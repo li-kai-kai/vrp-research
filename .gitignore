@@ -8,3 +8,14 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Experiment outputs
+outputs/
+figures/
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.pdf
+!references/*.pdf
+!presentations/*.pptx

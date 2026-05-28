@@ -1,7 +1,7 @@
 [project]
 name = "vrp-research"
 version = "0.1.0"
-description = "Add your description here"
+description = "Research notes and exploratory code for post-disaster road network repair and relief logistics optimization"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
