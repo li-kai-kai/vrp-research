@@ -1,0 +1,4 @@
+interface:
+  display_name: "研究生论文写作"
+  short_description: "基于样本导师风格搭建硕士论文结构、章节逻辑与中文表达"
+  default_prompt: "Use $write-graduate-thesis to draft a Chinese graduate thesis framework, abstract, and chapter prose."
