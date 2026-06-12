@@ -21,6 +21,7 @@
 | 汇报文档 | `docs/presentation_narrative_plan.md` | 演示文稿叙事结构 |
 | 代码说明 | `scripts/README.md` | 脚本职责、运行方式和实验脚本定位 |
 | 演示文稿 | `presentations/s10479-018-3037-2_summary_presentation.pptx` | 可编辑 PPT 汇报稿 |
+| 下载资料说明 | `downloads/xju/README.md` | 新疆大学 WebVPN reader 页面图片和 OCR 文本的本地资料说明 |
 
 ## 命名规则
 
@@ -33,12 +34,15 @@
 | 主线脚本 | `scripts/` | 按模型或输出目的命名 |
 | 探索脚本 | `scripts/experiments/` | 按实验假设或演进阶段命名 |
 | 汇报材料 | `presentations/` | 保留文献编号，便于追溯来源 |
+| 本地下载资料 | `downloads/` | 按来源建子目录；大体量图片、OCR 原文和中间结果默认不提交 |
 
 ## 已整理内容
 
 - 根目录不再堆放 PDF、PPT、临时脚本和论文笔记。
 - `main.py`, `main1.py`, `main2.py`, `main3.py`, `main4.py`, `figure.py` 已改为有含义的脚本名。
 - 论文文档已拆分为数据、模型、算法和汇报叙事四类。
+- OCR 等资料处理工具已归入 `scripts/tools/`，避免和算法复现实验入口混在一起。
+- `downloads/xju/` 只保留资料说明；`pdfbox/` 页面图片和 `ocr/` 输出作为本地下载/生成产物忽略。
 - `README.md` 已补充项目入口、文档导读、代码导读和运行方式。
 
 ## 仍需注意
@@ -60,7 +64,10 @@
 | `references/` | 保留 | 原始文献来源 |
 | `docs/` | 保留 | 当前项目最核心的整理成果 |
 | `presentations/` | 保留 | 汇报产物和构建脚本 |
+| `downloads/xju/README.md` | 保留 | 记录本地下载资料结构和 OCR 产物来源 |
+| `downloads/xju/pdfbox/`, `downloads/xju/ocr/` | 本地保留、默认不提交 | 图片和 OCR 中间结果体量大且可再生成 |
 | `scripts/nsga2_multiobjective.py` | 保留为主线脚本 | 最接近多目标修复绩效/成本实验 |
 | `scripts/plot_initial_network.py` | 保留 | 数据可视化检查入口 |
+| `scripts/tools/ocr_xju_downloads.py` | 保留为工具脚本 | 用于处理本地下载文献页面图片 |
 | `scripts/experiments/` | 暂保留 | 记录模型假设演进，后续可归档或合并 |
 | `test.js`, `test.ts` | 删除 | 未发现与本文献数据、模型或代码主线相关 |

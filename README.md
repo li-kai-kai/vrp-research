@@ -26,6 +26,8 @@
 │   ├── README.md
 │   ├── nsga2_multiobjective.py
 │   ├── plot_initial_network.py
+│   ├── tools/
+│   │   └── ocr_xju_downloads.py
 │   ├── reproduce/
 │   │   ├── capacity_recovery.py
 │   │   └── run_random_experiments.py
@@ -34,9 +36,12 @@
 │       ├── case_single_objective_plan.py
 │       ├── advanced_visualization.py
 │       └── fleet_constraint_visualization.py
-└── presentations/
-    ├── build_summary_deck.mjs
-    └── s10479-018-3037-2_summary_presentation.pptx
+├── presentations/
+│   ├── build_summary_deck.mjs
+│   └── s10479-018-3037-2_summary_presentation.pptx
+└── downloads/
+    └── xju/
+        └── README.md
 ```
 
 ## 文档导读
@@ -61,6 +66,8 @@
 - `scripts/reproduce/capacity_recovery.py`：道路容量渐进恢复 + 多车型通行阈值 + NSGA-II/ALNS 原型实验入口。
 - `scripts/plot_initial_network.py`：绘制汶川案例初始道路网络与受损边。
 - `scripts/experiments/`：保留不同阶段的实验脚本，用于对比单目标 GA、运力约束、可视化和调度假设。
+- `scripts/tools/ocr_xju_downloads.py`：对新疆大学 WebVPN reader 导出的页面图片执行 OCR，输出到 `downloads/xju/ocr/`。
+- `downloads/xju/`：本地下载与 OCR 资料区；大体量图片和 OCR 输出默认不纳入 Git，只保留说明文档。
 
 ## 运行环境
 
@@ -88,6 +95,7 @@ uv run python scripts/reproduce/capacity_recovery.py --scenario both --seeds 1 -
 - 论文相关 Markdown 已归入 `docs/`。
 - 演示文稿及构建脚本已归入 `presentations/`。
 - 原 `main*.py` 与 `figure.py` 已按用途归入 `scripts/` 与 `scripts/experiments/`。
+- 资料处理脚本已归入 `scripts/tools/`，下载/OCR 产物统一放在 `downloads/xju/`。
 - `test.js` 和 `test.ts` 已被标记为删除，当前项目没有发现它们与论文复现主线的直接关系。
 
 ## 后续建议

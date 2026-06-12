@@ -20,6 +20,12 @@
 | `experiments/advanced_visualization.py` | 更复杂的过程可视化和成本惩罚实验 | 可视化增强版本 |
 | `experiments/fleet_constraint_visualization.py` | 加入运力约束和维修队行进时间的实验 | 更接近业务约束的版本 |
 
+## 工具脚本
+
+| 脚本 | 作用 | 定位 |
+|---|---|---|
+| `tools/ocr_xju_downloads.py` | 对 `downloads/xju/pdfbox/<fid>/page_*.jpg` 执行 OCR，并写入 `downloads/xju/ocr/` | 本地资料处理工具，不属于算法复现实验 |
+
 ## 运行方式
 
 在项目根目录运行：
@@ -31,6 +37,7 @@ uv run python scripts/plot_initial_network.py
 uv run python scripts/reproduce/run_random_experiments.py --config quick
 uv run python scripts/reproduce/run_random_experiments.py --nodes 50 --gamma 4 --damage 0.3 --eta 8 --seeds 5
 uv run python scripts/reproduce/capacity_recovery.py --scenario both --seeds 1 --sim-nodes 25 --pop-size 24 --generations 20 --alns-iterations 8 --output-dir outputs/capacity_recovery
+uv run python scripts/tools/ocr_xju_downloads.py
 ```
 
 如果只想快速检查算法流程，可以优先运行 `scripts/experiments/simple_ga_convergence.py`，它的输出更偏向分时叙事。

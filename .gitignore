@@ -19,3 +19,7 @@ figures/
 *.pdf
 !references/*.pdf
 !presentations/*.pptx
+
+# Local/downloaded literature assets
+downloads/xju/pdfbox/
+downloads/xju/ocr/
