@@ -6,6 +6,12 @@ from scripts.reproduce.dispatch import dispatch_relief
 from scripts.reproduce.instance_generator import generate_random_instance
 from scripts.reproduce.metrics import evaluate_solution
 from scripts.reproduce.capacity_recovery import build_wenchuan_instance
+from scripts.reproduce.dynamic_interaction_experiments import (
+    MECHANISMS,
+    _apply_stress,
+    _variant,
+    run_mechanism,
+)
 
 
 class ReproductionFrameworkTest(unittest.TestCase):
@@ -86,6 +92,32 @@ class ReproductionFrameworkTest(unittest.TestCase):
         self.assertEqual(instance.total_supply, 9000)
         self.assertEqual(instance.total_demand, 11288)
         self.assertAlmostEqual(instance.total_supply / instance.total_demand, 0.7973068745570517)
+
+    def test_binary_mechanism_requires_full_recovery(self):
+        instance = _variant(build_wenchuan_instance(seed=1), progressive=False)
+
+        self.assertTrue(all(vehicle.min_recovery_progress == 1.0 for vehicle in instance.vehicles))
+        self.assertEqual([stage.capacity_ratio for stage in instance.recovery_stages], [0.0, 1.0])
+
+    def test_stress_grid_exposes_dynamic_feedback_benefit(self):
+        instance = _apply_stress(build_wenchuan_instance(seed=1), 2.0, 2)
+        results = {
+            mechanism.name: run_mechanism(instance, mechanism, 40001)[0]
+            for mechanism in MECHANISMS
+        }
+
+        self.assertLess(
+            results["progressive_static"]["cumulative_unmet_area"],
+            results["binary_static"]["cumulative_unmet_area"],
+        )
+        self.assertLess(
+            results["progressive_rolling"]["cumulative_unmet_area"],
+            results["progressive_static"]["cumulative_unmet_area"],
+        )
+        self.assertGreater(
+            results["progressive_rolling"]["average_reachable_ratio"],
+            results["progressive_static"]["average_reachable_ratio"],
+        )
 
 if __name__ == "__main__":
     unittest.main()

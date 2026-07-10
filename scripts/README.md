@@ -7,6 +7,7 @@
 | 脚本 | 作用 | 备注 |
 |---|---|---|
 | `reproduce/capacity_recovery.py` | 道路容量渐进恢复、多车型通行阈值、NSGA-II + ALNS 原型实验 | 最新 proposal 主入口 |
+| `reproduce/dynamic_interaction_experiments.py` | 二元/渐进恢复与滚动修复—路径反馈对照 | 机制验证主入口 |
 | `reproduce/run_random_experiments.py` | 论文随机算例与普通 GA 实验，输出 CSV/JSON/PNG | 基线和对照入口 |
 | `reproduce/model.py` 等模块 | 实例、调度、配送、指标、求解和可视化 | 主线共享实现 |
 | `plot_initial_network.py` | 绘制初始路网、供给点、需求点和受损路段 | 用于检查表格数据和网络结构 |

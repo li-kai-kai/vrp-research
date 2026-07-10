@@ -22,6 +22,7 @@
 - [拟研究模型](docs/proposed_capacity_recovery_model.md)
 - [拟研究算法](docs/proposed_nsga2_alns_algorithm.md)
 - [原型实验记录](docs/capacity_recovery_experiment_notes.md)
+- [动态交互机制实验结果](docs/dynamic_interaction_experiment_results.md)
 
 ## 项目结构
 
@@ -56,6 +57,7 @@
 ## 代码导读
 
 - `scripts/reproduce/capacity_recovery.py`：最新 proposal 主入口，实现容量渐进恢复、多车型通行阈值和 NSGA-II + ALNS 原型。
+- `scripts/reproduce/dynamic_interaction_experiments.py`：二元/渐进恢复与滚动修复—路径反馈机制实验。
 - `scripts/reproduce/run_random_experiments.py`：原论文/普通 GA 基线和随机算例入口。
 - `scripts/reproduce/` 其余模块：共享实例、调度、配送、指标、求解和可视化逻辑。
 - `scripts/plot_initial_network.py`：检查汶川案例路网、供需节点和受损边。
