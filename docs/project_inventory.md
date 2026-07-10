@@ -1,73 +1,73 @@
 # 项目清单与整理说明
 
-本文档说明当前项目文件的职责、命名规则和后续整理优先级，方便继续维护 `s10479-018-3037-2.pdf` 相关数据、模型和代码。
+本文档记录 `s10479-018-3037-2.pdf` 相关资料、最新 proposal 与复现代码的职责边界。
 
 ## 当前主线
 
-项目主线可以概括为：
-
 ```text
-论文 PDF -> 汶川案例数据整理 -> 多周期双层模型说明 -> 遗传算法说明 -> Python 探索性复现 -> 汇报材料
+论文 PDF
+    -> 汶川案例数据与原模型
+    -> 原论文/普通 GA 基线
+    -> 道路容量渐进恢复与异质车辆模型
+    -> NSGA-II + ALNS
+    -> 对照、消融、多种子与 Pareto 实验
 ```
 
-对应文件如下：
+## 核心文件
 
 | 类别 | 文件 | 作用 |
 |---|---|---|
-| 原始文献 | `references/s10479-018-3037-2.pdf` | 唯一主来源 |
-| 数据文档 | `docs/wenchuan_case_model_inputs.md` | 汶川案例输入表、数据来源和缺口说明 |
-| 模型文档 | `docs/algorithm_flow.md` | 多周期双层模型、周期滚动逻辑、上下层目标 |
-| 算法文档 | `docs/genetic_algorithm.md` | HSSPGA 编码、解码、遗传操作和参数 |
-| 汇报文档 | `docs/presentation_narrative_plan.md` | 演示文稿叙事结构 |
-| 代码说明 | `scripts/README.md` | 脚本职责、运行方式和实验脚本定位 |
-| 演示文稿 | `presentations/s10479-018-3037-2_summary_presentation.pptx` | 可编辑 PPT 汇报稿 |
-| 下载资料说明 | `downloads/xju/README.md` | 新疆大学 WebVPN reader 页面图片和 OCR 文本的本地资料说明 |
+| 原始文献 | `references/s10479-018-3037-2.pdf` | 原模型和汶川案例的主来源 |
+| 案例数据 | `docs/wenchuan_case_model_inputs.md` | 供需节点、路网、受损道路、车辆和维修队数据 |
+| 原模型 | `docs/algorithm_flow.md` | 多周期道路修复与救援配送联动逻辑 |
+| 原算法 | `docs/genetic_algorithm.md` | HSSPGA 编码、解码和遗传操作 |
+| 拟研究数据 | `docs/proposed_capacity_recovery_data.md` | 最新 proposal 所需字段与数据来源 |
+| 拟研究模型 | `docs/proposed_capacity_recovery_model.md` | 容量渐进恢复、车型阈值和三目标模型 |
+| 拟研究算法 | `docs/proposed_nsga2_alns_algorithm.md` | NSGA-II + ALNS 编码、解码和算子 |
+| 原型记录 | `docs/capacity_recovery_experiment_notes.md` | 当前实现范围、结果和限制 |
+| 主线实验 | `scripts/reproduce/capacity_recovery.py` | 最新 proposal 的可运行原型 |
+| 基线实验 | `scripts/reproduce/run_random_experiments.py` | 原论文/普通 GA 和随机算例 |
+| 自动测试 | `tests/test_reproduce.py` | 实例、配送、指标和汶川数据检查 |
 
-## 命名规则
+## 目录职责
 
-当前采用以下规则：
+| 目录 | 职责 |
+|---|---|
+| `references/` | 原始论文和参考 PDF |
+| `docs/` | 数据、模型、算法、综述、审稿记录和实验记录 |
+| `scripts/reproduce/` | 主线实验入口与共享求解模块 |
+| `scripts/tools/` | OCR 等资料处理工具，不参与算法实验 |
+| `tests/` | 复现框架的自动检查 |
+| `presentations/` | 汇报产物与构建脚本 |
+| `downloads/` | 本地下载/OCR 资料说明；大体量产物不提交 |
+| `outputs/` | 实验生成结果；默认不作为源文件维护 |
 
-| 类型 | 目录 | 命名方式 |
-|---|---|---|
-| 原始参考文献 | `references/` | 保留 DOI 文件名或文献编号 |
-| 论文整理文档 | `docs/` | 使用语义化英文名，避免所有文件都以前缀开头 |
-| 主线脚本 | `scripts/` | 按模型或输出目的命名 |
-| 探索脚本 | `scripts/experiments/` | 按实验假设或演进阶段命名 |
-| 汇报材料 | `presentations/` | 保留文献编号，便于追溯来源 |
-| 本地下载资料 | `downloads/` | 按来源建子目录；大体量图片、OCR 原文和中间结果默认不提交 |
+## 本次清理
 
-## 已整理内容
+已删除以下过时实验：
 
-- 根目录不再堆放 PDF、PPT、临时脚本和论文笔记。
-- `main.py`, `main1.py`, `main2.py`, `main3.py`, `main4.py`, `figure.py` 已改为有含义的脚本名。
-- 论文文档已拆分为数据、模型、算法和汇报叙事四类。
-- OCR 等资料处理工具已归入 `scripts/tools/`，避免和算法复现实验入口混在一起。
-- `downloads/xju/` 只保留资料说明；`pdfbox/` 页面图片和 `ocr/` 输出作为本地下载/生成产物忽略。
-- `README.md` 已补充项目入口、文档导读、代码导读和运行方式。
+- 独立的双目标 `scripts/nsga2_multiobjective.py`；
+- 早期单目标 GA 收敛实验；
+- 成本惩罚和单目标方案实验；
+- 以展示为主的高级过程可视化实验；
+- 旧的运力约束/维修队行进可视化实验。
 
-## 仍需注意
+这些脚本采用二元道路状态、单目标或早期双目标口径，并重复硬编码汶川数据。其有效职责已由 `scripts/reproduce/` 的基线与容量恢复原型覆盖。
 
-当前 Python 脚本仍然重复定义了大量汶川案例数据，包括节点、边、受损路段和算法配置。这样便于早期试验，但后续维护容易出现数据不一致。
+保留 `scripts/plot_initial_network.py`，因为它仍是案例数据的独立可视化检查入口。保留原模型和原算法文档，因为它们是最新 proposal 的理论基线，不属于过时实验。
 
-建议后续按以下顺序继续整理：
+## 维护规则
 
-1. 新建统一数据模块，例如 `scripts/data/wenchuan_case.py`。
-2. 将节点、边、受损路段、车辆、维修队和规划周期从实验脚本中抽离。
-3. 给主线脚本添加命令行参数，例如种群规模、迭代次数、随机种子和是否显示图窗。
-4. 将 `plt.show()` 改为可选输出，例如保存到 `outputs/figures/`。
-5. 为数据完整性添加轻量检查，例如节点数量、边数量、受损路段数量和需求总量。
+1. 新实验复用 `scripts/reproduce/` 的实例、调度、配送和指标模块。
+2. 模型差异通过配置或明确的基线/消融入口表达，不复制整套脚本。
+3. 所有论文级结果记录随机种子、参数、运行时间和输出目录。
+4. 生成结果统一写入 `outputs/`，源数据与生成数据分离。
+5. 新增模型行为时同步增加测试。
 
-## 文件去留建议
+## 下一步优先级
 
-| 文件或目录 | 建议 | 理由 |
-|---|---|---|
-| `references/` | 保留 | 原始文献来源 |
-| `docs/` | 保留 | 当前项目最核心的整理成果 |
-| `presentations/` | 保留 | 汇报产物和构建脚本 |
-| `downloads/xju/README.md` | 保留 | 记录本地下载资料结构和 OCR 产物来源 |
-| `downloads/xju/pdfbox/`, `downloads/xju/ocr/` | 本地保留、默认不提交 | 图片和 OCR 中间结果体量大且可再生成 |
-| `scripts/nsga2_multiobjective.py` | 保留为主线脚本 | 最接近多目标修复绩效/成本实验 |
-| `scripts/plot_initial_network.py` | 保留 | 数据可视化检查入口 |
-| `scripts/tools/ocr_xju_downloads.py` | 保留为工具脚本 | 用于处理本地下载文献页面图片 |
-| `scripts/experiments/` | 暂保留 | 记录模型假设演进，后续可归档或合并 |
-| `test.js`, `test.ts` | 删除 | 未发现与本文献数据、模型或代码主线相关 |
+1. 导出完整 Pareto 前沿和不同偏好的代表解。
+2. 实现“二元道路 + NSGA-II”“渐进恢复 + NSGA-II”“渐进恢复 + NSGA-II/ALNS”三组对照与消融。
+3. 对随机算例和汶川案例执行多随机种子实验，报告均值、标准差和显著性。
+4. 将 `free_time / capacity_ratio` 升级为 BPR 通行时间函数。
+5. 增加公平性导向 ALNS 算子和关键行为测试。
