@@ -22,7 +22,9 @@
 - [拟研究模型](docs/proposed_capacity_recovery_model.md)
 - [拟研究算法](docs/proposed_nsga2_alns_algorithm.md)
 - [原型实验记录](docs/capacity_recovery_experiment_notes.md)
-- [动态交互机制实验结果](docs/dynamic_interaction_experiment_results.md)
+- [动态交互机制实验摘要](docs/dynamic_interaction_experiment_results.md)
+- [动态交互数值实验详细报告](docs/dynamic_interaction_experiment_report_detailed.md)
+- [研究交接文档](docs/HANDOFF.md)
 
 ## 项目结构
 
