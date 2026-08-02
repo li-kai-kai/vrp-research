@@ -8,11 +8,13 @@
 
 1. **道路容量渐进恢复层**：道路不再只有“不可达/可达”两种状态，而是随修复进度逐步恢复容量。
 2. **异质车辆通行层**：不同救援车辆对道路恢复程度有不同通行要求，小型车可以更早进入，重型车需要道路恢复到更高水平。
+3. **维修效率逐期揭示层**：实际修复进度可能偏离期初计划，周期结束后观测道路状态并用于下一期重规划。
 
 因此，新的数据逻辑是：
 
 ```text
 基础路网 + 受损道路 + 修复时间
+        -> 当期维修效率 xi_a^t
         -> 修复进度 p_a^t
         -> 道路恢复阶段 r_a^t
         -> 当前容量 C_a^t
@@ -102,19 +104,23 @@
 | `assigned_crew_id` | 当前分配维修队 |
 | `start_period` | 开始维修周期 |
 | `worked_time_by_period` | 各周期累计维修时间 |
+| `planned_progress_increment` | 按期望维修效率计算的本期计划进度增量 |
+| `realized_repair_efficiency` | 周期结束后观测的实际维修效率 `xi_a^t` |
 | `progress_by_period` | 各周期累计修复进度 |
+| `progress_forecast_error` | 实际进度与期初预测进度之差 |
 | `recovery_stage_by_period` | 各周期恢复阶段 |
 
 修复进度计算：
 
 ```text
-p_a^t = min(1, 累计维修时间_a^t / 完全修复时间_a)
+p_a^t = min(1, p_a^(t-1) + xi_a^t * 本期维修时间_a^t / 完全修复时间_a)
 ```
 
 如果周期长度为 8 小时，即 480 分钟，一条道路完全修复时间为 900 分钟，则：
 
 ```text
-第 1 期维修 480 分钟：p = 480 / 900 = 0.533
+第 1 期期望维修效率为 1：预测 p = 480 / 900 = 0.533
+若实际 xi=0.8：观测 p = 0.8 * 480 / 900 = 0.427
 第 2 期再维修 420 分钟：p = 1.000
 ```
 
@@ -176,6 +182,7 @@ scripts/data/vehicle_profiles.py
 | `nodes` | `node_id`, `name`, `type`, `supply`, `demand` |
 | `edges` | `edge_id`, `from_node`, `to_node`, `travel_time_min`, `capacity_pcu_h` |
 | `damaged_links` | `damaged_link_id`, `edge_id`, `repair_time_min`, `endpoint_a`, `endpoint_b` |
+| `repair_efficiency_scenarios` | `scenario_seed`, `period`, `edge_id`, `repair_efficiency`, `observed_at` |
 | `repair_crews` | `crew_id`, `station_node_id`, `initial_node_id`, `repair_speed_km_h` |
 | `vehicles` | `vehicle_type`, `capacity_ton`, `available_count`, `occupied_od_pcu_h`, `pcu_per_vehicle`, `min_recovery_progress`, `speed_factor` |
 | `recovery_stages` | `stage_id`, `progress_lower`, `progress_upper`, `capacity_ratio`, `speed_ratio`, `description` |
@@ -189,6 +196,7 @@ scripts/data/vehicle_profiles.py
 | 不同车型真实限载限宽要求 | 先用 `theta_v` 构造场景参数，做敏感性分析 |
 | 单车 pcu 当量 | 原案例只给出车型类别 OD 流量；原型暂用 1.0/1.5/2.0/2.5，正式研究应以车型尺寸、轴载或交通工程手册标定 |
 | 修复过程中的阶段性抢通时间 | 由总修复时间按比例拆分，例如 30%、60%、80%、100% |
+| 实际维修效率分布 | 原型采用 `U(0.7,1.3)`；正式研究需用历史工效、专家区间或分布鲁棒方法标定 |
 | 灾后动态需求 | 第一版先固定需求，后续再加入滚动更新 |
 | 普通交通流 | 第一版暂不纳入，容量仅约束救援车辆；后续可用背景占用比例或 OD 流量扩展 |
 
@@ -198,6 +206,7 @@ scripts/data/vehicle_profiles.py
 |---|---|
 | 道路状态不只是二元可达，而是容量随修复进度逐步恢复 | `recovery_stages`, `period_edge_state`, `recovery_progress`, `current_capacity` |
 | 不同车辆类型与道路恢复程度匹配 | `vehicles.min_recovery_progress`, `period_edge_state.is_passable` |
+| 实际道路状态逐期揭示与重规划 | `repair_efficiency_scenarios`, `progress_forecast_error`, `progress_by_period` |
 | NSGA-II + ALNS 混合算法 | 数据需支持染色体解码、周期路网更新、局部搜索路径重算 |
 
 ## 10. 第一版实验推荐口径
@@ -209,6 +218,7 @@ scripts/data/vehicle_profiles.py
 3. 道路容量使用现有估算容量。
 4. 容量恢复采用 5 阶段分段函数。
 5. 车辆通行阈值采用 4 类车默认参数。
-6. 需求量先固定，后续再扩展为滚动更新。
+6. 需求量保持固定，只让维修效率逐期揭示，避免同时引入多种不确定性。
+7. 机制验证使用 `repair_efficiency_deviation=0/0.15/0.30`，分别表示无偏差、中等偏差和高偏差；同一种子下所有机制共享相同实现。
 
 这样可以把创新集中在“道路容量渐进恢复 + 车辆类型通行约束”，避免同时引入过多不确定因素。

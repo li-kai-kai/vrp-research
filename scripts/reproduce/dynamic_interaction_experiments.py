@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import random
 import sys
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -29,6 +30,23 @@ class Mechanism:
     repair_policy: str
 
 
+@dataclass(frozen=True)
+class RepairEfficiencyUncertainty:
+    deviation: float = 0.0
+
+    @property
+    def lower(self) -> float:
+        return 1.0 - self.deviation
+
+    @property
+    def upper(self) -> float:
+        return 1.0 + self.deviation
+
+    def validate(self) -> None:
+        if not 0.0 <= self.deviation < 1.0:
+            raise ValueError("repair efficiency deviation must be in [0, 1)")
+
+
 MECHANISMS = (
     Mechanism("binary_static", False, "shortest_static"),
     Mechanism("progressive_static", True, "shortest_static"),
@@ -37,7 +55,14 @@ MECHANISMS = (
 )
 
 
-def run_mechanism(instance, mechanism, seed):
+def run_mechanism(
+    instance,
+    mechanism,
+    seed,
+    repair_efficiency_deviation=0.0,
+):
+    uncertainty = RepairEfficiencyUncertainty(repair_efficiency_deviation)
+    uncertainty.validate()
     variant = _variant(instance, mechanism.progressive)
     base = variant.base
     priority = [(s, d) for s in base.suppliers for d in base.demands]
@@ -49,6 +74,12 @@ def run_mechanism(instance, mechanism, seed):
     schedule = _decode_timed_schedule(
         base, order, [idx % base.repair_crews for idx in range(len(order))]
     )
+    efficiency_realization = _sample_repair_efficiencies(
+        base,
+        seed,
+        uncertainty,
+    )
+    static_plan = _build_static_plan(base, schedule)
     openloop_plan = None
     if mechanism.repair_policy == "demand_openloop":
         openloop_plan = _build_openloop_plan(variant, priority)
@@ -59,29 +90,52 @@ def run_mechanism(instance, mechanism, seed):
     rows = []
     unmet_area = 0.0
     path_switches = 0
+    observed_efficiencies = []
+    progress_forecast_errors = []
 
     for period in range(1, base.periods + 1):
+        period_efficiency = {
+            edge_id: efficiency_realization[(period, edge_id)]
+            for edge_id in base.damaged_edges
+        }
         if mechanism.repair_policy == "demand_rolling":
+            expected_progress = dict(progress)
             selected = _objective_aligned_step(
                 variant,
-                progress,
+                expected_progress,
                 delivered,
                 remaining_supply,
                 priority,
                 base.eta_minutes,
             )
+            planned_increment = _progress_increment(progress, expected_progress)
         elif mechanism.repair_policy == "demand_openloop":
-            selected, planned_progress = openloop_plan[period - 1]
-            progress = dict(planned_progress)
+            selected, planned_increment = openloop_plan[period - 1]
         else:
-            progress = _repair_progress_by_damage(
-                base, schedule, period * base.eta_minutes
-            )
-            selected = [
-                task.damage_id for task in schedule
-                if task.start_time < period * base.eta_minutes
-                and task.finish_time > (period - 1) * base.eta_minutes
-            ]
+            selected, planned_increment = static_plan[period - 1]
+
+        before_realization = dict(progress)
+        expected_after_repair = _apply_repair_efficiency(
+            before_realization,
+            planned_increment,
+            {edge_id: 1.0 for edge_id in base.damaged_edges},
+        )
+        progress = _apply_repair_efficiency(
+            before_realization,
+            planned_increment,
+            period_efficiency,
+        )
+        progress_forecast_mae = sum(
+            abs(progress[edge_id] - expected_after_repair[edge_id])
+            for edge_id in base.damaged_edges
+        ) / max(len(base.damaged_edges), 1)
+        progress_forecast_errors.append(progress_forecast_mae)
+        worked_efficiencies = [
+            period_efficiency[edge_id]
+            for edge_id, increment in planned_increment.items()
+            if increment > 1e-9
+        ]
+        observed_efficiencies.extend(worked_efficiencies)
 
         remaining_demand = {
             d: max(0.0, base.demand_amounts[d] - delivered[d])
@@ -124,6 +178,13 @@ def run_mechanism(instance, mechanism, seed):
             "max_edge_utilization": dispatch["max_edge_utilization"],
             "high_utilization_edges": dispatch["high_utilization_edges"],
             "capacity_blocked_tons": dispatch["capacity_blocked_tons"],
+            "repair_efficiency_scenario_seed": seed,
+            "repair_efficiency_deviation": uncertainty.deviation,
+            "period_mean_repair_efficiency": (
+                sum(worked_efficiencies) / len(worked_efficiencies)
+                if worked_efficiencies else 1.0
+            ),
+            "repair_progress_forecast_mae": progress_forecast_mae,
         })
 
     summary = {
@@ -142,6 +203,15 @@ def run_mechanism(instance, mechanism, seed):
         "high_utilization_edge_periods": sum(r["high_utilization_edges"] for r in rows),
         "capacity_blocked_tons": sum(r["capacity_blocked_tons"] for r in rows),
         "total_vehicle_trips": sum(r["vehicle_trips"] for r in rows),
+        "repair_efficiency_scenario_seed": seed,
+        "repair_efficiency_deviation": uncertainty.deviation,
+        "mean_observed_repair_efficiency": (
+            sum(observed_efficiencies) / len(observed_efficiencies)
+            if observed_efficiencies else 1.0
+        ),
+        "mean_repair_progress_forecast_mae": (
+            sum(progress_forecast_errors) / len(progress_forecast_errors)
+        ),
     }
     return summary, rows
 
@@ -175,23 +245,104 @@ def _variant(instance, progressive):
 
 
 def _build_openloop_plan(instance, dispatch_priority):
-    """Create a period-by-period repair plan using only the initial demand state."""
+    """Plan the full horizon once using expected repair efficiency and state."""
     base = instance.base
     planned_progress = {edge_id: 0.0 for edge_id in base.damaged_edges}
-    initial_delivered = {demand: 0.0 for demand in base.demands}
-    initial_supply = dict(base.supply_amounts)
+    planned_delivered = {demand: 0.0 for demand in base.demands}
+    planned_supply = dict(base.supply_amounts)
     plan = []
     for _period in range(base.periods):
+        before_progress = dict(planned_progress)
         selected = _objective_aligned_step(
             instance,
             planned_progress,
-            initial_delivered,
-            initial_supply,
+            planned_delivered,
+            planned_supply,
             dispatch_priority,
             base.eta_minutes,
         )
-        plan.append((selected, dict(planned_progress)))
+        plan.append((selected, _progress_increment(before_progress, planned_progress)))
+        remaining_demand = {
+            demand: max(
+                0.0,
+                base.demand_amounts[demand] - planned_delivered[demand],
+            )
+            for demand in base.demands
+        }
+        dispatch = _dispatch_with_vehicle_types(
+            instance,
+            dispatch_priority,
+            planned_progress,
+            planned_supply,
+            remaining_demand,
+        )
+        for demand, amount in dispatch["delivered"].items():
+            planned_delivered[demand] += amount
     return plan
+
+
+def _build_static_plan(base, schedule):
+    plan = []
+    previous = {edge_id: 0.0 for edge_id in base.damaged_edges}
+    for period in range(1, base.periods + 1):
+        planned = _repair_progress_by_damage(
+            base,
+            schedule,
+            period * base.eta_minutes,
+        )
+        selected = [
+            task.damage_id for task in schedule
+            if task.start_time < period * base.eta_minutes
+            and task.finish_time > (period - 1) * base.eta_minutes
+        ]
+        plan.append((selected, _progress_increment(previous, planned)))
+        previous = planned
+    return plan
+
+
+def _sample_repair_efficiencies(base, seed, uncertainty):
+    rng = random.Random(seed)
+    return {
+        (period, edge_id): rng.uniform(uncertainty.lower, uncertainty.upper)
+        for period in range(1, base.periods + 1)
+        for edge_id in sorted(base.damaged_edges)
+    }
+
+
+def _repair_efficiency_rows(base, scenario_seed, uncertainty):
+    realization = _sample_repair_efficiencies(base, scenario_seed, uncertainty)
+    return [
+        {
+            "repair_efficiency_scenario_seed": scenario_seed,
+            "period": period,
+            "damage_id": edge_id,
+            "repair_efficiency": realization[(period, edge_id)],
+            "repair_efficiency_deviation": uncertainty.deviation,
+            "distribution": "uniform",
+            "lower_bound": uncertainty.lower,
+            "upper_bound": uncertainty.upper,
+        }
+        for period in range(1, base.periods + 1)
+        for edge_id in sorted(base.damaged_edges)
+    ]
+
+
+def _progress_increment(before, after):
+    return {
+        edge_id: max(0.0, after.get(edge_id, 0.0) - before.get(edge_id, 0.0))
+        for edge_id in before
+    }
+
+
+def _apply_repair_efficiency(progress, planned_increment, efficiency):
+    return {
+        edge_id: min(
+            1.0,
+            progress.get(edge_id, 0.0)
+            + planned_increment.get(edge_id, 0.0) * efficiency[edge_id],
+        )
+        for edge_id in progress
+    }
 
 
 def _objective_aligned_step(
@@ -357,11 +508,22 @@ def run_cli():
     parser.add_argument("--repair-scale", type=float, default=1.0)
     parser.add_argument("--crews", type=int, default=3)
     parser.add_argument("--capacity-scale", type=float, default=1.0)
+    parser.add_argument(
+        "--repair-efficiency-deviation",
+        type=float,
+        default=0.30,
+        help="Uniform repair-efficiency deviation around 1.0; 0.30 means U[0.7, 1.3].",
+    )
     parser.add_argument("--output-dir", default="outputs/dynamic_interaction")
     args = parser.parse_args()
     if args.capacity_scale <= 0:
         parser.error("--capacity-scale must be greater than zero")
-    summaries, periods = [], []
+    if args.seeds <= 0:
+        parser.error("--seeds must be greater than zero")
+    if not 0.0 <= args.repair_efficiency_deviation < 1.0:
+        parser.error("--repair-efficiency-deviation must be in [0, 1)")
+    uncertainty = RepairEfficiencyUncertainty(args.repair_efficiency_deviation)
+    summaries, periods, efficiency_rows = [], [], []
     for seed in range(args.seed_start, args.seed_start + args.seeds):
         instance = (
             build_wenchuan_instance(seed) if args.scenario == "wenchuan"
@@ -373,17 +535,34 @@ def run_cli():
             args.crews,
             args.capacity_scale,
         )
+        efficiency_seed = seed + 40000
+        for row in _repair_efficiency_rows(instance.base, efficiency_seed, uncertainty):
+            row["scenario"] = args.scenario
+            row["scenario_seed"] = seed
+            row["repair_scale"] = args.repair_scale
+            row["crews"] = args.crews
+            row["capacity_scale"] = args.capacity_scale
+            efficiency_rows.append(row)
         for mechanism in MECHANISMS:
-            summary, rows = run_mechanism(instance, mechanism, seed + 40000)
+            summary, rows = run_mechanism(
+                instance,
+                mechanism,
+                efficiency_seed,
+                args.repair_efficiency_deviation,
+            )
             summary["scenario"] = args.scenario
+            summary["scenario_seed"] = seed
             summary["repair_scale"] = args.repair_scale
             summary["crews"] = args.crews
             summary["capacity_scale"] = args.capacity_scale
+            summary["repair_efficiency_deviation"] = args.repair_efficiency_deviation
             for row in rows:
                 row["scenario"] = args.scenario
+                row["scenario_seed"] = seed
                 row["repair_scale"] = args.repair_scale
                 row["crews"] = args.crews
                 row["capacity_scale"] = args.capacity_scale
+                row["repair_efficiency_deviation"] = args.repair_efficiency_deviation
             summaries.append(summary)
             periods.extend(rows)
             print(mechanism.name, seed, summary)
@@ -391,6 +570,7 @@ def run_cli():
     output.mkdir(parents=True, exist_ok=True)
     _write_csv(output / "mechanism_summary.csv", summaries)
     _write_csv(output / "period_dynamics.csv", periods)
+    _write_csv(output / "repair_efficiency_realizations.csv", efficiency_rows)
 
 
 if __name__ == "__main__":

@@ -100,3 +100,5 @@ uv run python scripts/reproduce/capacity_recovery.py \
 当前原型已经同时执行车型通行阈值和边—周期救援车辆吞吐约束：每辆车按 `pcu_per_vehicle` 占用路径容量，每辆车每周期最多执行一趟；容量不足时会在残余容量路网中重算路径。`--capacity-scale` 用于容量压力敏感性，默认 1.0；0.05 和 0.02 可作为机制检查档位，但属于假设性压力参数。
 
 实验输出默认写入 `outputs/`。当前实现是可运行原型，不应直接作为论文最终结果；下一步需要补齐完整 Pareto 前沿、基线/消融组、多随机种子统计、车型 pcu 标定和车辆跨期周转。普通交通 OD 与流量驱动 BPR 拥堵仍未纳入。
+
+动态交互实验支持逐期揭示的维修效率偏差：`--repair-efficiency-deviation 0.30` 表示 `xi~U(0.7,1.3)`。open-loop 按期望状态在期初制定全期计划，rolling 在每期观测实际道路修复进度后重规划；相同种子下各机制共享同一随机实现，并将逐道路、逐周期样本写入 `repair_efficiency_realizations.csv`。

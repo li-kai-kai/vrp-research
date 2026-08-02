@@ -10,7 +10,9 @@ if __package__ is None or __package__ == "":
 from scripts.reproduce.capacity_recovery import build_wenchuan_instance
 from scripts.reproduce.dynamic_interaction_experiments import (
     MECHANISMS,
+    RepairEfficiencyUncertainty,
     _apply_stress,
+    _repair_efficiency_rows,
     _write_csv,
     run_mechanism,
 )
@@ -19,46 +21,80 @@ from scripts.reproduce.dynamic_interaction_experiments import (
 def run_grid(
     output_dir: Path,
     seed: int = 1,
+    seeds: int = 1,
     capacity_scale: float = 1.0,
+    repair_efficiency_deviation: float = 0.30,
 ) -> list[dict]:
     output_dir.mkdir(parents=True, exist_ok=True)
     comparison_rows = []
-    for repair_scale in (1.0, 1.5, 2.0, 3.0):
-        for crews in (1, 2, 3):
-            instance = _apply_stress(
-                build_wenchuan_instance(seed),
-                repair_scale,
-                crews,
-                capacity_scale,
-            )
-            summaries, periods = [], []
-            by_mechanism = {}
-            for mechanism in MECHANISMS:
-                summary, rows = run_mechanism(instance, mechanism, seed + 40000)
-                summary.update({
-                    "scenario": "wenchuan",
-                    "repair_scale": repair_scale,
-                    "crews": crews,
-                    "capacity_scale": capacity_scale,
-                })
-                for row in rows:
+    for scenario_seed in range(seed, seed + seeds):
+        for repair_scale in (1.0, 1.5, 2.0, 3.0):
+            for crews in (1, 2, 3):
+                instance = _apply_stress(
+                    build_wenchuan_instance(scenario_seed),
+                    repair_scale,
+                    crews,
+                    capacity_scale,
+                )
+                summaries, periods = [], []
+                by_mechanism = {}
+                efficiency_seed = scenario_seed + 40000
+                for mechanism in MECHANISMS:
+                    summary, rows = run_mechanism(
+                        instance,
+                        mechanism,
+                        efficiency_seed,
+                        repair_efficiency_deviation,
+                    )
+                    summary.update({
+                        "scenario": "wenchuan",
+                        "scenario_seed": scenario_seed,
+                        "repair_scale": repair_scale,
+                        "crews": crews,
+                        "capacity_scale": capacity_scale,
+                        "repair_efficiency_deviation": repair_efficiency_deviation,
+                    })
+                    for row in rows:
+                        row.update({
+                            "scenario": "wenchuan",
+                            "scenario_seed": scenario_seed,
+                            "repair_scale": repair_scale,
+                            "crews": crews,
+                            "capacity_scale": capacity_scale,
+                            "repair_efficiency_deviation": repair_efficiency_deviation,
+                        })
+                    summaries.append(summary)
+                    periods.extend(rows)
+                    by_mechanism[mechanism.name] = summary
+
+                scenario_dir = (
+                    output_dir
+                    / f"seed{scenario_seed}"
+                    / f"s{repair_scale:g}_c{crews}"
+                )
+                scenario_dir.mkdir(parents=True, exist_ok=True)
+                _write_csv(scenario_dir / "mechanism_summary.csv", summaries)
+                _write_csv(scenario_dir / "period_dynamics.csv", periods)
+                efficiency_rows = _repair_efficiency_rows(
+                    instance.base,
+                    efficiency_seed,
+                    RepairEfficiencyUncertainty(repair_efficiency_deviation),
+                )
+                for row in efficiency_rows:
                     row.update({
                         "scenario": "wenchuan",
+                        "scenario_seed": scenario_seed,
                         "repair_scale": repair_scale,
                         "crews": crews,
                         "capacity_scale": capacity_scale,
                     })
-                summaries.append(summary)
-                periods.extend(rows)
-                by_mechanism[mechanism.name] = summary
-
-            scenario_dir = output_dir / f"s{repair_scale:g}_c{crews}"
-            scenario_dir.mkdir(parents=True, exist_ok=True)
-            _write_csv(scenario_dir / "mechanism_summary.csv", summaries)
-            _write_csv(scenario_dir / "period_dynamics.csv", periods)
-            comparison_rows.append(
-                _comparison_row(repair_scale, crews, by_mechanism)
-            )
+                _write_csv(
+                    scenario_dir / "repair_efficiency_realizations.csv",
+                    efficiency_rows,
+                )
+                comparison_rows.append(
+                    _comparison_row(repair_scale, crews, by_mechanism)
+                )
 
     _write_csv(output_dir / "grid_comparison.csv", comparison_rows)
     return comparison_rows
@@ -69,7 +105,9 @@ def _comparison_row(repair_scale, crews, by_mechanism):
     row = {
         "repair_scale": repair_scale,
         "crews": crews,
+        "scenario_seed": first_summary["scenario_seed"],
         "capacity_scale": first_summary["capacity_scale"],
+        "repair_efficiency_deviation": first_summary["repair_efficiency_deviation"],
     }
     for name, summary in by_mechanism.items():
         for metric in (
@@ -81,6 +119,8 @@ def _comparison_row(repair_scale, crews, by_mechanism):
             "high_utilization_edge_periods",
             "capacity_blocked_tons",
             "total_vehicle_trips",
+            "mean_observed_repair_efficiency",
+            "mean_repair_progress_forecast_mae",
         ):
             row[f"{name}_{metric}"] = summary[metric]
 
@@ -99,22 +139,35 @@ def _comparison_row(repair_scale, crews, by_mechanism):
 def run_cli():
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, default=1)
+    parser.add_argument("--seeds", type=int, default=1)
     parser.add_argument(
         "--capacity-scale",
         type=float,
         default=1.0,
         help="Multiplier applied to every edge-period throughput capacity.",
     )
+    parser.add_argument(
+        "--repair-efficiency-deviation",
+        type=float,
+        default=0.30,
+        help="Uniform repair-efficiency deviation around 1.0.",
+    )
     parser.add_argument("--output-dir", default="outputs/dynamic_grid")
     args = parser.parse_args()
     if args.capacity_scale <= 0:
         parser.error("--capacity-scale must be greater than zero")
+    if args.seeds <= 0:
+        parser.error("--seeds must be greater than zero")
+    if not 0.0 <= args.repair_efficiency_deviation < 1.0:
+        parser.error("--repair-efficiency-deviation must be in [0, 1)")
     rows = run_grid(
         Path(args.output_dir),
         seed=args.seed,
+        seeds=args.seeds,
         capacity_scale=args.capacity_scale,
+        repair_efficiency_deviation=args.repair_efficiency_deviation,
     )
-    print(f"wrote {len(rows)} scenarios to {args.output_dir}")
+    print(f"wrote {len(rows)} seed-resource scenarios to {args.output_dir}")
 
 
 if __name__ == "__main__":

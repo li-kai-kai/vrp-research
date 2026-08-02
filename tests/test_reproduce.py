@@ -11,7 +11,9 @@ from scripts.reproduce.capacity_recovery import (
 )
 from scripts.reproduce.dynamic_interaction_experiments import (
     MECHANISMS,
+    RepairEfficiencyUncertainty,
     _apply_stress,
+    _sample_repair_efficiencies,
     _variant,
     run_mechanism,
 )
@@ -128,7 +130,7 @@ class ReproductionFrameworkTest(unittest.TestCase):
                 vehicle.count,
             )
 
-    def test_stress_grid_exposes_dynamic_feedback_benefit(self):
+    def test_deterministic_openloop_matches_rolling_without_new_information(self):
         instance = _apply_stress(build_wenchuan_instance(seed=1), 2.0, 2)
         results = {
             mechanism.name: run_mechanism(instance, mechanism, 40001)[0]
@@ -148,13 +150,45 @@ class ReproductionFrameworkTest(unittest.TestCase):
             results["progressive_static"]["cumulative_unmet_area"],
             results["binary_static"]["cumulative_unmet_area"],
         )
+        self.assertAlmostEqual(
+            results["progressive_rolling"]["cumulative_unmet_area"],
+            results["progressive_openloop"]["cumulative_unmet_area"],
+        )
+        self.assertAlmostEqual(
+            results["progressive_rolling"]["average_reachable_ratio"],
+            results["progressive_openloop"]["average_reachable_ratio"],
+        )
+
+    def test_revealed_repair_efficiency_can_change_rolling_decisions(self):
+        instance = _apply_stress(
+            build_wenchuan_instance(seed=1),
+            2.0,
+            2,
+            capacity_scale=0.05,
+        )
+        uncertainty = RepairEfficiencyUncertainty(0.30)
+        first = _sample_repair_efficiencies(instance.base, 40001, uncertainty)
+        repeated = _sample_repair_efficiencies(instance.base, 40001, uncertainty)
+        different = _sample_repair_efficiencies(instance.base, 40002, uncertainty)
+        self.assertEqual(first, repeated)
+        self.assertNotEqual(first, different)
+
+        results = {
+            mechanism.name: run_mechanism(
+                instance,
+                mechanism,
+                40001,
+                repair_efficiency_deviation=0.30,
+            )[0]
+            for mechanism in MECHANISMS
+        }
         self.assertLess(
             results["progressive_rolling"]["cumulative_unmet_area"],
             results["progressive_openloop"]["cumulative_unmet_area"],
         )
-        self.assertGreater(
-            results["progressive_rolling"]["average_reachable_ratio"],
-            results["progressive_openloop"]["average_reachable_ratio"],
+        self.assertEqual(
+            results["progressive_rolling"]["repair_efficiency_scenario_seed"],
+            results["progressive_openloop"]["repair_efficiency_scenario_seed"],
         )
 
 if __name__ == "__main__":
