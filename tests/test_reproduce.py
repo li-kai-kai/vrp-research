@@ -5,7 +5,10 @@ import networkx as nx
 from scripts.reproduce.dispatch import dispatch_relief
 from scripts.reproduce.instance_generator import generate_random_instance
 from scripts.reproduce.metrics import evaluate_solution
-from scripts.reproduce.capacity_recovery import build_wenchuan_instance
+from scripts.reproduce.capacity_recovery import (
+    _dispatch_with_vehicle_types,
+    build_wenchuan_instance,
+)
 from scripts.reproduce.dynamic_interaction_experiments import (
     MECHANISMS,
     _apply_stress,
@@ -99,6 +102,32 @@ class ReproductionFrameworkTest(unittest.TestCase):
         self.assertTrue(all(vehicle.min_recovery_progress == 1.0 for vehicle in instance.vehicles))
         self.assertEqual([stage.capacity_ratio for stage in instance.recovery_stages], [0.0, 1.0])
 
+    def test_edge_period_capacity_is_enforced(self):
+        instance = build_wenchuan_instance(seed=1)
+        instance.capacity_scale = 0.001
+        progress = {edge_id: 1.0 for edge_id in instance.base.damaged_edges}
+        priority = [
+            (supplier, demand)
+            for supplier in instance.base.suppliers
+            for demand in instance.base.demands
+        ]
+        result = _dispatch_with_vehicle_types(
+            instance,
+            priority,
+            progress,
+            dict(instance.base.supply_amounts),
+            dict(instance.base.demand_amounts),
+        )
+
+        self.assertLessEqual(result["max_edge_utilization"], 1.0 + 1e-9)
+        self.assertGreater(result["max_edge_utilization"], 0.0)
+        self.assertGreater(result["capacity_blocked_tons"], 0.0)
+        for vehicle in instance.vehicles:
+            self.assertLessEqual(
+                result["vehicle_trips"][vehicle.vehicle_type],
+                vehicle.count,
+            )
+
     def test_stress_grid_exposes_dynamic_feedback_benefit(self):
         instance = _apply_stress(build_wenchuan_instance(seed=1), 2.0, 2)
         results = {
@@ -106,17 +135,26 @@ class ReproductionFrameworkTest(unittest.TestCase):
             for mechanism in MECHANISMS
         }
 
+        self.assertEqual(
+            set(results),
+            {
+                "binary_static",
+                "progressive_static",
+                "progressive_openloop",
+                "progressive_rolling",
+            },
+        )
         self.assertLess(
             results["progressive_static"]["cumulative_unmet_area"],
             results["binary_static"]["cumulative_unmet_area"],
         )
         self.assertLess(
             results["progressive_rolling"]["cumulative_unmet_area"],
-            results["progressive_static"]["cumulative_unmet_area"],
+            results["progressive_openloop"]["cumulative_unmet_area"],
         )
         self.assertGreater(
             results["progressive_rolling"]["average_reachable_ratio"],
-            results["progressive_static"]["average_reachable_ratio"],
+            results["progressive_openloop"]["average_reachable_ratio"],
         )
 
 if __name__ == "__main__":

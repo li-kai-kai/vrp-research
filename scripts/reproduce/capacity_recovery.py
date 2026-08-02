@@ -25,8 +25,9 @@ class VehicleProfile:
     vehicle_type: int
     capacity_ton: float
     count: int
-    pcu_impact: float
+    occupied_od_pcu_h: float
     min_recovery_progress: float
+    pcu_per_vehicle: float
     speed_factor: float = 1.0
 
 
@@ -36,6 +37,7 @@ class RecoveryStage:
     upper: float
     capacity_ratio: float
     label: str
+    speed_ratio: float
 
 
 @dataclass
@@ -43,6 +45,8 @@ class CapacityExperimentInstance:
     base: RandomInstance
     vehicles: list[VehicleProfile]
     recovery_stages: list[RecoveryStage]
+    capacity_scale: float = 1.0
+    repair_time_weight: float = 0.05
 
 
 @dataclass
@@ -105,6 +109,8 @@ class CapacityExperimentResult:
             "scenario": self.scenario,
             "seed": self.seed,
             "algorithm": self.algorithm,
+            "capacity_scale": self.metrics["capacity_scale"],
+            "repair_time_weight": self.metrics["repair_time_weight"],
             "unmet_area": self.objectives[0],
             "time_cost": self.objectives[1],
             "neg_min_satisfaction": self.objectives[2],
@@ -114,6 +120,10 @@ class CapacityExperimentResult:
             "final_repaired_ratio": self.metrics["final_repaired_ratio"],
             "partial_recovery_edge_periods": self.metrics["partial_recovery_edge_periods"],
             "small_vehicle_share": self.metrics["small_vehicle_share"],
+            "max_edge_utilization": self.metrics["max_edge_utilization"],
+            "high_utilization_edge_periods": self.metrics["high_utilization_edge_periods"],
+            "capacity_blocked_tons": self.metrics["capacity_blocked_tons"],
+            "total_vehicle_trips": self.metrics["total_vehicle_trips"],
             "runtime_seconds": self.runtime_seconds,
         }
 
@@ -129,19 +139,47 @@ class CapacityExperimentResult:
 
 
 DEFAULT_RECOVERY_STAGES = [
-    RecoveryStage(0.0, 0.30, 0.0, "blocked"),
-    RecoveryStage(0.30, 0.60, 0.30, "temporary"),
-    RecoveryStage(0.60, 0.80, 0.60, "one_lane"),
-    RecoveryStage(0.80, 1.0, 0.80, "basic"),
-    RecoveryStage(1.0, 1.01, 1.0, "full"),
+    RecoveryStage(0.0, 0.30, 0.0, "blocked", 0.0),
+    RecoveryStage(0.30, 0.60, 0.30, "temporary", 0.30),
+    RecoveryStage(0.60, 0.80, 0.60, "one_lane", 0.60),
+    RecoveryStage(0.80, 1.0, 0.80, "basic", 0.80),
+    RecoveryStage(1.0, 1.01, 1.0, "full", 1.0),
 ]
 
 
 DEFAULT_VEHICLES = [
-    VehicleProfile(1, capacity_ton=5.0, count=150, pcu_impact=300, min_recovery_progress=0.30),
-    VehicleProfile(2, capacity_ton=10.0, count=110, pcu_impact=500, min_recovery_progress=0.50),
-    VehicleProfile(3, capacity_ton=15.0, count=70, pcu_impact=800, min_recovery_progress=0.70),
-    VehicleProfile(4, capacity_ton=20.0, count=40, pcu_impact=1000, min_recovery_progress=0.80),
+    VehicleProfile(
+        1,
+        capacity_ton=5.0,
+        count=150,
+        occupied_od_pcu_h=300.0,
+        min_recovery_progress=0.30,
+        pcu_per_vehicle=1.0,
+    ),
+    VehicleProfile(
+        2,
+        capacity_ton=10.0,
+        count=110,
+        occupied_od_pcu_h=500.0,
+        min_recovery_progress=0.50,
+        pcu_per_vehicle=1.5,
+    ),
+    VehicleProfile(
+        3,
+        capacity_ton=15.0,
+        count=70,
+        occupied_od_pcu_h=800.0,
+        min_recovery_progress=0.70,
+        pcu_per_vehicle=2.0,
+    ),
+    VehicleProfile(
+        4,
+        capacity_ton=20.0,
+        count=40,
+        occupied_od_pcu_h=1000.0,
+        min_recovery_progress=0.80,
+        pcu_per_vehicle=2.5,
+    ),
 ]
 
 
@@ -333,6 +371,10 @@ def evaluate_capacity_solution(
     reachable_ratios: list[float] = []
     partial_recovery_edge_periods = 0
     vehicle_ton_by_type = {vehicle.vehicle_type: 0.0 for vehicle in instance.vehicles}
+    max_edge_utilizations: list[float] = []
+    high_utilization_edge_periods = 0
+    capacity_blocked_tons = 0.0
+    total_vehicle_trips = 0
 
     for period in range(1, base.periods + 1):
         time_minutes = period * base.eta_minutes
@@ -357,6 +399,10 @@ def evaluate_capacity_solution(
         total_delivery_time += period_result["delivery_time"]
         for vehicle_type, amount in period_result["vehicle_tons"].items():
             vehicle_ton_by_type[vehicle_type] += amount
+        max_edge_utilizations.append(period_result["max_edge_utilization"])
+        high_utilization_edge_periods += period_result["high_utilization_edges"]
+        capacity_blocked_tons += period_result["capacity_blocked_tons"]
+        total_vehicle_trips += sum(period_result["vehicle_trips"].values())
         reachable_ratios.append(period_result["reachable_count"] / max(len(base.demands), 1))
         total_delivered = sum(min(delivered[d], base.demand_amounts[d]) for d in base.demands)
         total_satisfaction = total_delivered / max(base.total_demand, 1e-9)
@@ -382,13 +428,18 @@ def evaluate_capacity_solution(
         if vehicle_type <= 2
     )
     all_vehicle_tons = sum(vehicle_ton_by_type.values())
-    time_cost = total_delivery_time + 0.05 * total_repair_work
+    time_cost = (
+        total_delivery_time
+        + instance.repair_time_weight * total_repair_work
+    )
     objectives = (
         unmet_area,
         time_cost,
         -final_min_satisfaction,
     )
     metrics = {
+        "capacity_scale": instance.capacity_scale,
+        "repair_time_weight": instance.repair_time_weight,
         "final_total_satisfaction": final_total_satisfaction,
         "final_min_satisfaction": final_min_satisfaction,
         "average_reachable_ratio": sum(reachable_ratios) / max(len(reachable_ratios), 1),
@@ -397,6 +448,10 @@ def evaluate_capacity_solution(
         "total_repair_work": total_repair_work,
         "partial_recovery_edge_periods": float(partial_recovery_edge_periods),
         "small_vehicle_share": small_vehicle_tons / max(all_vehicle_tons, 1e-9),
+        "max_edge_utilization": max(max_edge_utilizations, default=0.0),
+        "high_utilization_edge_periods": float(high_utilization_edge_periods),
+        "capacity_blocked_tons": capacity_blocked_tons,
+        "total_vehicle_trips": float(total_vehicle_trips),
     }
     return objectives, metrics
 
@@ -455,10 +510,12 @@ def _dispatch_with_vehicle_types(
     remaining_demand: dict[int, float],
 ) -> dict[str, Any]:
     base = instance.base
-    vehicle_capacity_left = {
-        vehicle.vehicle_type: vehicle.capacity_ton * vehicle.count
+    vehicle_trips_left = {
+        vehicle.vehicle_type: vehicle.count
         for vehicle in instance.vehicles
     }
+    edge_capacity = _period_edge_capacities(instance, progress)
+    residual_edge_capacity = dict(edge_capacity)
     shortest_by_vehicle = {
         vehicle.vehicle_type: _shortest_paths_for_vehicle(instance, progress, vehicle)
         for vehicle in instance.vehicles
@@ -469,6 +526,8 @@ def _dispatch_with_vehicle_types(
 
     delivered = {demand: 0.0 for demand in base.demands}
     vehicle_tons = {vehicle.vehicle_type: 0.0 for vehicle in instance.vehicles}
+    vehicle_trips = {vehicle.vehicle_type: 0 for vehicle in instance.vehicles}
+    capacity_blocked_demands: set[int] = set()
     delivery_time = 0.0
     reachable_demands = [
         demand
@@ -476,7 +535,10 @@ def _dispatch_with_vehicle_types(
         if demand in reachable and remaining_demand.get(demand, 0.0) > 1e-9
     ]
     available_supply = sum(max(0.0, remaining_supply.get(supplier, 0.0)) for supplier in base.suppliers)
-    available_vehicle_capacity = sum(max(0.0, value) for value in vehicle_capacity_left.values())
+    available_vehicle_capacity = sum(
+        vehicle.capacity_ton * vehicle_trips_left[vehicle.vehicle_type]
+        for vehicle in instance.vehicles
+    )
     fair_resource = min(available_supply, available_vehicle_capacity)
     current_delivered = {
         demand: max(0.0, base.demand_amounts[demand] - remaining_demand.get(demand, 0.0))
@@ -503,11 +565,15 @@ def _dispatch_with_vehicle_types(
         instance,
         dispatch_priority,
         shortest_by_vehicle,
+        progress,
         remaining_supply,
-        vehicle_capacity_left,
+        vehicle_trips_left,
+        residual_edge_capacity,
         delivered,
         vehicle_tons,
+        vehicle_trips,
         fair_targets,
+        capacity_blocked_demands,
     )
     residual_targets = {
         demand: min(
@@ -520,11 +586,24 @@ def _dispatch_with_vehicle_types(
         instance,
         dispatch_priority,
         shortest_by_vehicle,
+        progress,
         remaining_supply,
-        vehicle_capacity_left,
+        vehicle_trips_left,
+        residual_edge_capacity,
         delivered,
         vehicle_tons,
+        vehicle_trips,
         residual_targets,
+        capacity_blocked_demands,
+    )
+
+    max_edge_utilization, high_utilization_edges = _edge_utilization_stats(
+        edge_capacity,
+        residual_edge_capacity,
+    )
+    capacity_blocked_tons = sum(
+        max(0.0, residual_targets.get(demand, 0.0) - delivered.get(demand, 0.0))
+        for demand in capacity_blocked_demands
     )
 
     return {
@@ -532,6 +611,10 @@ def _dispatch_with_vehicle_types(
         "delivery_time": delivery_time,
         "reachable_count": len(reachable),
         "vehicle_tons": vehicle_tons,
+        "vehicle_trips": vehicle_trips,
+        "max_edge_utilization": max_edge_utilization,
+        "high_utilization_edges": high_utilization_edges,
+        "capacity_blocked_tons": capacity_blocked_tons,
     }
 
 
@@ -565,11 +648,15 @@ def _allocate_vehicle_aware(
     instance: CapacityExperimentInstance,
     dispatch_priority: list[tuple[int, int]],
     shortest_by_vehicle: dict[int, dict[tuple[int, int], tuple[float, list[int]]]],
+    progress: dict[int, float],
     remaining_supply: dict[int, float],
-    vehicle_capacity_left: dict[int, float],
+    vehicle_trips_left: dict[int, int],
+    residual_edge_capacity: dict[frozenset[Any], float],
     delivered: dict[int, float],
     vehicle_tons: dict[int, float],
+    vehicle_trips: dict[int, int],
     targets: dict[int, float],
+    capacity_blocked_demands: set[int],
 ) -> float:
     delivery_time = 0.0
     for supplier, demand in dispatch_priority:
@@ -583,32 +670,158 @@ def _allocate_vehicle_aware(
             and remaining_supply.get(supplier, 0.0) > 1e-9
         ):
             candidates = []
+            topology_exists_but_capacity_blocks = False
             for vehicle in instance.vehicles:
-                if vehicle_capacity_left[vehicle.vehicle_type] <= 1e-9:
+                if vehicle_trips_left[vehicle.vehicle_type] <= 0:
                     continue
-                path_info = shortest_by_vehicle[vehicle.vehicle_type].get((supplier, demand))
+                topology_path = shortest_by_vehicle[vehicle.vehicle_type].get((supplier, demand))
+                if topology_path is None:
+                    continue
+                path_info = _capacity_feasible_shortest_path(
+                    instance,
+                    progress,
+                    vehicle,
+                    supplier,
+                    demand,
+                    residual_edge_capacity,
+                )
                 if path_info is None:
+                    topology_exists_but_capacity_blocks = True
                     continue
-                candidates.append((path_info[0], vehicle, path_info[1]))
+                travel_time, path = path_info
+                path_capacity_trips = _path_trip_capacity(
+                    path,
+                    residual_edge_capacity,
+                    vehicle.pcu_per_vehicle,
+                )
+                available_trips = min(
+                    vehicle_trips_left[vehicle.vehicle_type],
+                    path_capacity_trips,
+                )
+                if available_trips <= 0:
+                    topology_exists_but_capacity_blocks = True
+                    continue
+                max_tons = available_trips * vehicle.capacity_ton
+                amount = min(
+                    remaining_supply[supplier],
+                    targets[demand] - delivered[demand],
+                    max_tons,
+                )
+                if amount <= 1e-9:
+                    continue
+                trips = max(1, math.ceil(amount / vehicle.capacity_ton))
+                candidates.append(
+                    (travel_time, -vehicle.capacity_ton, vehicle, path, amount, trips)
+                )
             if not candidates:
+                if topology_exists_but_capacity_blocks:
+                    capacity_blocked_demands.add(demand)
                 break
 
-            candidates.sort(key=lambda item: (item[0], -item[1].capacity_ton))
-            travel_time, vehicle, _path = candidates[0]
-            amount = min(
-                remaining_supply[supplier],
-                targets[demand] - delivered[demand],
-                vehicle_capacity_left[vehicle.vehicle_type],
-            )
-            if amount <= 1e-9:
-                break
-            trips = max(1, math.ceil(amount / vehicle.capacity_ton))
+            candidates.sort(key=lambda item: (item[0], item[1], item[2].vehicle_type))
+            travel_time, _neg_capacity, vehicle, path, amount, trips = candidates[0]
             remaining_supply[supplier] -= amount
-            vehicle_capacity_left[vehicle.vehicle_type] -= amount
+            vehicle_trips_left[vehicle.vehicle_type] -= trips
             delivered[demand] += amount
             vehicle_tons[vehicle.vehicle_type] += amount
+            vehicle_trips[vehicle.vehicle_type] += trips
+            capacity_use = trips * vehicle.pcu_per_vehicle
+            for u, v in zip(path, path[1:]):
+                edge_key = _edge_key(u, v)
+                residual_edge_capacity[edge_key] = max(
+                    0.0,
+                    residual_edge_capacity.get(edge_key, 0.0) - capacity_use,
+                )
             delivery_time += travel_time * trips
     return delivery_time
+
+
+def _capacity_feasible_shortest_path(
+    instance: CapacityExperimentInstance,
+    progress: dict[int, float],
+    vehicle: VehicleProfile,
+    supplier: int,
+    demand: int,
+    residual_edge_capacity: dict[frozenset[Any], float],
+) -> tuple[float, list[int]] | None:
+    graph = _build_vehicle_graph(
+        instance,
+        progress,
+        vehicle,
+        residual_edge_capacity=residual_edge_capacity,
+    )
+    try:
+        travel_time, path = nx.single_source_dijkstra(
+            graph,
+            supplier,
+            demand,
+            weight="weight",
+        )
+    except (nx.NetworkXNoPath, nx.NodeNotFound):
+        return None
+    return float(travel_time), path
+
+
+def _path_trip_capacity(
+    path: list[int],
+    residual_edge_capacity: dict[frozenset[Any], float],
+    pcu_per_vehicle: float,
+) -> int:
+    if len(path) < 2 or pcu_per_vehicle <= 0:
+        return 0
+    return max(
+        0,
+        math.floor(
+            min(
+                residual_edge_capacity.get(_edge_key(u, v), 0.0)
+                for u, v in zip(path, path[1:])
+            )
+            / pcu_per_vehicle
+            + 1e-9
+        ),
+    )
+
+
+def _period_edge_capacities(
+    instance: CapacityExperimentInstance,
+    progress: dict[int, float],
+) -> dict[frozenset[Any], float]:
+    if instance.capacity_scale <= 0:
+        raise ValueError("capacity_scale must be greater than zero")
+    capacities: dict[frozenset[Any], float] = {}
+    for u, v, data in instance.base.graph.edges(data=True):
+        damage_id = data.get("damage_id")
+        ratio = (
+            1.0
+            if damage_id is None
+            else _capacity_ratio(instance.recovery_stages, progress.get(damage_id, 0.0))
+        )
+        capacities[_edge_key(u, v)] = (
+            float(data.get("capacity", 1000.0))
+            * ratio
+            * instance.base.eta_hours
+            * instance.capacity_scale
+        )
+    return capacities
+
+
+def _edge_utilization_stats(
+    initial: dict[frozenset[Any], float],
+    residual: dict[frozenset[Any], float],
+) -> tuple[float, int]:
+    utilizations = [
+        (capacity - residual.get(edge, 0.0)) / capacity
+        for edge, capacity in initial.items()
+        if capacity > 1e-9
+    ]
+    return (
+        max(utilizations, default=0.0),
+        sum(value >= 0.80 - 1e-9 for value in utilizations),
+    )
+
+
+def _edge_key(u: Any, v: Any) -> frozenset[Any]:
+    return frozenset((u, v))
 
 
 def _shortest_paths_for_vehicle(
@@ -630,6 +843,8 @@ def _build_vehicle_graph(
     instance: CapacityExperimentInstance,
     progress: dict[int, float],
     vehicle: VehicleProfile,
+    *,
+    residual_edge_capacity: dict[frozenset[Any], float] | None = None,
 ) -> nx.Graph:
     graph = nx.Graph()
     graph.add_nodes_from(instance.base.graph.nodes(data=True))
@@ -637,20 +852,38 @@ def _build_vehicle_graph(
         damage_id = data.get("damage_id")
         if damage_id is None:
             ratio = 1.0
+            speed_ratio = 1.0
             passable = True
         else:
             p = progress.get(damage_id, 0.0)
             ratio = _capacity_ratio(instance.recovery_stages, p)
-            passable = p >= vehicle.min_recovery_progress and ratio > 0.0
+            speed_ratio = _speed_ratio(instance.recovery_stages, p)
+            passable = (
+                p >= vehicle.min_recovery_progress
+                and ratio > 0.0
+                and speed_ratio > 0.0
+            )
         if not passable:
             continue
+        edge_key = _edge_key(u, v)
+        if (
+            residual_edge_capacity is not None
+            and residual_edge_capacity.get(edge_key, 0.0)
+            < vehicle.pcu_per_vehicle - 1e-9
+        ):
+            continue
         free_time = float(data.get("free_time", data.get("weight", 1.0)))
-        weight = free_time / max(ratio, 0.1) / max(vehicle.speed_factor, 1e-9)
+        weight = free_time / max(speed_ratio, 0.1) / max(vehicle.speed_factor, 1e-9)
         graph.add_edge(
             u,
             v,
             weight=weight,
-            capacity=float(data.get("capacity", 1000.0)) * ratio,
+            period_capacity_pcu=(
+                float(data.get("capacity", 1000.0))
+                * ratio
+                * instance.base.eta_hours
+                * instance.capacity_scale
+            ),
         )
     return graph
 
@@ -661,6 +894,15 @@ def _capacity_ratio(stages: list[RecoveryStage], progress: float) -> float:
     for stage in stages:
         if stage.lower <= progress < stage.upper:
             return stage.capacity_ratio
+    return 0.0
+
+
+def _speed_ratio(stages: list[RecoveryStage], progress: float) -> float:
+    if progress >= 1.0:
+        return 1.0
+    for stage in stages:
+        if stage.lower <= progress < stage.upper:
+            return stage.speed_ratio
     return 0.0
 
 
@@ -982,6 +1224,10 @@ def _convergence_row(generation: int, individual: CapacityIndividual) -> dict[st
 
 def run_cli() -> None:
     args = _parse_args()
+    if args.capacity_scale <= 0:
+        raise SystemExit("--capacity-scale must be greater than zero")
+    if args.repair_time_weight < 0:
+        raise SystemExit("--repair-time-weight must be non-negative")
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     config = CapacityNSGAConfig(
@@ -998,6 +1244,8 @@ def run_cli() -> None:
                 instance = build_simulation_instance(seed, num_nodes=args.sim_nodes)
             else:
                 instance = build_wenchuan_instance(seed)
+            instance.capacity_scale = args.capacity_scale
+            instance.repair_time_weight = args.repair_time_weight
             print(
                 f"Solving {scenario} seed={seed} "
                 f"nodes={instance.base.num_nodes} damaged={len(instance.base.damaged_edges)}"
@@ -1011,6 +1259,7 @@ def run_cli() -> None:
                 f"min_sat={summary['final_min_satisfaction']:.3f}, "
                 f"repair={summary['final_repaired_ratio']:.3f}, "
                 f"partial={summary['partial_recovery_edge_periods']:.0f}, "
+                f"max_util={summary['max_edge_utilization']:.3f}, "
                 f"time={summary['runtime_seconds']:.2f}s"
             )
     _write_outputs(results, output_dir)
@@ -1029,6 +1278,18 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--generations", type=int, default=30)
     parser.add_argument("--alns-iterations", type=int, default=12)
     parser.add_argument("--alns-probability", type=float, default=0.35)
+    parser.add_argument(
+        "--capacity-scale",
+        type=float,
+        default=1.0,
+        help="Multiplier applied to every edge-period throughput capacity.",
+    )
+    parser.add_argument(
+        "--repair-time-weight",
+        type=float,
+        default=0.05,
+        help="Weight lambda_R applied to repair work in the time objective.",
+    )
     parser.add_argument(
         "--output-dir",
         default="outputs/capacity_recovery",

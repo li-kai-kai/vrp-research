@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import math
-import random
 import sys
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -28,18 +26,18 @@ from scripts.reproduce.capacity_recovery import (
 class Mechanism:
     name: str
     progressive: bool
-    rolling_feedback: bool
+    repair_policy: str
 
 
 MECHANISMS = (
-    Mechanism("binary_static", False, False),
-    Mechanism("progressive_static", True, False),
-    Mechanism("progressive_rolling", True, True),
+    Mechanism("binary_static", False, "shortest_static"),
+    Mechanism("progressive_static", True, "shortest_static"),
+    Mechanism("progressive_openloop", True, "demand_openloop"),
+    Mechanism("progressive_rolling", True, "demand_rolling"),
 )
 
 
 def run_mechanism(instance, mechanism, seed):
-    rng = random.Random(seed)
     variant = _variant(instance, mechanism.progressive)
     base = variant.base
     priority = [(s, d) for s in base.suppliers for d in base.demands]
@@ -51,6 +49,9 @@ def run_mechanism(instance, mechanism, seed):
     schedule = _decode_timed_schedule(
         base, order, [idx % base.repair_crews for idx in range(len(order))]
     )
+    openloop_plan = None
+    if mechanism.repair_policy == "demand_openloop":
+        openloop_plan = _build_openloop_plan(variant, priority)
     progress = {edge_id: 0.0 for edge_id in base.damaged_edges}
     remaining_supply = dict(base.supply_amounts)
     delivered = {demand: 0.0 for demand in base.demands}
@@ -60,10 +61,18 @@ def run_mechanism(instance, mechanism, seed):
     path_switches = 0
 
     for period in range(1, base.periods + 1):
-        if mechanism.rolling_feedback:
-            selected = _rolling_step(
-                variant, progress, delivered, base.eta_minutes, rng
+        if mechanism.repair_policy == "demand_rolling":
+            selected = _objective_aligned_step(
+                variant,
+                progress,
+                delivered,
+                remaining_supply,
+                priority,
+                base.eta_minutes,
             )
+        elif mechanism.repair_policy == "demand_openloop":
+            selected, planned_progress = openloop_plan[period - 1]
+            progress = dict(planned_progress)
         else:
             progress = _repair_progress_by_damage(
                 base, schedule, period * base.eta_minutes
@@ -111,6 +120,10 @@ def run_mechanism(instance, mechanism, seed):
             "min_satisfaction": min_sat,
             "path_switches": switches,
             "delivered": sum(dispatch["delivered"].values()),
+            "vehicle_trips": sum(dispatch["vehicle_trips"].values()),
+            "max_edge_utilization": dispatch["max_edge_utilization"],
+            "high_utilization_edges": dispatch["high_utilization_edges"],
+            "capacity_blocked_tons": dispatch["capacity_blocked_tons"],
         })
 
     summary = {
@@ -125,6 +138,10 @@ def run_mechanism(instance, mechanism, seed):
         ),
         "path_switches": path_switches,
         "partial_edge_periods": sum(r["partial_edges"] for r in rows),
+        "max_edge_utilization": max(r["max_edge_utilization"] for r in rows),
+        "high_utilization_edge_periods": sum(r["high_utilization_edges"] for r in rows),
+        "capacity_blocked_tons": sum(r["capacity_blocked_tons"] for r in rows),
+        "total_vehicle_trips": sum(r["vehicle_trips"] for r in rows),
     }
     return summary, rows
 
@@ -134,18 +151,57 @@ def _variant(instance, progressive):
         return instance
     vehicles = [
         VehicleProfile(
-            v.vehicle_type, v.capacity_ton, v.count, v.pcu_impact, 1.0, v.speed_factor
+            vehicle_type=v.vehicle_type,
+            capacity_ton=v.capacity_ton,
+            count=v.count,
+            occupied_od_pcu_h=v.occupied_od_pcu_h,
+            min_recovery_progress=1.0,
+            pcu_per_vehicle=v.pcu_per_vehicle,
+            speed_factor=v.speed_factor,
         )
         for v in instance.vehicles
     ]
     stages = [
-        RecoveryStage(0.0, 1.0, 0.0, "blocked"),
-        RecoveryStage(1.0, 1.01, 1.0, "full"),
+        RecoveryStage(0.0, 1.0, 0.0, "blocked", 0.0),
+        RecoveryStage(1.0, 1.01, 1.0, "full", 1.0),
     ]
-    return CapacityExperimentInstance(instance.base, vehicles, stages)
+    return CapacityExperimentInstance(
+        instance.base,
+        vehicles,
+        stages,
+        capacity_scale=instance.capacity_scale,
+        repair_time_weight=instance.repair_time_weight,
+    )
 
 
-def _rolling_step(instance, progress, delivered, work_minutes, rng):
+def _build_openloop_plan(instance, dispatch_priority):
+    """Create a period-by-period repair plan using only the initial demand state."""
+    base = instance.base
+    planned_progress = {edge_id: 0.0 for edge_id in base.damaged_edges}
+    initial_delivered = {demand: 0.0 for demand in base.demands}
+    initial_supply = dict(base.supply_amounts)
+    plan = []
+    for _period in range(base.periods):
+        selected = _objective_aligned_step(
+            instance,
+            planned_progress,
+            initial_delivered,
+            initial_supply,
+            dispatch_priority,
+            base.eta_minutes,
+        )
+        plan.append((selected, dict(planned_progress)))
+    return plan
+
+
+def _objective_aligned_step(
+    instance,
+    progress,
+    delivered,
+    remaining_supply,
+    dispatch_priority,
+    work_minutes,
+):
     base = instance.base
     chosen = []
     active = set()
@@ -158,13 +214,20 @@ def _rolling_step(instance, progress, delivered, work_minutes, rng):
             ]
             if not candidates:
                 break
-            remaining = {
-                d: max(0.0, base.demand_amounts[d] - delivered[d])
-                for d in base.demands
-            }
             scored = [
-                (_marginal_score(instance, progress, remaining, edge_id, budget),
-                 rng.random(), edge_id)
+                (
+                    _candidate_objective_gain(
+                        instance,
+                        progress,
+                        delivered,
+                        remaining_supply,
+                        dispatch_priority,
+                        edge_id,
+                        budget,
+                    ),
+                    -edge_id,
+                    edge_id,
+                )
                 for edge_id in candidates
             ]
             best = max(scored)[2]
@@ -181,9 +244,10 @@ def _rolling_step(instance, progress, delivered, work_minutes, rng):
     return chosen
 
 
-def _apply_stress(instance, repair_scale, crews):
+def _apply_stress(instance, repair_scale, crews, capacity_scale=1.0):
     base = instance.base
     base.repair_crews = crews
+    instance.capacity_scale = capacity_scale
     base.damaged_edges = {
         edge_id: replace(edge, repair_time=edge.repair_time * repair_scale)
         for edge_id, edge in base.damaged_edges.items()
@@ -193,31 +257,76 @@ def _apply_stress(instance, repair_scale, crews):
     return instance
 
 
-def _marginal_score(instance, progress, remaining, edge_id, work_minutes):
-    before = _access_value(instance, progress, remaining)
+def _candidate_objective_gain(
+    instance,
+    progress,
+    delivered,
+    remaining_supply,
+    dispatch_priority,
+    edge_id,
+    work_minutes,
+):
+    """Return lexicographic gains aligned with F1, F3, then delivery-time F2."""
+    base = instance.base
+    remaining_demand = {
+        demand: max(0.0, base.demand_amounts[demand] - delivered[demand])
+        for demand in base.demands
+    }
+    before_dispatch = _dispatch_with_vehicle_types(
+        instance,
+        dispatch_priority,
+        progress,
+        dict(remaining_supply),
+        remaining_demand,
+    )
     after_progress = dict(progress)
-    edge = instance.base.damaged_edges[edge_id]
+    edge = base.damaged_edges[edge_id]
+    available_work = min(
+        float(work_minutes),
+        (1.0 - progress[edge_id]) * edge.repair_time,
+    )
     after_progress[edge_id] = min(
-        1.0, after_progress[edge_id] + work_minutes / edge.repair_time
+        1.0,
+        after_progress[edge_id] + available_work / max(edge.repair_time, 1e-9),
     )
-    after = _access_value(instance, after_progress, remaining)
-    threshold_gain = sum(
-        v.capacity_ton * v.count for v in instance.vehicles
-        if progress[edge_id] < v.min_recovery_progress <= after_progress[edge_id]
+    after_dispatch = _dispatch_with_vehicle_types(
+        instance,
+        dispatch_priority,
+        after_progress,
+        dict(remaining_supply),
+        remaining_demand,
     )
-    return after - before + 1e-4 * threshold_gain - 1e-6 * edge.repair_time
+
+    before_unmet, before_min = _post_dispatch_service_metrics(
+        base, delivered, before_dispatch["delivered"]
+    )
+    after_unmet, after_min = _post_dispatch_service_metrics(
+        base, delivered, after_dispatch["delivered"]
+    )
+    return (
+        before_unmet - after_unmet,
+        after_min - before_min,
+        before_dispatch["delivery_time"] - after_dispatch["delivery_time"],
+    )
 
 
-def _access_value(instance, progress, remaining):
-    best = {}
-    for vehicle in instance.vehicles:
-        for (_, demand), (time_value, _) in _shortest_paths_for_vehicle(
-            instance, progress, vehicle
-        ).items():
-            best[demand] = min(best.get(demand, math.inf), time_value)
-    return sum(
-        remaining[d] / (1.0 + best[d]) for d in best if remaining[d] > 1e-9
+def _post_dispatch_service_metrics(base, delivered, period_delivery):
+    cumulative = {
+        demand: min(
+            base.demand_amounts[demand],
+            delivered[demand] + period_delivery.get(demand, 0.0),
+        )
+        for demand in base.demands
+    }
+    unmet = sum(
+        base.demand_amounts[demand] - cumulative[demand]
+        for demand in base.demands
     )
+    minimum_satisfaction = min(
+        cumulative[demand] / max(base.demand_amounts[demand], 1e-9)
+        for demand in base.demands
+    )
+    return unmet, minimum_satisfaction
 
 
 def _best_paths(instance, progress):
@@ -247,24 +356,34 @@ def run_cli():
     parser.add_argument("--sim-nodes", type=int, default=25)
     parser.add_argument("--repair-scale", type=float, default=1.0)
     parser.add_argument("--crews", type=int, default=3)
+    parser.add_argument("--capacity-scale", type=float, default=1.0)
     parser.add_argument("--output-dir", default="outputs/dynamic_interaction")
     args = parser.parse_args()
+    if args.capacity_scale <= 0:
+        parser.error("--capacity-scale must be greater than zero")
     summaries, periods = [], []
     for seed in range(args.seed_start, args.seed_start + args.seeds):
         instance = (
             build_wenchuan_instance(seed) if args.scenario == "wenchuan"
             else build_simulation_instance(seed, num_nodes=args.sim_nodes)
         )
-        instance = _apply_stress(instance, args.repair_scale, args.crews)
+        instance = _apply_stress(
+            instance,
+            args.repair_scale,
+            args.crews,
+            args.capacity_scale,
+        )
         for mechanism in MECHANISMS:
             summary, rows = run_mechanism(instance, mechanism, seed + 40000)
             summary["scenario"] = args.scenario
             summary["repair_scale"] = args.repair_scale
             summary["crews"] = args.crews
+            summary["capacity_scale"] = args.capacity_scale
             for row in rows:
                 row["scenario"] = args.scenario
                 row["repair_scale"] = args.repair_scale
                 row["crews"] = args.crews
+                row["capacity_scale"] = args.capacity_scale
             summaries.append(summary)
             periods.extend(rows)
             print(mechanism.name, seed, summary)
@@ -276,4 +395,3 @@ def run_cli():
 
 if __name__ == "__main__":
     run_cli()
-

@@ -92,7 +92,11 @@ uv run python scripts/reproduce/capacity_recovery.py \
   --pop-size 24 \
   --generations 20 \
   --alns-iterations 8 \
+  --capacity-scale 1.0 \
+  --repair-time-weight 0.05 \
   --output-dir outputs/capacity_recovery
 ```
 
-实验输出默认写入 `outputs/`。当前实现是可运行原型，不应直接作为论文最终结果；下一步需要补齐完整 Pareto 前沿、基线/消融组、多随机种子统计和 BPR 通行时间函数。
+当前原型已经同时执行车型通行阈值和边—周期救援车辆吞吐约束：每辆车按 `pcu_per_vehicle` 占用路径容量，每辆车每周期最多执行一趟；容量不足时会在残余容量路网中重算路径。`--capacity-scale` 用于容量压力敏感性，默认 1.0；0.05 和 0.02 可作为机制检查档位，但属于假设性压力参数。
+
+实验输出默认写入 `outputs/`。当前实现是可运行原型，不应直接作为论文最终结果；下一步需要补齐完整 Pareto 前沿、基线/消融组、多随机种子统计、车型 pcu 标定和车辆跨期周转。普通交通 OD 与流量驱动 BPR 拥堵仍未纳入。

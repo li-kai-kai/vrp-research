@@ -35,30 +35,33 @@
 
 为表达“抢通”和“完全修复”的差别，建议将每条受损路段的恢复过程拆成 4-5 个阶段。这里给出一个可复现实验用的默认表。
 
-| 恢复阶段编号 | 修复进度区间 `p_a^t` | 道路状态 | 容量恢复系数 `g(p_a^t)` | 管理含义 |
-|---:|---|---|---:|---|
-| 0 | `[0, 0.30)` | 完全中断 | 0.00 | 车辆不可通行 |
-| 1 | `[0.30, 0.60)` | 临时抢通 | 0.30 | 小型救援车可低速通行 |
-| 2 | `[0.60, 0.80)` | 单车道限行 | 0.60 | 小型车和中型车可通行 |
-| 3 | `[0.80, 1.00)` | 基本恢复 | 0.80 | 大部分货车可通行 |
-| 4 | `1.00` | 完全恢复 | 1.00 | 全部车辆按正常容量通行 |
+| 恢复阶段编号 | 修复进度区间 `p_a^t` | 道路状态 | 吞吐恢复系数 `g(p_a^t)` | 速度恢复系数 `s(p_a^t)` | 管理含义 |
+|---:|---|---|---:|---:|---|
+| 0 | `[0, 0.30)` | 完全中断 | 0.00 | 0.00 | 车辆不可通行 |
+| 1 | `[0.30, 0.60)` | 临时抢通 | 0.30 | 0.30 | 小型救援车可低速通行 |
+| 2 | `[0.60, 0.80)` | 单车道限行 | 0.60 | 0.60 | 小型车和中型车可通行 |
+| 3 | `[0.80, 1.00)` | 基本恢复 | 0.80 | 0.80 | 大部分货车可通行 |
+| 4 | `1.00` | 完全恢复 | 1.00 | 1.00 | 全部车辆按正常容量通行 |
 
 说明：
 
 - `p_a^t` 表示路段 `a` 在周期 `t` 结束时的累计修复进度，取值范围为 `[0, 1]`。
 - `g(p_a^t)` 是容量恢复函数，用于计算当前道路容量。
+- `s(p_a^t)` 是速度恢复函数，用于计算无拥堵条件下的阶段性通行时间。当前默认值与 `g(p)` 相同，但在数据结构和敏感性分析中分开处理。
 - 分段阈值 `0.30/0.60/0.80/1.00` 是可调场景参数，后续可以做敏感性分析。
 
 ## 4. 新增数据表 2：车辆通行阈值
 
 原论文车辆表只有容量、数量和道路占用。为了让道路容量恢复影响配送路径，需要为每类车辆增加最低通行阈值、速度折减敏感系数等字段。
 
-| 车辆类型 | 原单车容量（吨） | 原车辆数量 | 原占用 OD（pcu/h） | 最低通行进度 `theta_v` | 建议车型解释 |
-|---:|---:|---:|---:|---:|---|
-| 1 | 5 | 150 | 300 | 0.30 | 小型救援车 |
-| 2 | 10 | 110 | 500 | 0.50 | 中型货车 |
-| 3 | 15 | 70 | 800 | 0.70 | 大型货车 |
-| 4 | 20 | 40 | 1000 | 0.80 | 重型货车 |
+| 车辆类型 | 原单车容量（吨） | 原车辆数量 | 原占用 OD（pcu/h） | 最低通行进度 `theta_v` | 原型单车当量 `e_v` | 建议车型解释 |
+|---:|---:|---:|---:|---:|---:|---|
+| 1 | 5 | 150 | 300 | 0.30 | 1.0 | 小型救援车 |
+| 2 | 10 | 110 | 500 | 0.50 | 1.5 | 中型货车 |
+| 3 | 15 | 70 | 800 | 0.70 | 2.0 | 大型货车 |
+| 4 | 20 | 40 | 1000 | 0.80 | 2.5 | 重型货车 |
+
+原占用 OD 的 300/500/800/1000 pcu/h 是车型类别层面的交通流数据，不是单辆车的 pcu 当量，不能直接用于“每通过一辆车扣减多少 pcu”的计算。代码将其保留为 `occupied_od_pcu_h`；新增的 `pcu_per_vehicle` 才用于路段周期吞吐约束。表中的 1.0/1.5/2.0/2.5 是可运行原型的场景值，不是汶川现场标定值，正式实验必须做敏感性分析或替换为交通工程依据。
 
 建议新增字段：
 
@@ -67,7 +70,8 @@
 | `vehicle_type` | 车辆类型编号 | 与原车辆表一致 |
 | `capacity_ton` | 单车载重 | 控制配送量 |
 | `available_count` | 车辆数量 | 控制车队规模 |
-| `pcu_impact` | 道路占用系数 | 用于路段流量或拥堵计算 |
+| `occupied_od_pcu_h` | 原案例车型类别 OD 流量 | 保留原始数据语义，不作为单车占用系数 |
+| `pcu_per_vehicle` | 单辆车的 pcu 当量 | 每执行一趟配送，从路径各路段扣减相应 pcu |
 | `min_recovery_progress` | 最低道路修复进度 `theta_v` | 判断该车型能否通过路段 |
 | `speed_factor` | 灾后速度折减基准 | 可用于区分不同车辆速度 |
 
@@ -129,6 +133,9 @@ p_a^t = min(1, 累计维修时间_a^t / 完全修复时间_a)
 | `recovery_progress` | 当前修复进度 |
 | `recovery_stage` | 当前恢复阶段 |
 | `current_capacity_pcu_h` | 当前道路容量 |
+| `period_capacity_pcu` | 当前周期吞吐上限，即 `current_capacity_pcu_h * period_hours` |
+| `residual_capacity_pcu` | 扣除已安排配送后的剩余周期容量 |
+| `edge_utilization` | 周期已用 pcu / 周期吞吐上限 |
 | `vehicle_type` | 车辆类型 |
 | `is_passable` | 该车型当前是否可通 |
 | `travel_time_min` | 当前车型通过该路段的实际通行时间 |
@@ -143,7 +150,7 @@ C_a^t = C_a^0 * g(p_a^t)
 
 ```text
 如果车辆不可通行：travel_time = INF
-如果车辆可通行：travel_time = t_a^0 / max(g(p_a^t), epsilon)
+如果车辆可通行：travel_time = t_a^0 / max(s(p_a^t), epsilon)
 ```
 
 后续升级为 BPR 函数：
@@ -170,9 +177,9 @@ scripts/data/vehicle_profiles.py
 | `edges` | `edge_id`, `from_node`, `to_node`, `travel_time_min`, `capacity_pcu_h` |
 | `damaged_links` | `damaged_link_id`, `edge_id`, `repair_time_min`, `endpoint_a`, `endpoint_b` |
 | `repair_crews` | `crew_id`, `station_node_id`, `initial_node_id`, `repair_speed_km_h` |
-| `vehicles` | `vehicle_type`, `capacity_ton`, `available_count`, `pcu_impact`, `min_recovery_progress`, `speed_factor` |
-| `recovery_stages` | `stage_id`, `progress_lower`, `progress_upper`, `capacity_ratio`, `description` |
-| `period_edge_state` | `period`, `edge_id`, `recovery_progress`, `capacity_ratio`, `current_capacity`, `vehicle_type`, `is_passable`, `travel_time` |
+| `vehicles` | `vehicle_type`, `capacity_ton`, `available_count`, `occupied_od_pcu_h`, `pcu_per_vehicle`, `min_recovery_progress`, `speed_factor` |
+| `recovery_stages` | `stage_id`, `progress_lower`, `progress_upper`, `capacity_ratio`, `speed_ratio`, `description` |
+| `period_edge_state` | `period`, `edge_id`, `recovery_progress`, `capacity_ratio`, `speed_ratio`, `current_capacity`, `period_capacity_pcu`, `residual_capacity_pcu`, `edge_utilization`, `vehicle_type`, `is_passable`, `travel_time` |
 
 ## 8. 数据缺口与处理建议
 
@@ -180,9 +187,10 @@ scripts/data/vehicle_profiles.py
 |---|---|
 | 真实道路等级和车道数 | 先沿用现有容量估算，后续可用道路等级数据替换 |
 | 不同车型真实限载限宽要求 | 先用 `theta_v` 构造场景参数，做敏感性分析 |
+| 单车 pcu 当量 | 原案例只给出车型类别 OD 流量；原型暂用 1.0/1.5/2.0/2.5，正式研究应以车型尺寸、轴载或交通工程手册标定 |
 | 修复过程中的阶段性抢通时间 | 由总修复时间按比例拆分，例如 30%、60%、80%、100% |
 | 灾后动态需求 | 第一版先固定需求，后续再加入滚动更新 |
-| 普通交通流 | 第一版暂不纳入，避免模型过大 |
+| 普通交通流 | 第一版暂不纳入，容量仅约束救援车辆；后续可用背景占用比例或 OD 流量扩展 |
 
 ## 9. 与创新点的对应关系
 
