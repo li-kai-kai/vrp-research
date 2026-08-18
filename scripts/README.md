@@ -39,6 +39,7 @@ uv run python scripts/tools/ocr_xju_downloads.py
 如果只想快速验证随机算例框架，可以给复现实验入口追加较小的 GA 参数，例如 `--pop-size 10 --generations 3`。
 如果只想快速验证容量恢复原型，可以给 `capacity_recovery.py` 设置 `--pop-size 8 --generations 3 --alns-iterations 3`。
 效率目标中的维修作业工时权重可通过 `--repair-time-weight` 调整，默认值为 0.05；该参数不表示维修队移动时间。
+容量恢复实验会保存 `pareto_front_runs.csv`（每次运行的非支配 archive）、`pareto_front.csv`（跨运行合并后仍然非支配的全局近似前沿）、`pareto_solutions.json`（完整染色体决策）、`experiment_manifest.json`（全部运行参数）和 `pareto_front.png`（三目标前沿图）。前沿来自跨代外部 archive，而不再局限于最终种群中的单一代表解。
 
 ## 维护建议
 

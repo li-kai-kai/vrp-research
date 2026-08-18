@@ -1,4 +1,6 @@
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import networkx as nx
 
@@ -6,8 +8,13 @@ from scripts.reproduce.dispatch import dispatch_relief
 from scripts.reproduce.instance_generator import generate_random_instance
 from scripts.reproduce.metrics import evaluate_solution
 from scripts.reproduce.capacity_recovery import (
+    CapacityNSGAConfig,
+    _dominates,
     _dispatch_with_vehicle_types,
+    _plot_pareto_front,
+    _write_outputs,
     build_wenchuan_instance,
+    solve_capacity_instance,
 )
 from scripts.reproduce.dynamic_interaction_experiments import (
     MECHANISMS,
@@ -20,6 +27,48 @@ from scripts.reproduce.dynamic_interaction_experiments import (
 
 
 class ReproductionFrameworkTest(unittest.TestCase):
+    def test_capacity_solver_exports_complete_non_dominated_archive(self):
+        config = CapacityNSGAConfig(
+            pop_size=6,
+            generations=2,
+            crossover_probability=0.9,
+            mutation_probability=0.2,
+            alns_probability=0.0,
+            alns_iterations=0,
+        )
+        result = solve_capacity_instance(
+            build_wenchuan_instance(seed=1),
+            config,
+            seed=30001,
+            scenario="wenchuan",
+        )
+
+        self.assertGreater(len(result.pareto_front), 0)
+        self.assertEqual(
+            len({solution.decision_hash for solution in result.pareto_front}),
+            len(result.pareto_front),
+        )
+        for left_idx, left in enumerate(result.pareto_front):
+            for right_idx, right in enumerate(result.pareto_front):
+                if left_idx != right_idx:
+                    self.assertFalse(_dominates(left.objectives, right.objectives))
+
+        with TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            _write_outputs([result], output_dir, config)
+            _plot_pareto_front([result], output_dir / "pareto_front.png")
+            for filename in (
+                "runs.csv",
+                "solutions.json",
+                "convergence.csv",
+                "pareto_front_runs.csv",
+                "pareto_front.csv",
+                "pareto_solutions.json",
+                "experiment_manifest.json",
+                "pareto_front.png",
+            ):
+                self.assertTrue((output_dir / filename).is_file(), filename)
+
     def test_instance_generation_counts_and_seed_reproducibility(self):
         first = generate_random_instance(
             num_nodes=25,

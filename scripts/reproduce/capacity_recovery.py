@@ -2,12 +2,16 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import math
+import platform
 import random
+import subprocess
 import sys
 import time
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -91,6 +95,56 @@ class CapacityNSGAConfig:
 
 
 @dataclass
+class ParetoSolution:
+    solution_id: str
+    objectives: tuple[float, float, float]
+    metrics: dict[str, float]
+    repair_order: list[int]
+    team_assignment: list[int]
+    dispatch_priority: list[tuple[int, int]]
+    crowding_distance: float
+    decision_hash: str
+
+    def row(self) -> dict[str, Any]:
+        return {
+            "solution_id": self.solution_id,
+            "decision_hash": self.decision_hash,
+            "pareto_rank": 0,
+            "crowding_distance": (
+                self.crowding_distance
+                if math.isfinite(self.crowding_distance)
+                else None
+            ),
+            "unmet_area": self.objectives[0],
+            "time_cost": self.objectives[1],
+            "neg_min_satisfaction": self.objectives[2],
+            "final_min_satisfaction": self.metrics["final_min_satisfaction"],
+            "final_total_satisfaction": self.metrics["final_total_satisfaction"],
+            "average_reachable_ratio": self.metrics["average_reachable_ratio"],
+            "final_repaired_ratio": self.metrics["final_repaired_ratio"],
+            "partial_recovery_edge_periods": self.metrics["partial_recovery_edge_periods"],
+            "small_vehicle_share": self.metrics["small_vehicle_share"],
+            "max_edge_utilization": self.metrics["max_edge_utilization"],
+            "high_utilization_edge_periods": self.metrics["high_utilization_edge_periods"],
+            "capacity_blocked_tons": self.metrics["capacity_blocked_tons"],
+            "total_vehicle_trips": self.metrics["total_vehicle_trips"],
+        }
+
+    def to_jsonable(self) -> dict[str, Any]:
+        return {
+            **self.row(),
+            "objectives": self.objectives,
+            "metrics": self.metrics,
+            "repair_order": self.repair_order,
+            "team_assignment": self.team_assignment,
+            "dispatch_priority": [
+                {"supplier": supplier, "demand": demand}
+                for supplier, demand in self.dispatch_priority
+            ],
+        }
+
+
+@dataclass
 class CapacityExperimentResult:
     instance_name: str
     scenario: str
@@ -101,6 +155,8 @@ class CapacityExperimentResult:
     repair_order: list[int]
     team_assignment: list[int]
     runtime_seconds: float
+    pareto_front: list[ParetoSolution] = field(default_factory=list)
+    parameters: dict[str, Any] = field(default_factory=dict)
     convergence: list[dict[str, float]] = field(default_factory=list)
 
     def summary_row(self) -> dict[str, Any]:
@@ -124,6 +180,7 @@ class CapacityExperimentResult:
             "high_utilization_edge_periods": self.metrics["high_utilization_edge_periods"],
             "capacity_blocked_tons": self.metrics["capacity_blocked_tons"],
             "total_vehicle_trips": self.metrics["total_vehicle_trips"],
+            "pareto_solution_count": len(self.pareto_front),
             "runtime_seconds": self.runtime_seconds,
         }
 
@@ -134,6 +191,8 @@ class CapacityExperimentResult:
             "team_assignment": self.team_assignment,
             "objectives": self.objectives,
             "metrics": self.metrics,
+            "parameters": self.parameters,
+            "pareto_front": [solution.to_jsonable() for solution in self.pareto_front],
             "convergence": self.convergence,
         }
 
@@ -303,10 +362,12 @@ def solve_capacity_instance(
     rng = random.Random(seed)
     start = time.perf_counter()
     population = [_create_individual(instance, rng) for _ in range(config.pop_size)]
+    pareto_archive: list[CapacityIndividual] = []
     convergence: list[dict[str, float]] = []
 
     for generation in range(config.generations):
         _evaluate_population(instance, population)
+        pareto_archive = _update_pareto_archive(pareto_archive, population)
         fronts = _assign_rank_and_crowding(population)
         best_front = fronts[0] if fronts else []
         if best_front:
@@ -332,12 +393,18 @@ def solve_capacity_instance(
                 offspring.append(child_b)
 
         _evaluate_population(instance, offspring)
+        pareto_archive = _update_pareto_archive(
+            pareto_archive,
+            population + offspring,
+        )
         population = _select_next_generation(population + offspring, config.pop_size)
 
     _evaluate_population(instance, population)
-    fronts = _assign_rank_and_crowding(population)
-    best_front = fronts[0]
+    pareto_archive = _update_pareto_archive(pareto_archive, population)
+    best_front = pareto_archive
+    _assign_crowding(best_front)
     best = min(best_front, key=_representative_key)
+    pareto_front = _serialize_pareto_front(best_front)
     runtime = time.perf_counter() - start
     return CapacityExperimentResult(
         instance_name=instance.base.name,
@@ -349,6 +416,8 @@ def solve_capacity_instance(
         repair_order=best.repair_order,
         team_assignment=best.team_assignment,
         runtime_seconds=runtime,
+        pareto_front=pareto_front,
+        parameters=_experiment_parameters(instance, config),
         convergence=convergence,
     )
 
@@ -1010,6 +1079,67 @@ def _assign_crowding(front: list[CapacityIndividual]) -> None:
             front[idx].crowding += (next_value - previous_value) / scale
 
 
+def _decision_signature(individual: CapacityIndividual) -> tuple[Any, ...]:
+    return (
+        tuple(individual.repair_order),
+        tuple(individual.team_assignment),
+        tuple(individual.dispatch_priority),
+    )
+
+
+def _update_pareto_archive(
+    archive: list[CapacityIndividual],
+    candidates: list[CapacityIndividual],
+) -> list[CapacityIndividual]:
+    unique: dict[tuple[Any, ...], CapacityIndividual] = {}
+    for individual in archive + candidates:
+        if individual.objectives is None:
+            continue
+        signature = _decision_signature(individual)
+        unique.setdefault(signature, individual.clone())
+
+    values = list(unique.values())
+    non_dominated = [
+        individual
+        for idx, individual in enumerate(values)
+        if not any(
+            _dominates(other.objectives, individual.objectives)
+            for other_idx, other in enumerate(values)
+            if idx != other_idx and other.objectives is not None
+        )
+    ]
+    non_dominated.sort(
+        key=lambda item: (
+            item.objectives or (math.inf, math.inf, math.inf),
+            _decision_signature(item),
+        )
+    )
+    return non_dominated
+
+
+def _serialize_pareto_front(front: list[CapacityIndividual]) -> list[ParetoSolution]:
+    solutions: list[ParetoSolution] = []
+    for idx, individual in enumerate(front, start=1):
+        objectives = individual.objectives or (math.inf, math.inf, math.inf)
+        metrics = individual.metrics or {}
+        signature = repr(_decision_signature(individual)).encode("utf-8")
+        solutions.append(
+            ParetoSolution(
+                solution_id=f"p{idx:04d}",
+                objectives=objectives,
+                metrics=dict(metrics),
+                repair_order=list(individual.repair_order),
+                team_assignment=list(individual.team_assignment),
+                dispatch_priority=list(individual.dispatch_priority),
+                crowding_distance=(
+                    individual.crowding if math.isfinite(individual.crowding) else math.inf
+                ),
+                decision_hash=hashlib.sha256(signature).hexdigest()[:16],
+            )
+        )
+    return solutions
+
+
 def _select_next_generation(
     combined: list[CapacityIndividual],
     pop_size: int,
@@ -1222,17 +1352,62 @@ def _convergence_row(generation: int, individual: CapacityIndividual) -> dict[st
     }
 
 
+def _experiment_parameters(
+    instance: CapacityExperimentInstance,
+    config: CapacityNSGAConfig,
+) -> dict[str, Any]:
+    base = instance.base
+    return {
+        "algorithm": asdict(config),
+        "instance": {
+            "name": base.name,
+            "instance_seed": base.seed,
+            "nodes": base.num_nodes,
+            "edges": base.graph.number_of_edges(),
+            "damaged_edges": len(base.damaged_edges),
+            "repair_crews": base.repair_crews,
+            "eta_hours": base.eta_hours,
+            "horizon_hours": base.horizon_hours,
+            "periods": base.periods,
+            "total_supply_ton": base.total_supply,
+            "total_demand_ton": base.total_demand,
+            "theoretical_supply_ceiling": base.total_supply / max(base.total_demand, 1e-9),
+        },
+        "model": {
+            "capacity_scale": instance.capacity_scale,
+            "repair_time_weight": instance.repair_time_weight,
+            "vehicles": [asdict(vehicle) for vehicle in instance.vehicles],
+            "recovery_stages": [asdict(stage) for stage in instance.recovery_stages],
+        },
+    }
+
+
 def run_cli() -> None:
     args = _parse_args()
     if args.capacity_scale <= 0:
         raise SystemExit("--capacity-scale must be greater than zero")
     if args.repair_time_weight < 0:
         raise SystemExit("--repair-time-weight must be non-negative")
+    if args.pop_size < 2:
+        raise SystemExit("--pop-size must be at least 2")
+    if args.generations <= 0:
+        raise SystemExit("--generations must be greater than zero")
+    if args.alns_iterations < 0:
+        raise SystemExit("--alns-iterations must be non-negative")
+    for name in (
+        "crossover_probability",
+        "mutation_probability",
+        "alns_probability",
+    ):
+        if not 0.0 <= getattr(args, name) <= 1.0:
+            raise SystemExit(f"--{name.replace('_', '-')} must be in [0, 1]")
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     config = CapacityNSGAConfig(
         pop_size=args.pop_size,
         generations=args.generations,
+        crossover_probability=args.crossover_probability,
+        mutation_probability=args.mutation_probability,
         alns_iterations=args.alns_iterations,
         alns_probability=args.alns_probability,
     )
@@ -1262,7 +1437,8 @@ def run_cli() -> None:
                 f"max_util={summary['max_edge_utilization']:.3f}, "
                 f"time={summary['runtime_seconds']:.2f}s"
             )
-    _write_outputs(results, output_dir)
+    _write_outputs(results, output_dir, config)
+    _plot_pareto_front(results, output_dir / "pareto_front.png")
     print(f"Done. Results written to {output_dir}")
 
 
@@ -1276,6 +1452,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--sim-nodes", type=int, default=25)
     parser.add_argument("--pop-size", type=int, default=32)
     parser.add_argument("--generations", type=int, default=30)
+    parser.add_argument("--crossover-probability", type=float, default=0.9)
+    parser.add_argument("--mutation-probability", type=float, default=0.2)
     parser.add_argument("--alns-iterations", type=int, default=12)
     parser.add_argument("--alns-probability", type=float, default=0.35)
     parser.add_argument(
@@ -1298,7 +1476,11 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _write_outputs(results: list[CapacityExperimentResult], output_dir: Path) -> None:
+def _write_outputs(
+    results: list[CapacityExperimentResult],
+    output_dir: Path,
+    config: CapacityNSGAConfig,
+) -> None:
     _write_csv(output_dir / "runs.csv", [result.summary_row() for result in results])
     with (output_dir / "solutions.json").open("w", encoding="utf-8") as fh:
         json.dump([result.to_jsonable() for result in results], fh, indent=2, ensure_ascii=False)
@@ -1308,6 +1490,175 @@ def _write_outputs(results: list[CapacityExperimentResult], output_dir: Path) ->
         for row in result.convergence
     ]
     _write_csv(output_dir / "convergence.csv", convergence_rows)
+    run_pareto_rows = [
+        {
+            "instance": result.instance_name,
+            "scenario": result.scenario,
+            "solver_seed": result.seed,
+            **solution.row(),
+        }
+        for result in results
+        for solution in result.pareto_front
+    ]
+    _write_csv(output_dir / "pareto_front_runs.csv", run_pareto_rows)
+    global_points = _global_pareto_points(results)
+    global_rows = [
+        {
+            "instance": result.instance_name,
+            "scenario": result.scenario,
+            "solver_seed": result.seed,
+            **solution.row(),
+        }
+        for result, solution in global_points
+    ]
+    _write_csv(output_dir / "pareto_front.csv", global_rows)
+    with (output_dir / "pareto_solutions.json").open("w", encoding="utf-8") as fh:
+        json.dump(
+            [
+                {
+                    "instance": result.instance_name,
+                    "scenario": result.scenario,
+                    "solver_seed": result.seed,
+                    "solutions": [
+                        solution.to_jsonable() for solution in result.pareto_front
+                    ],
+                }
+                for result in results
+            ],
+            fh,
+            indent=2,
+            ensure_ascii=False,
+        )
+    manifest = {
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "command": [sys.executable, *sys.argv],
+        "python_version": sys.version,
+        "platform": platform.platform(),
+        "git_sha": _git_sha(),
+        "git_dirty": _git_dirty(),
+        "source_file": str(Path(__file__).resolve()),
+        "source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        "algorithm_config": asdict(config),
+        "runs": [
+            {
+                "scenario": result.scenario,
+                "instance": result.instance_name,
+                "solver_seed": result.seed,
+                "parameters": result.parameters,
+            }
+            for result in results
+        ],
+    }
+    with (output_dir / "experiment_manifest.json").open("w", encoding="utf-8") as fh:
+        json.dump(manifest, fh, indent=2, ensure_ascii=False)
+
+
+def _git_sha() -> str | None:
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return completed.stdout.strip()
+
+
+def _git_dirty() -> bool | None:
+    try:
+        completed = subprocess.run(
+            ["git", "status", "--porcelain"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return bool(completed.stdout.strip())
+
+
+def _global_pareto_points(
+    results: list[CapacityExperimentResult],
+) -> list[tuple[CapacityExperimentResult, ParetoSolution]]:
+    unique: dict[
+        tuple[str, tuple[float, float, float]],
+        tuple[CapacityExperimentResult, ParetoSolution],
+    ] = {}
+    for result in results:
+        for solution in result.pareto_front:
+            key = (solution.decision_hash, solution.objectives)
+            unique.setdefault(key, (result, solution))
+
+    points = list(unique.values())
+    non_dominated = [
+        point
+        for idx, point in enumerate(points)
+        if not any(
+            _dominates(other[1].objectives, point[1].objectives)
+            for other_idx, other in enumerate(points)
+            if idx != other_idx
+        )
+    ]
+    non_dominated.sort(
+        key=lambda point: (
+            point[1].objectives,
+            point[1].decision_hash,
+            point[0].seed,
+        )
+    )
+    return non_dominated
+
+
+def _plot_pareto_front(
+    results: list[CapacityExperimentResult],
+    output_path: Path,
+) -> None:
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    points = _global_pareto_points(results)
+    if not points:
+        return
+
+    figure, axes = plt.subplots(1, 3, figsize=(16, 4.8), constrained_layout=True)
+    unmet = [solution.objectives[0] for _, solution in points]
+    time_cost = [solution.objectives[1] for _, solution in points]
+    min_sat = [solution.metrics["final_min_satisfaction"] for _, solution in points]
+    colors = min_sat
+
+    first = axes[0].scatter(unmet, time_cost, c=colors, cmap="viridis", s=42, alpha=0.85)
+    axes[0].set_xlabel("F1: cumulative unmet fraction-period")
+    axes[0].set_ylabel("F2: weighted time cost (minutes)")
+    axes[0].set_title("Efficiency trade-off")
+    colorbar = figure.colorbar(first, ax=axes[0])
+    colorbar.set_label("Final minimum satisfaction")
+
+    axes[1].scatter(unmet, min_sat, c=time_cost, cmap="plasma", s=42, alpha=0.85)
+    axes[1].set_xlabel("F1: cumulative unmet fraction-period")
+    axes[1].set_ylabel("Final minimum satisfaction")
+    axes[1].set_title("Service versus fairness")
+
+    axes[2].scatter(time_cost, min_sat, c=unmet, cmap="cividis", s=42, alpha=0.85)
+    axes[2].set_xlabel("F2: weighted time cost (minutes)")
+    axes[2].set_ylabel("Final minimum satisfaction")
+    axes[2].set_title("Cost versus fairness")
+
+    for axis in axes:
+        axis.grid(alpha=0.22, linewidth=0.7)
+    run_text = ", ".join(
+        f"{result.scenario}/seed={result.seed}: n={len(result.pareto_front)}"
+        for result in results
+    )
+    figure.suptitle(
+        f"Global approximate Pareto front: n={len(points)} | {run_text}",
+        fontsize=11,
+    )
+    figure.savefig(output_path, dpi=180)
+    plt.close(figure)
 
 
 def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
