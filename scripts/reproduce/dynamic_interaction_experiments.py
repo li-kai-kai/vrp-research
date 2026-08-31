@@ -12,9 +12,6 @@ if __package__ is None or __package__ == "":
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from scripts.reproduce.capacity_recovery import (
-    CapacityExperimentInstance,
-    RecoveryStage,
-    VehicleProfile,
     _crew_transfer,
     _decode_timed_schedule,
     _dispatch_with_vehicle_types,
@@ -22,6 +19,7 @@ from scripts.reproduce.capacity_recovery import (
     _shortest_paths_for_vehicle,
     build_simulation_instance,
     build_wenchuan_instance,
+    model_factor_variant,
 )
 
 
@@ -327,30 +325,15 @@ def run_mechanism(
 def _variant(instance, progressive):
     if progressive:
         return instance
-    vehicles = [
-        VehicleProfile(
-            vehicle_type=v.vehicle_type,
-            capacity_ton=v.capacity_ton,
-            count=v.count,
-            occupied_od_pcu_h=v.occupied_od_pcu_h,
-            min_recovery_progress=1.0,
-            pcu_per_vehicle=v.pcu_per_vehicle,
-            speed_factor=v.speed_factor,
-        )
-        for v in instance.vehicles
-    ]
-    stages = [
-        RecoveryStage(0.0, 1.0, 0.0, "blocked", 0.0),
-        RecoveryStage(1.0, 1.01, 1.0, "full", 1.0),
-    ]
-    return CapacityExperimentInstance(
-        instance.base,
-        vehicles,
-        stages,
-        capacity_scale=instance.capacity_scale,
-        repair_time_weight=instance.repair_time_weight,
-        crew_transfer_time_scale=instance.crew_transfer_time_scale,
-        crew_min_access_progress=instance.crew_min_access_progress,
+    return model_factor_variant(
+        instance,
+        progressive_recovery=False,
+        heterogeneous_vehicle_thresholds=False,
+        edge_capacity_constraint=instance.edge_capacity_constraint,
+        # Preserve the historical binary mechanism's explicit full-recovery
+        # vehicle threshold. Binary stages already block every damaged edge
+        # before full recovery, so this does not add a second recovery rule.
+        uniform_vehicle_threshold=1.0,
     )
 
 

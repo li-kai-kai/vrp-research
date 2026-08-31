@@ -14,6 +14,7 @@ from scripts.reproduce.capacity_recovery import (
     _plot_pareto_front,
     _write_outputs,
     build_wenchuan_instance,
+    model_factor_variant,
     solve_capacity_instance,
 )
 from scripts.reproduce.dynamic_interaction_experiments import (
@@ -153,6 +154,60 @@ class ReproductionFrameworkTest(unittest.TestCase):
         self.assertTrue(all(vehicle.min_recovery_progress == 1.0 for vehicle in instance.vehicles))
         self.assertEqual([stage.capacity_ratio for stage in instance.recovery_stages], [0.0, 1.0])
 
+    def test_model_factors_are_orthogonal_and_do_not_mutate_source(self):
+        source = build_wenchuan_instance(seed=1)
+        original_thresholds = [
+            vehicle.min_recovery_progress
+            for vehicle in source.vehicles
+        ]
+        variants = [
+            model_factor_variant(
+                source,
+                progressive_recovery=progressive,
+                heterogeneous_vehicle_thresholds=heterogeneous,
+                edge_capacity_constraint=capacity,
+            )
+            for progressive in (False, True)
+            for heterogeneous in (False, True)
+            for capacity in (False, True)
+        ]
+
+        self.assertEqual(
+            {
+                (
+                    item.progressive_recovery,
+                    item.heterogeneous_vehicle_thresholds,
+                    item.edge_capacity_constraint,
+                )
+                for item in variants
+            },
+            {
+                (progressive, heterogeneous, capacity)
+                for progressive in (False, True)
+                for heterogeneous in (False, True)
+                for capacity in (False, True)
+            },
+        )
+        for item in variants:
+            ratios = [stage.capacity_ratio for stage in item.recovery_stages]
+            if item.progressive_recovery:
+                self.assertEqual(ratios, [0.0, 0.3, 0.6, 0.8, 1.0])
+            else:
+                self.assertEqual(ratios, [0.0, 1.0])
+            thresholds = {
+                vehicle.min_recovery_progress
+                for vehicle in item.vehicles
+            }
+            if item.heterogeneous_vehicle_thresholds:
+                self.assertEqual(thresholds, set(original_thresholds))
+            else:
+                self.assertEqual(thresholds, {0.30})
+        self.assertEqual(
+            [vehicle.min_recovery_progress for vehicle in source.vehicles],
+            original_thresholds,
+        )
+        self.assertEqual(len(source.recovery_stages), 5)
+
     def test_edge_period_capacity_is_enforced(self):
         instance = build_wenchuan_instance(seed=1)
         instance.capacity_scale = 0.001
@@ -185,6 +240,51 @@ class ReproductionFrameworkTest(unittest.TestCase):
                 result["vehicle_trips"][vehicle.vehicle_type],
                 vehicle.count,
             )
+
+    def test_edge_capacity_factor_can_disable_only_throughput_accounting(self):
+        source = build_wenchuan_instance(seed=1)
+        source.capacity_scale = 0.001
+        constrained = model_factor_variant(
+            source,
+            progressive_recovery=True,
+            heterogeneous_vehicle_thresholds=True,
+            edge_capacity_constraint=True,
+        )
+        unlimited = model_factor_variant(
+            source,
+            progressive_recovery=True,
+            heterogeneous_vehicle_thresholds=True,
+            edge_capacity_constraint=False,
+        )
+        progress = {edge_id: 1.0 for edge_id in source.base.damaged_edges}
+        priority = [
+            (supplier, demand)
+            for supplier in source.base.suppliers
+            for demand in source.base.demands
+        ]
+
+        constrained_result = _dispatch_with_vehicle_types(
+            constrained,
+            priority,
+            progress,
+            dict(source.base.supply_amounts),
+            dict(source.base.demand_amounts),
+        )
+        unlimited_result = _dispatch_with_vehicle_types(
+            unlimited,
+            priority,
+            progress,
+            dict(source.base.supply_amounts),
+            dict(source.base.demand_amounts),
+        )
+
+        self.assertGreater(constrained_result["capacity_blocked_tons"], 0.0)
+        self.assertEqual(unlimited_result["capacity_blocked_tons"], 0.0)
+        self.assertEqual(unlimited_result["max_edge_utilization"], 0.0)
+        self.assertGreaterEqual(
+            sum(unlimited_result["delivered"].values()),
+            sum(constrained_result["delivered"].values()),
+        )
 
     def test_deterministic_openloop_matches_rolling_without_new_information(self):
         instance = _apply_stress(build_wenchuan_instance(seed=1), 2.0, 2)

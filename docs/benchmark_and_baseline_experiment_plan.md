@@ -81,6 +81,8 @@ NSGA-II 的标准来源为 [Deb et al. (2002)](https://doi.org/10.1109/4235.9960
 
 模块组合采用 `2^3`：自适应权重、退火接受、滚动反馈三个开关全组合；容量恢复、车型阈值和吞吐约束作为模型机制单独做 `2^3` 组合。主效应和二阶交互效应均在同实例同种子上配对估计。
 
+模型机制 `2^3` 已由 `scripts/reproduce/run_model_ablation.py` 实现：三个因子分别为 `progressive_recovery`、`heterogeneous_vehicle_thresholds` 和 `edge_capacity_constraint`。八个组合统一调用 benchmark 的 `nsga2_alns`、共享配对的实例种子、求解种子和目标评价预算，并按实例使用八组及全部求解重复合并后的 pooled reference front 计算归一化 HV 与 IGD。`scripts/reproduce/model_ablation_analysis.py` 负责分片合并、完整性检查、模型汇总、三个主效应与三个二阶交互的配对估计，并输出95% BCa bootstrap区间、双侧符号翻转随机化检验和Holm校正。合成案例先在实例内平均solver重复，以实例种子为分析单位；固定汶川案例只保留一个实例副本，以solver重复为分析单位。算法模块的 `2^3` 组合仍待实现。
+
 ### 5.2 参数敏感性
 
 算法参数：`pop_size={50,100,200}`、`pc={0.7,0.8,0.9,1.0}`、`pm={0.05,0.1,0.2,0.3}`、`alns_probability={0,0.2,0.35,0.5,0.8}`、`alns_iterations={2,4,8,16}`。模型参数：`capacity_scale={0.02,0.05,0.10,1.0}`、`repair_time_weight={0,0.01,0.05,0.10,0.20}`、维修效率偏差 `delta={0,0.15,0.30}`。先用 Morris/筛选实验定位敏感参数，再对前 3–5 个参数做精细网格，避免完整笛卡尔积。

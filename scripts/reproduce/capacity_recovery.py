@@ -10,7 +10,7 @@ import random
 import subprocess
 import sys
 import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -53,6 +53,9 @@ class CapacityExperimentInstance:
     repair_time_weight: float = 0.05
     crew_transfer_time_scale: float = 0.0
     crew_min_access_progress: float = 0.0
+    progressive_recovery: bool = True
+    heterogeneous_vehicle_thresholds: bool = True
+    edge_capacity_constraint: bool = True
 
 
 @dataclass
@@ -210,6 +213,15 @@ DEFAULT_RECOVERY_STAGES = [
 ]
 
 
+BINARY_RECOVERY_STAGES = [
+    RecoveryStage(0.0, 1.0, 0.0, "blocked", 0.0),
+    RecoveryStage(1.0, 1.01, 1.0, "full", 1.0),
+]
+
+
+UNIFORM_VEHICLE_RECOVERY_THRESHOLD = 0.30
+
+
 DEFAULT_VEHICLES = [
     VehicleProfile(
         1,
@@ -244,6 +256,48 @@ DEFAULT_VEHICLES = [
         pcu_per_vehicle=2.5,
     ),
 ]
+
+
+def model_factor_variant(
+    instance: CapacityExperimentInstance,
+    *,
+    progressive_recovery: bool,
+    heterogeneous_vehicle_thresholds: bool,
+    edge_capacity_constraint: bool,
+    uniform_vehicle_threshold: float = UNIFORM_VEHICLE_RECOVERY_THRESHOLD,
+) -> CapacityExperimentInstance:
+    """Create one orthogonal model-factor variant without changing the base instance.
+
+    Binary recovery reuses the same stage-based capacity and speed functions as the
+    progressive model. Disabling heterogeneous thresholds assigns one common
+    passability threshold to every existing vehicle profile; it does not collapse
+    fleet capacities, counts, PCU values, or speed factors.
+    """
+    if not 0.0 <= uniform_vehicle_threshold <= 1.0:
+        raise ValueError("uniform_vehicle_threshold must be in [0, 1]")
+    vehicles = list(instance.vehicles)
+    if not heterogeneous_vehicle_thresholds:
+        vehicles = [
+            replace(vehicle, min_recovery_progress=uniform_vehicle_threshold)
+            for vehicle in vehicles
+        ]
+    stages = (
+        list(instance.recovery_stages)
+        if progressive_recovery
+        else list(BINARY_RECOVERY_STAGES)
+    )
+    return CapacityExperimentInstance(
+        base=instance.base,
+        vehicles=vehicles,
+        recovery_stages=stages,
+        capacity_scale=instance.capacity_scale,
+        repair_time_weight=instance.repair_time_weight,
+        crew_transfer_time_scale=instance.crew_transfer_time_scale,
+        crew_min_access_progress=instance.crew_min_access_progress,
+        progressive_recovery=progressive_recovery,
+        heterogeneous_vehicle_thresholds=heterogeneous_vehicle_thresholds,
+        edge_capacity_constraint=edge_capacity_constraint,
+    )
 
 
 def build_simulation_instance(seed: int, *, num_nodes: int = 25) -> CapacityExperimentInstance:
@@ -529,6 +583,11 @@ def evaluate_capacity_solution(
         "capacity_scale": instance.capacity_scale,
         "repair_time_weight": instance.repair_time_weight,
         "crew_transfer_time_scale": instance.crew_transfer_time_scale,
+        "progressive_recovery": float(instance.progressive_recovery),
+        "heterogeneous_vehicle_thresholds": float(
+            instance.heterogeneous_vehicle_thresholds
+        ),
+        "edge_capacity_constraint": float(instance.edge_capacity_constraint),
         "final_total_satisfaction": final_total_satisfaction,
         "final_min_satisfaction": final_min_satisfaction,
         "average_reachable_ratio": sum(reachable_ratios) / max(len(reachable_ratios), 1),
@@ -697,7 +756,11 @@ def _dispatch_with_vehicle_types(
         vehicle.vehicle_type: vehicle.count
         for vehicle in instance.vehicles
     }
-    edge_capacity = _period_edge_capacities(instance, progress)
+    edge_capacity = (
+        _period_edge_capacities(instance, progress)
+        if instance.edge_capacity_constraint
+        else {}
+    )
     residual_edge_capacity = dict(edge_capacity)
     shortest_by_vehicle = {
         vehicle.vehicle_type: _shortest_paths_for_vehicle(instance, progress, vehicle)
@@ -866,22 +929,30 @@ def _allocate_vehicle_aware(
                 topology_path = shortest_by_vehicle[vehicle.vehicle_type].get((supplier, demand))
                 if topology_path is None:
                     continue
-                path_info = _capacity_feasible_shortest_path(
-                    instance,
-                    progress,
-                    vehicle,
-                    supplier,
-                    demand,
-                    residual_edge_capacity,
+                path_info = (
+                    _capacity_feasible_shortest_path(
+                        instance,
+                        progress,
+                        vehicle,
+                        supplier,
+                        demand,
+                        residual_edge_capacity,
+                    )
+                    if instance.edge_capacity_constraint
+                    else topology_path
                 )
                 if path_info is None:
                     topology_exists_but_capacity_blocks = True
                     continue
                 travel_time, path = path_info
-                path_capacity_trips = _path_trip_capacity(
-                    path,
-                    residual_edge_capacity,
-                    vehicle.pcu_per_vehicle,
+                path_capacity_trips = (
+                    _path_trip_capacity(
+                        path,
+                        residual_edge_capacity,
+                        vehicle.pcu_per_vehicle,
+                    )
+                    if instance.edge_capacity_constraint
+                    else vehicle_trips_left[vehicle.vehicle_type]
                 )
                 available_trips = min(
                     vehicle_trips_left[vehicle.vehicle_type],
@@ -923,13 +994,14 @@ def _allocate_vehicle_aware(
                 "travel_time": travel_time,
                 "path": list(path),
             })
-            capacity_use = trips * vehicle.pcu_per_vehicle
-            for u, v in zip(path, path[1:]):
-                edge_key = _edge_key(u, v)
-                residual_edge_capacity[edge_key] = max(
-                    0.0,
-                    residual_edge_capacity.get(edge_key, 0.0) - capacity_use,
-                )
+            if instance.edge_capacity_constraint:
+                capacity_use = trips * vehicle.pcu_per_vehicle
+                for u, v in zip(path, path[1:]):
+                    edge_key = _edge_key(u, v)
+                    residual_edge_capacity[edge_key] = max(
+                        0.0,
+                        residual_edge_capacity.get(edge_key, 0.0) - capacity_use,
+                    )
             delivery_time += travel_time * trips
     return delivery_time
 
@@ -1507,6 +1579,11 @@ def _experiment_parameters(
             "repair_time_weight": instance.repair_time_weight,
             "crew_transfer_time_scale": instance.crew_transfer_time_scale,
             "crew_min_access_progress": instance.crew_min_access_progress,
+            "progressive_recovery": instance.progressive_recovery,
+            "heterogeneous_vehicle_thresholds": (
+                instance.heterogeneous_vehicle_thresholds
+            ),
+            "edge_capacity_constraint": instance.edge_capacity_constraint,
             "vehicles": [asdict(vehicle) for vehicle in instance.vehicles],
             "recovery_stages": [asdict(stage) for stage in instance.recovery_stages],
         },

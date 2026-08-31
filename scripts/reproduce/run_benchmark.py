@@ -261,29 +261,18 @@ def _attach_quality_indicators(
         groups[(spec.case_id, instance_seed)].append((idx, result))
 
     for grouped in groups.values():
-        all_points = [
-            individual.objectives
-            for _idx, result in grouped
-            for individual in result.front
-            if individual.objectives is not None
-        ]
-        reference_front = _non_dominated(all_points)
-        # Scale by the full observed objective range. A singleton pooled front
-        # can otherwise create a zero range and numerically meaningless IGD.
-        ideal, nadir = _bounds(all_points)
-        normalized_reference = [_normalize(point, ideal, nadir) for point in reference_front]
-        for row_idx, result in grouped:
-            normalized = [
-                _normalize(individual.objectives, ideal, nadir)
+        fronts = [
+            [
+                individual.objectives
                 for individual in result.front
                 if individual.objectives is not None
             ]
-            run_rows[row_idx]["hypervolume"] = hypervolume_3d(normalized, (1.1, 1.1, 1.1))
-            run_rows[row_idx]["igd"] = inverted_generational_distance(
-                normalized,
-                normalized_reference,
-            )
-            run_rows[row_idx]["reference_front_size"] = len(reference_front)
+            for _row_idx, result in grouped
+        ]
+        quality_rows, metadata = pooled_quality_indicators(fronts)
+        for (row_idx, _result), quality in zip(grouped, quality_rows):
+            run_rows[row_idx].update(quality)
+            run_rows[row_idx]["reference_front_size"] = metadata["reference_front_size"]
 
 
 def _non_dominated(points: Iterable[tuple[float, float, float]]) -> list[tuple[float, float, float]]:
@@ -364,6 +353,42 @@ def inverted_generational_distance(
         for reference in reference_front
     ]
     return statistics.fmean(distances)
+
+
+def pooled_quality_indicators(
+    fronts: list[list[tuple[float, float, float]]],
+) -> tuple[list[dict[str, float]], dict[str, object]]:
+    """Calculate normalized HV/IGD against one front pooled across all runs."""
+    all_points = [point for front in fronts for point in front]
+    if not all_points:
+        raise ValueError("at least one objective point is required")
+    reference_front = _non_dominated(all_points)
+    # Use the full observed range, not only the non-dominated points, so every
+    # compared run uses exactly the same normalization and reference front.
+    ideal, nadir = _bounds(all_points)
+    normalized_reference = [
+        _normalize(point, ideal, nadir)
+        for point in reference_front
+    ]
+    quality_rows = []
+    for front in fronts:
+        normalized = [_normalize(point, ideal, nadir) for point in front]
+        quality_rows.append(
+            {
+                "hypervolume": hypervolume_3d(normalized, (1.1, 1.1, 1.1)),
+                "igd": inverted_generational_distance(
+                    normalized,
+                    normalized_reference,
+                ),
+            }
+        )
+    metadata: dict[str, object] = {
+        "reference_front_size": len(reference_front),
+        "ideal": ideal,
+        "nadir": nadir,
+        "reference_point_normalized": (1.1, 1.1, 1.1),
+    }
+    return quality_rows, metadata
 
 
 def _aggregate_rows(run_rows: list[dict[str, object]]) -> list[dict[str, object]]:

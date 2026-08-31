@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import math
 import sys
@@ -55,7 +56,7 @@ ROAD_STYLE = {
 }
 CREW_COLORS = ("#7c3aed", "#db2777", "#0891b2", "#4d7c0f", "#c2410c")
 CREW_MARKERS = ("*", "P", "X", "D", "s")
-SUPPLY_COLORS = ("#0ea5e9", "#8b5cf6", "#ec4899", "#14b8a6")
+SUPPLY_COLORS = ("#00a6d6", "#6a00f4", "#ff006e", "#00a878")
 
 
 def collect_mechanism_snapshots(
@@ -119,6 +120,22 @@ def write_stage_visualizations(instance, snapshots, output_dir):
     timeline = output_dir / "delivery_timeline.png"
     _plot_delivery_timeline(visual_instance, snapshots, timeline)
     written.append(timeline)
+    sequence = output_dir / "operation_sequence.png"
+    _plot_operation_sequence(visual_instance, snapshots, sequence)
+    written.append(sequence)
+    dispatch_dir = output_dir / "dispatch_routes"
+    dispatch_dir.mkdir(parents=True, exist_ok=True)
+    for snapshot in snapshots:
+        dispatch_path = (
+            dispatch_dir / f"stage_{snapshot['period']:02d}_dispatch.png"
+        )
+        _plot_stage_dispatch_routes(
+            visual_instance, snapshot, positions, dispatch_path,
+        )
+        written.append(dispatch_path)
+    manifest = output_dir / "dispatch_manifest.csv"
+    _write_dispatch_manifest(snapshots, manifest)
+    written.append(manifest)
     states = output_dir / "stage_states.json"
     _write_state_json(visual_instance, snapshots, states)
     written.append(states)
@@ -267,6 +284,289 @@ def _plot_delivery_timeline(instance, snapshots, path):
     fig.tight_layout()
     fig.savefig(path, dpi=180, facecolor="white")
     plt.close(fig)
+
+
+def _plot_operation_sequence(instance, snapshots, path):
+    """Plot repair and dispatch decision order across and within stages."""
+    base = instance.base
+    periods = [snapshot["period"] for snapshot in snapshots]
+    fig, (repair_ax, delivery_ax) = plt.subplots(
+        2, 1, figsize=(18, 12), facecolor="white",
+        gridspec_kw={"height_ratios": [2.2, 7.8]},
+    )
+
+    for ax in (repair_ax, delivery_ax):
+        for period in periods:
+            if period % 2 == 0:
+                ax.axvspan(
+                    period - 0.5, period + 0.5,
+                    color="#f8fafc", zorder=0,
+                )
+        ax.set_xlim(min(periods) - 0.5, max(periods) + 0.5)
+        ax.set_xticks(periods, [f"S{period}" for period in periods])
+        ax.grid(axis="x", color="#cbd5e1", linewidth=0.7, alpha=0.8)
+
+    crew_points = {crew_id: [] for crew_id in range(base.repair_crews)}
+    for snapshot in snapshots:
+        period = snapshot["period"]
+        for crew_id in range(base.repair_crews):
+            tasks = snapshot["crew_activity"].get(crew_id, [])
+            for order, damage_id in enumerate(tasks, start=1):
+                x = _stage_event_x(period, order, len(tasks))
+                y = base.repair_crews - crew_id
+                crew_points[crew_id].append((x, y))
+                repair_ax.scatter(
+                    x, y, s=155,
+                    marker=CREW_MARKERS[crew_id % len(CREW_MARKERS)],
+                    color=CREW_COLORS[crew_id % len(CREW_COLORS)],
+                    edgecolor="#111827", linewidth=0.8, zorder=3,
+                )
+                repair_ax.annotate(
+                    f"R{damage_id}", (x, y), xytext=(0, 12),
+                    textcoords="offset points", ha="center", va="bottom",
+                    fontsize=8, fontweight="semibold",
+                )
+    for crew_id, points in crew_points.items():
+        if len(points) > 1:
+            repair_ax.plot(
+                [point[0] for point in points],
+                [point[1] for point in points],
+                color=CREW_COLORS[crew_id % len(CREW_COLORS)],
+                linewidth=1.5, alpha=0.55, zorder=1,
+            )
+    repair_ax.set_yticks(
+        [base.repair_crews - crew_id for crew_id in range(base.repair_crews)],
+        [f"Crew C{crew_id + 1}" for crew_id in range(base.repair_crews)],
+    )
+    repair_ax.set_ylim(0.45, base.repair_crews + 0.75)
+    repair_ax.set_title(
+        "Repair decision order (left to right within each stage)",
+        fontsize=12, fontweight="semibold",
+    )
+
+    supplier_index = {
+        supplier: index for index, supplier in enumerate(base.suppliers)
+    }
+    max_amount = max(
+        (
+            shipment["amount"]
+            for snapshot in snapshots
+            for shipment in snapshot["shipments"]
+        ),
+        default=1.0,
+    )
+    for snapshot in snapshots:
+        period = snapshot["period"]
+        shipments = snapshot["shipments"]
+        for order, shipment in enumerate(shipments, start=1):
+            x = _stage_event_x(period, order, len(shipments))
+            supplier = shipment["supplier"]
+            delivery_ax.scatter(
+                x, shipment["demand"],
+                s=22 + 120 * shipment["amount"] / max_amount,
+                color=SUPPLY_COLORS[
+                    supplier_index[supplier] % len(SUPPLY_COLORS)
+                ],
+                edgecolor="#334155", linewidth=0.45, alpha=0.82, zorder=3,
+            )
+        if shipments:
+            delivery_ax.text(
+                period, max(base.demands) + 1.15,
+                f"{len(shipments)} dispatches\n"
+                f"{sum(item['amount'] for item in shipments):.0f} t",
+                ha="center", va="bottom", fontsize=7.5, color="#334155",
+            )
+    delivery_ax.set_yticks(base.demands)
+    delivery_ax.set_ylim(min(base.demands) - 0.8, max(base.demands) + 3.6)
+    delivery_ax.set_ylabel("Demand node")
+    delivery_ax.set_xlabel(
+        "Stage and within-stage dispatch allocation order (left to right)"
+    )
+    delivery_ax.set_title(
+        "Material dispatch decision order (bubble size = tons)",
+        fontsize=12, fontweight="semibold",
+    )
+    delivery_ax.grid(axis="y", color="#e2e8f0", linewidth=0.55, alpha=0.75)
+    delivery_ax.legend(
+        handles=[
+            Line2D(
+                [0], [0], marker="o", linestyle="none",
+                markerfacecolor=SUPPLY_COLORS[index % len(SUPPLY_COLORS)],
+                markeredgecolor="#334155", markersize=8,
+                label=f"Supply {supplier}",
+            )
+            for index, supplier in enumerate(base.suppliers)
+        ],
+        loc="upper right", ncol=len(base.suppliers), frameon=False,
+    )
+    fig.suptitle(
+        "Repair and material dispatch sequence",
+        fontsize=16, fontweight="bold",
+    )
+    fig.text(
+        0.5, 0.012,
+        "Sequence semantics: order of repair and dispatch decisions recorded "
+        "by the stage model; not minute-level vehicle departure or arrival time.",
+        ha="center", fontsize=9, color="#475569",
+    )
+    fig.subplots_adjust(
+        left=0.065, right=0.985, top=0.93, bottom=0.075, hspace=0.22,
+    )
+    fig.savefig(path, dpi=180, facecolor="white")
+    plt.close(fig)
+
+
+def _stage_event_x(period, order, total):
+    if total <= 0:
+        return float(period)
+    return period - 0.42 + 0.84 * order / (total + 1)
+
+
+def _plot_stage_dispatch_routes(instance, snapshot, positions, path):
+    base = instance.base
+    progress = snapshot["road_progress"]
+    fig, ax = plt.subplots(figsize=(13, 9), facecolor="white")
+    intact = [
+        (u, v) for u, v, data in base.graph.edges(data=True)
+        if data.get("damage_id") is None
+    ]
+    nx.draw_networkx_edges(
+        base.graph, positions, ax=ax, edgelist=intact,
+        edge_color="#cbd5e1", width=1.3, alpha=0.78,
+    )
+    for label, (color, style) in ROAD_STYLE.items():
+        edges = [
+            (edge.u, edge.v)
+            for damage_id, edge in base.damaged_edges.items()
+            if _road_stage(
+                instance, progress.get(damage_id, 0.0),
+            )["label"] == label
+        ]
+        if edges:
+            nx.draw_networkx_edges(
+                base.graph, positions, ax=ax, edgelist=edges,
+                edge_color=color, width=2.5, style=style, alpha=0.82,
+            )
+
+    supplier_index = {
+        supplier: index for index, supplier in enumerate(base.suppliers)
+    }
+    edge_flow = {}
+    demand_supply = {}
+    for shipment in snapshot["shipments"]:
+        supplier = shipment["supplier"]
+        demand = shipment["demand"]
+        demand_supply.setdefault(demand, {})
+        demand_supply[demand][supplier] = (
+            demand_supply[demand].get(supplier, 0.0) + shipment["amount"]
+        )
+        for u, v in zip(shipment["path"], shipment["path"][1:]):
+            edge = tuple(sorted((u, v)))
+            key = (supplier, edge)
+            edge_flow[key] = edge_flow.get(key, 0.0) + shipment["amount"]
+    max_flow = max(edge_flow.values(), default=1.0)
+    for supplier in base.suppliers:
+        flows = {
+            edge: amount
+            for (source, edge), amount in edge_flow.items()
+            if source == supplier
+        }
+        if not flows:
+            continue
+        nx.draw_networkx_edges(
+            base.graph, positions, ax=ax,
+            edgelist=list(flows),
+            edge_color=SUPPLY_COLORS[
+                supplier_index[supplier] % len(SUPPLY_COLORS)
+            ],
+            width=[2.0 + 6.0 * amount / max_flow for amount in flows.values()],
+            alpha=0.58,
+        )
+
+    nx.draw_networkx_nodes(
+        base.graph, positions, ax=ax, nodelist=base.demands,
+        node_color="white", node_size=100,
+        edgecolors="#f59e0b", linewidths=1.7,
+    )
+    nx.draw_networkx_nodes(
+        base.graph, positions, ax=ax, nodelist=base.suppliers,
+        node_shape="^", node_color="#fb923c", node_size=230,
+        edgecolors="#7c2d12", linewidths=1.0,
+    )
+    nx.draw_networkx_labels(
+        base.graph, positions, ax=ax,
+        labels={node: str(node) for node in base.graph},
+        font_size=5.8, font_color="#0f172a",
+    )
+    for demand, by_supplier in demand_supply.items():
+        parts = [
+            f"S{supplier}:{amount:.0f}t"
+            for supplier, amount in sorted(by_supplier.items())
+        ]
+        ax.annotate(
+            " | ".join(parts), positions[demand],
+            xytext=(5, 7), textcoords="offset points",
+            ha="left", va="bottom", fontsize=6.5, color="#0f172a",
+            bbox={
+                "boxstyle": "round,pad=0.18", "facecolor": "white",
+                "edgecolor": "#cbd5e1", "alpha": 0.88,
+                "linewidth": 0.45,
+            },
+        )
+    ax.set_title(
+        f"Stage {snapshot['period']}",
+        fontsize=14, fontweight="semibold",
+    )
+    if not snapshot["shipments"]:
+        ax.text(
+            0.5, 0.5, "No material dispatched in this stage",
+            transform=ax.transAxes, ha="center", va="center",
+            fontsize=15, color="#64748b",
+            bbox={
+                "boxstyle": "round,pad=0.5", "facecolor": "white",
+                "edgecolor": "#cbd5e1", "alpha": 0.92,
+            },
+        )
+    ax.legend(
+        handles=[
+            Line2D(
+                [0], [0], color=SUPPLY_COLORS[
+                    index % len(SUPPLY_COLORS)
+                ],
+                linewidth=4, alpha=0.7, label=f"Supply {supplier} route",
+            )
+            for index, supplier in enumerate(base.suppliers)
+        ],
+        loc="lower center", bbox_to_anchor=(0.5, -0.02),
+        ncol=len(base.suppliers), frameon=False,
+    )
+    ax.axis("off")
+    fig.subplots_adjust(left=0.025, right=0.99, top=0.92, bottom=0.075)
+    fig.savefig(path, dpi=180, facecolor="white")
+    plt.close(fig)
+
+
+def _write_dispatch_manifest(snapshots, path):
+    fields = [
+        "stage", "dispatch_order", "supplier", "demand", "amount_tons",
+        "vehicle_type", "trips", "travel_time_minutes", "path",
+    ]
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        for snapshot in snapshots:
+            for order, shipment in enumerate(snapshot["shipments"], start=1):
+                writer.writerow({
+                    "stage": snapshot["period"],
+                    "dispatch_order": order,
+                    "supplier": shipment["supplier"],
+                    "demand": shipment["demand"],
+                    "amount_tons": f"{shipment['amount']:.6f}",
+                    "vehicle_type": shipment["vehicle_type"],
+                    "trips": shipment["trips"],
+                    "travel_time_minutes": f"{shipment['travel_time']:.6f}",
+                    "path": "->".join(map(str, shipment["path"])),
+                })
 
 
 def _draw_snapshot(ax, instance, snapshot, positions, *, compact):
@@ -623,6 +923,10 @@ def _write_state_json(instance, snapshots, path):
         "eta_hours": base.eta_hours,
         "crew_transfer_time_scale": instance.crew_transfer_time_scale,
         "crew_min_access_progress": instance.crew_min_access_progress,
+        "sequence_semantics": (
+            "repair_sequence and dispatch_order record decision order within "
+            "each stage; they are not minute-level departure or arrival times."
+        ),
         "position_semantics": (
             "Crew markers show the final work site in each period. "
             "Dotted crew-colored lines show midpoint-to-midpoint transfer "
@@ -693,13 +997,29 @@ def _write_state_json(instance, snapshots, path):
             "selected_repairs": snapshot["selected_repairs"],
             "period_delivery_by_demand": snapshot["period_delivery_by_demand"],
             "period_delivered_tons": snapshot["period_delivered_tons"],
-            "shipments": snapshot["shipments"],
+            "shipments": [
+                {**shipment, "dispatch_order": order}
+                for order, shipment in enumerate(
+                    snapshot["shipments"], start=1,
+                )
+            ],
             "vehicle_trips": snapshot["vehicle_trips"],
             "road_states": roads,
             "demand_states": demands,
             "crew_locations": snapshot["crew_locations"],
             "crew_transfers": snapshot["crew_transfers"],
             "crew_activity": snapshot["crew_activity"],
+            "repair_sequence": [
+                {
+                    "crew_id": int(crew_id),
+                    "repair_order": order,
+                    "damage_id": damage_id,
+                }
+                for crew_id, damage_ids in sorted(
+                    snapshot["crew_activity"].items(),
+                )
+                for order, damage_id in enumerate(damage_ids, start=1)
+            ],
             "repair_impact": snapshot["repair_impact"],
         })
     with Path(path).open("w", encoding="utf-8") as handle:
