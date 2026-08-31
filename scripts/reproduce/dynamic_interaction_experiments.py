@@ -6,6 +6,7 @@ import random
 import sys
 from dataclasses import dataclass, replace
 from pathlib import Path
+from typing import Any, Callable
 
 if __package__ is None or __package__ == "":
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -14,6 +15,7 @@ from scripts.reproduce.capacity_recovery import (
     CapacityExperimentInstance,
     RecoveryStage,
     VehicleProfile,
+    _crew_transfer,
     _decode_timed_schedule,
     _dispatch_with_vehicle_types,
     _repair_progress_by_damage,
@@ -60,6 +62,7 @@ def run_mechanism(
     mechanism,
     seed,
     repair_efficiency_deviation=0.0,
+    state_callback: Callable[[dict[str, Any]], None] | None = None,
 ):
     uncertainty = RepairEfficiencyUncertainty(repair_efficiency_deviation)
     uncertainty.validate()
@@ -72,7 +75,10 @@ def run_mechanism(
         key=lambda edge_id: (base.damaged_edges[edge_id].repair_time, edge_id),
     )
     schedule = _decode_timed_schedule(
-        base, order, [idx % base.repair_crews for idx in range(len(order))]
+        base,
+        order,
+        [idx % base.repair_crews for idx in range(len(order))],
+        variant.crew_transfer_time_scale,
     )
     efficiency_realization = _sample_repair_efficiencies(
         base,
@@ -92,14 +98,46 @@ def run_mechanism(
     path_switches = 0
     observed_efficiencies = []
     progress_forecast_errors = []
+    crew_locations = {
+        crew_id: {
+            "kind": "node",
+            "node_id": base.suppliers[crew_id % len(base.suppliers)],
+        }
+        for crew_id in range(base.repair_crews)
+    }
+
+    if state_callback is not None:
+        state_callback(
+            _state_snapshot(
+                variant,
+                mechanism,
+                period=0,
+                progress=progress,
+                delivered=delivered,
+                selected=[],
+                crew_locations=crew_locations,
+                reachable_demands=_reachable_demands(variant, progress),
+                period_delivery={},
+                shipments=[],
+                vehicle_trips={},
+                crew_transfers={},
+                crew_activity={},
+                road_progress_before=progress,
+                counterfactual_delivery={},
+                counterfactual_reachable=_reachable_demands(variant, progress),
+            )
+        )
 
     for period in range(1, base.periods + 1):
+        period_start_progress = dict(progress)
         period_efficiency = {
             edge_id: efficiency_realization[(period, edge_id)]
             for edge_id in base.damaged_edges
         }
         if mechanism.repair_policy == "demand_rolling":
             expected_progress = dict(progress)
+            crew_activity: dict[int, list[int]] = {}
+            crew_transfers: dict[int, list[dict[str, Any]]] = {}
             selected = _objective_aligned_step(
                 variant,
                 expected_progress,
@@ -107,12 +145,34 @@ def run_mechanism(
                 remaining_supply,
                 priority,
                 base.eta_minutes,
+                crew_activity=crew_activity,
+                crew_locations=crew_locations,
+                crew_transfers=crew_transfers,
             )
             planned_increment = _progress_increment(progress, expected_progress)
         elif mechanism.repair_policy == "demand_openloop":
-            selected, planned_increment = openloop_plan[period - 1]
+            selected, planned_increment, crew_activity, crew_transfers = (
+                openloop_plan[period - 1]
+            )
         else:
-            selected, planned_increment = static_plan[period - 1]
+            selected, planned_increment, crew_activity, crew_transfers = (
+                static_plan[period - 1]
+            )
+
+        for crew_id, damage_ids in crew_activity.items():
+            if damage_ids:
+                current_location = crew_locations.get(crew_id, {})
+                transfer_items = crew_transfers.get(crew_id, [])
+                last_path = transfer_items[-1].get("path", []) if transfer_items else []
+                crew_locations[crew_id] = {
+                    "kind": "edge",
+                    "damage_id": damage_ids[-1],
+                    "access_node": (
+                        last_path[-1]
+                        if last_path
+                        else current_location.get("access_node")
+                    ),
+                }
 
         before_realization = dict(progress)
         expected_after_repair = _apply_repair_efficiency(
@@ -141,6 +201,13 @@ def run_mechanism(
             d: max(0.0, base.demand_amounts[d] - delivered[d])
             for d in base.demands
         }
+        counterfactual = _dispatch_with_vehicle_types(
+            variant,
+            priority,
+            period_start_progress,
+            dict(remaining_supply),
+            dict(remaining_demand),
+        )
         dispatch = _dispatch_with_vehicle_types(
             variant, priority, progress, remaining_supply, remaining_demand
         )
@@ -180,12 +247,49 @@ def run_mechanism(
             "capacity_blocked_tons": dispatch["capacity_blocked_tons"],
             "repair_efficiency_scenario_seed": seed,
             "repair_efficiency_deviation": uncertainty.deviation,
+            "crew_transfer_time_scale": variant.crew_transfer_time_scale,
             "period_mean_repair_efficiency": (
                 sum(worked_efficiencies) / len(worked_efficiencies)
                 if worked_efficiencies else 1.0
             ),
             "repair_progress_forecast_mae": progress_forecast_mae,
+            "crew_transfer_minutes": sum(
+                transfer["minutes"]
+                for transfers in crew_transfers.values()
+                for transfer in transfers
+            ),
+            "repair_enabled_delivery_tons": (
+                sum(dispatch["delivered"].values())
+                - sum(counterfactual["delivered"].values())
+            ),
+            "repair_enabled_reachable_demands": len(
+                set(dispatch["reachable_demands"])
+                - set(counterfactual["reachable_demands"])
+            ),
         })
+        if state_callback is not None:
+            state_callback(
+                _state_snapshot(
+                    variant,
+                    mechanism,
+                    period=period,
+                    progress=progress,
+                    delivered=delivered,
+                    selected=selected,
+                    crew_locations=crew_locations,
+                    reachable_demands=set(dispatch["reachable_demands"]),
+                    period_delivery=dispatch["delivered"],
+                    shipments=dispatch["allocations"],
+                    vehicle_trips=dispatch["vehicle_trips"],
+                    crew_transfers=crew_transfers,
+                    crew_activity=crew_activity,
+                    road_progress_before=period_start_progress,
+                    counterfactual_delivery=counterfactual["delivered"],
+                    counterfactual_reachable=set(
+                        counterfactual["reachable_demands"]
+                    ),
+                )
+            )
 
     summary = {
         "mechanism": mechanism.name,
@@ -203,8 +307,12 @@ def run_mechanism(
         "high_utilization_edge_periods": sum(r["high_utilization_edges"] for r in rows),
         "capacity_blocked_tons": sum(r["capacity_blocked_tons"] for r in rows),
         "total_vehicle_trips": sum(r["vehicle_trips"] for r in rows),
+        "total_crew_transfer_minutes": sum(
+            r["crew_transfer_minutes"] for r in rows
+        ),
         "repair_efficiency_scenario_seed": seed,
         "repair_efficiency_deviation": uncertainty.deviation,
+        "crew_transfer_time_scale": variant.crew_transfer_time_scale,
         "mean_observed_repair_efficiency": (
             sum(observed_efficiencies) / len(observed_efficiencies)
             if observed_efficiencies else 1.0
@@ -241,6 +349,8 @@ def _variant(instance, progressive):
         stages,
         capacity_scale=instance.capacity_scale,
         repair_time_weight=instance.repair_time_weight,
+        crew_transfer_time_scale=instance.crew_transfer_time_scale,
+        crew_min_access_progress=instance.crew_min_access_progress,
     )
 
 
@@ -250,9 +360,18 @@ def _build_openloop_plan(instance, dispatch_priority):
     planned_progress = {edge_id: 0.0 for edge_id in base.damaged_edges}
     planned_delivered = {demand: 0.0 for demand in base.demands}
     planned_supply = dict(base.supply_amounts)
+    crew_locations = {
+        crew_id: {
+            "kind": "node",
+            "node_id": base.suppliers[crew_id % len(base.suppliers)],
+        }
+        for crew_id in range(base.repair_crews)
+    }
     plan = []
     for _period in range(base.periods):
         before_progress = dict(planned_progress)
+        crew_activity: dict[int, list[int]] = {}
+        crew_transfers: dict[int, list[dict[str, Any]]] = {}
         selected = _objective_aligned_step(
             instance,
             planned_progress,
@@ -260,8 +379,18 @@ def _build_openloop_plan(instance, dispatch_priority):
             planned_supply,
             dispatch_priority,
             base.eta_minutes,
+            crew_activity=crew_activity,
+            crew_locations=crew_locations,
+            crew_transfers=crew_transfers,
         )
-        plan.append((selected, _progress_increment(before_progress, planned_progress)))
+        plan.append(
+            (
+                selected,
+                _progress_increment(before_progress, planned_progress),
+                crew_activity,
+                crew_transfers,
+            )
+        )
         remaining_demand = {
             demand: max(
                 0.0,
@@ -295,9 +424,118 @@ def _build_static_plan(base, schedule):
             if task.start_time < period * base.eta_minutes
             and task.finish_time > (period - 1) * base.eta_minutes
         ]
-        plan.append((selected, _progress_increment(previous, planned)))
+        crew_activity = {
+            crew_id: [
+                task.damage_id
+                for task in sorted(schedule, key=lambda item: item.start_time)
+                if task.team_id == crew_id
+                and task.start_time < period * base.eta_minutes
+                and task.finish_time > (period - 1) * base.eta_minutes
+            ]
+            for crew_id in range(base.repair_crews)
+        }
+        period_start = (period - 1) * base.eta_minutes
+        period_end = period * base.eta_minutes
+        crew_transfers = {crew_id: [] for crew_id in range(base.repair_crews)}
+        for task in schedule:
+            transfer_start = task.start_time - task.transfer_time
+            overlap = max(
+                0.0,
+                min(task.start_time, period_end) - max(transfer_start, period_start),
+            )
+            if overlap > 1e-9:
+                crew_transfers[task.team_id].append({
+                    "to_damage_id": task.damage_id,
+                    "minutes": overlap,
+                    "path": list(task.transfer_path),
+                })
+        plan.append(
+            (
+                selected,
+                _progress_increment(previous, planned),
+                crew_activity,
+                crew_transfers,
+            )
+        )
         previous = planned
     return plan
+
+
+def _reachable_demands(instance, progress):
+    reachable = set()
+    for vehicle in instance.vehicles:
+        reachable.update(
+            demand
+            for _supplier, demand in _shortest_paths_for_vehicle(
+                instance,
+                progress,
+                vehicle,
+            )
+        )
+    return reachable
+
+
+def _state_snapshot(
+    instance,
+    mechanism,
+    *,
+    period,
+    progress,
+    delivered,
+    selected,
+    crew_locations,
+    reachable_demands,
+    period_delivery,
+    shipments,
+    vehicle_trips,
+    crew_transfers,
+    crew_activity,
+    road_progress_before,
+    counterfactual_delivery,
+    counterfactual_reachable,
+):
+    base = instance.base
+    total_delivered = sum(
+        min(delivered[demand], base.demand_amounts[demand])
+        for demand in base.demands
+    )
+    actual_period_tons = sum(period_delivery.values())
+    counterfactual_period_tons = sum(counterfactual_delivery.values())
+    newly_reachable = sorted(set(reachable_demands) - set(counterfactual_reachable))
+    return {
+        "mechanism": mechanism.name,
+        "period": period,
+        "time_hours": period * base.eta_hours,
+        "road_progress": dict(progress),
+        "road_progress_before": dict(road_progress_before),
+        "delivered_by_demand": dict(delivered),
+        "period_delivery_by_demand": dict(period_delivery),
+        "period_delivered_tons": sum(period_delivery.values()),
+        "shipments": [dict(item) for item in shipments],
+        "vehicle_trips": dict(vehicle_trips),
+        "reachable_demands": sorted(reachable_demands),
+        "selected_repairs": list(selected),
+        "crew_locations": {
+            crew_id: dict(location)
+            for crew_id, location in crew_locations.items()
+        },
+        "crew_transfers": {
+            crew_id: [dict(item) for item in transfers]
+            for crew_id, transfers in crew_transfers.items()
+        },
+        "crew_activity": {
+            crew_id: list(damage_ids)
+            for crew_id, damage_ids in crew_activity.items()
+        },
+        "repair_impact": {
+            "actual_period_delivery_tons": actual_period_tons,
+            "no_current_repair_delivery_tons": counterfactual_period_tons,
+            "enabled_delivery_tons": actual_period_tons - counterfactual_period_tons,
+            "newly_reachable_demands": newly_reachable,
+            "counterfactual_reachable_demands": sorted(counterfactual_reachable),
+        },
+        "total_satisfaction": total_delivered / max(base.total_demand, 1e-9),
+    }
 
 
 def _sample_repair_efficiencies(base, seed, uncertainty):
@@ -352,38 +590,93 @@ def _objective_aligned_step(
     remaining_supply,
     dispatch_priority,
     work_minutes,
+    *,
+    crew_activity=None,
+    crew_locations=None,
+    crew_transfers=None,
 ):
     base = instance.base
     chosen = []
     active = set()
-    for _crew in range(base.repair_crews):
+    access_progress = dict(progress)
+    if crew_locations is None:
+        crew_locations = {
+            crew_id: {
+                "kind": "node",
+                "node_id": base.suppliers[crew_id % len(base.suppliers)],
+            }
+            for crew_id in range(base.repair_crews)
+        }
+    for crew_id in range(base.repair_crews):
+        if crew_activity is not None:
+            crew_activity.setdefault(crew_id, [])
+        if crew_transfers is not None:
+            crew_transfers.setdefault(crew_id, [])
         budget = float(work_minutes)
         while budget > 1e-9:
-            candidates = [
+            candidate_ids = [
                 edge_id for edge_id, value in progress.items()
                 if value < 1 - 1e-9 and edge_id not in active
             ]
+            candidates = []
+            for edge_id in candidate_ids:
+                transfer_minutes, transfer_path = _crew_transfer(
+                    base,
+                    crew_locations[crew_id],
+                    edge_id,
+                    instance.crew_transfer_time_scale,
+                    access_progress,
+                    instance.crew_min_access_progress,
+                )
+                repair_budget = budget - transfer_minutes
+                if repair_budget <= 1e-9:
+                    continue
+                candidates.append(
+                    (
+                        _candidate_objective_gain(
+                            instance,
+                            progress,
+                            delivered,
+                            remaining_supply,
+                            dispatch_priority,
+                            edge_id,
+                            repair_budget,
+                        ),
+                        -transfer_minutes,
+                        -edge_id,
+                        edge_id,
+                        transfer_minutes,
+                        transfer_path,
+                    )
+                )
             if not candidates:
                 break
-            scored = [
-                (
-                    _candidate_objective_gain(
-                        instance,
-                        progress,
-                        delivered,
-                        remaining_supply,
-                        dispatch_priority,
-                        edge_id,
-                        budget,
-                    ),
-                    -edge_id,
-                    edge_id,
-                )
-                for edge_id in candidates
-            ]
-            best = max(scored)[2]
+            best_item = max(candidates)
+            best = best_item[3]
+            transfer_minutes = best_item[4]
+            transfer_path = best_item[5]
             if best not in chosen:
                 chosen.append(best)
+            if crew_activity is not None:
+                crew_activity[crew_id].append(best)
+            if crew_transfers is not None and transfer_minutes > 1e-9:
+                crew_transfers[crew_id].append({
+                    "to_damage_id": best,
+                    "minutes": transfer_minutes,
+                    "path": list(transfer_path),
+                })
+            budget -= transfer_minutes
+            previous_location = crew_locations[crew_id]
+            access_node = (
+                transfer_path[-1]
+                if transfer_path
+                else previous_location.get("access_node")
+            )
+            crew_locations[crew_id] = {
+                "kind": "edge",
+                "damage_id": best,
+                "access_node": access_node,
+            }
             active.add(best)
             edge = base.damaged_edges[best]
             work_needed = (1.0 - progress[best]) * edge.repair_time
@@ -395,10 +688,21 @@ def _objective_aligned_step(
     return chosen
 
 
-def _apply_stress(instance, repair_scale, crews, capacity_scale=1.0):
+def _apply_stress(
+    instance,
+    repair_scale,
+    crews,
+    capacity_scale=1.0,
+    crew_transfer_time_scale=None,
+    crew_min_access_progress=None,
+):
     base = instance.base
     base.repair_crews = crews
     instance.capacity_scale = capacity_scale
+    if crew_transfer_time_scale is not None:
+        instance.crew_transfer_time_scale = crew_transfer_time_scale
+    if crew_min_access_progress is not None:
+        instance.crew_min_access_progress = crew_min_access_progress
     base.damaged_edges = {
         edge_id: replace(edge, repair_time=edge.repair_time * repair_scale)
         for edge_id, edge in base.damaged_edges.items()
@@ -509,6 +813,21 @@ def run_cli():
     parser.add_argument("--crews", type=int, default=3)
     parser.add_argument("--capacity-scale", type=float, default=1.0)
     parser.add_argument(
+        "--crew-transfer-time-scale",
+        type=float,
+        default=0.0,
+        help=(
+            "Multiplier for midpoint-to-midpoint repair-crew transfer time; "
+            "0 preserves the original no-transfer assumption."
+        ),
+    )
+    parser.add_argument(
+        "--crew-min-access-progress",
+        type=float,
+        default=0.0,
+        help="Minimum road recovery progress usable by a moving repair crew.",
+    )
+    parser.add_argument(
         "--repair-efficiency-deviation",
         type=float,
         default=0.30,
@@ -518,6 +837,10 @@ def run_cli():
     args = parser.parse_args()
     if args.capacity_scale <= 0:
         parser.error("--capacity-scale must be greater than zero")
+    if args.crew_transfer_time_scale < 0:
+        parser.error("--crew-transfer-time-scale must be non-negative")
+    if not 0.0 <= args.crew_min_access_progress <= 1.0:
+        parser.error("--crew-min-access-progress must be in [0, 1]")
     if args.seeds <= 0:
         parser.error("--seeds must be greater than zero")
     if not 0.0 <= args.repair_efficiency_deviation < 1.0:
@@ -534,6 +857,8 @@ def run_cli():
             args.repair_scale,
             args.crews,
             args.capacity_scale,
+            args.crew_transfer_time_scale,
+            args.crew_min_access_progress,
         )
         efficiency_seed = seed + 40000
         for row in _repair_efficiency_rows(instance.base, efficiency_seed, uncertainty):
@@ -555,6 +880,8 @@ def run_cli():
             summary["repair_scale"] = args.repair_scale
             summary["crews"] = args.crews
             summary["capacity_scale"] = args.capacity_scale
+            summary["crew_transfer_time_scale"] = args.crew_transfer_time_scale
+            summary["crew_min_access_progress"] = args.crew_min_access_progress
             summary["repair_efficiency_deviation"] = args.repair_efficiency_deviation
             for row in rows:
                 row["scenario"] = args.scenario
@@ -562,6 +889,8 @@ def run_cli():
                 row["repair_scale"] = args.repair_scale
                 row["crews"] = args.crews
                 row["capacity_scale"] = args.capacity_scale
+                row["crew_transfer_time_scale"] = args.crew_transfer_time_scale
+                row["crew_min_access_progress"] = args.crew_min_access_progress
                 row["repair_efficiency_deviation"] = args.repair_efficiency_deviation
             summaries.append(summary)
             periods.extend(rows)

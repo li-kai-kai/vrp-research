@@ -173,6 +173,13 @@ class ReproductionFrameworkTest(unittest.TestCase):
         self.assertLessEqual(result["max_edge_utilization"], 1.0 + 1e-9)
         self.assertGreater(result["max_edge_utilization"], 0.0)
         self.assertGreater(result["capacity_blocked_tons"], 0.0)
+        self.assertAlmostEqual(
+            sum(item["amount"] for item in result["allocations"]),
+            sum(result["delivered"].values()),
+        )
+        for allocation in result["allocations"]:
+            self.assertEqual(allocation["path"][0], allocation["supplier"])
+            self.assertEqual(allocation["path"][-1], allocation["demand"])
         for vehicle in instance.vehicles:
             self.assertLessEqual(
                 result["vehicle_trips"][vehicle.vehicle_type],
@@ -207,6 +214,87 @@ class ReproductionFrameworkTest(unittest.TestCase):
             results["progressive_rolling"]["average_reachable_ratio"],
             results["progressive_openloop"]["average_reachable_ratio"],
         )
+
+    def test_dynamic_state_snapshots_cover_every_period(self):
+        instance = _apply_stress(
+            build_wenchuan_instance(seed=1),
+            2.0,
+            2,
+            capacity_scale=0.05,
+        )
+        snapshots = []
+        mechanism = next(
+            item for item in MECHANISMS
+            if item.name == "progressive_rolling"
+        )
+        summary, rows = run_mechanism(
+            instance,
+            mechanism,
+            40001,
+            0.30,
+            state_callback=snapshots.append,
+        )
+
+        self.assertEqual(len(rows), instance.base.periods)
+        self.assertEqual(len(snapshots), instance.base.periods + 1)
+        self.assertEqual([item["period"] for item in snapshots], list(range(10)))
+        self.assertEqual(len(snapshots[-1]["road_progress"]), 16)
+        self.assertEqual(len(snapshots[-1]["delivered_by_demand"]), 35)
+        self.assertEqual(len(snapshots[-1]["crew_locations"]), 2)
+        self.assertIn("period_delivery_by_demand", snapshots[-1])
+        self.assertIn("shipments", snapshots[-1])
+        self.assertIn("crew_transfers", snapshots[-1])
+        self.assertAlmostEqual(
+            snapshots[-1]["total_satisfaction"],
+            summary["final_total_satisfaction"],
+        )
+
+    def test_crew_transfer_time_consumes_period_repair_budget(self):
+        mechanism = next(
+            item for item in MECHANISMS
+            if item.name == "progressive_rolling"
+        )
+        snapshots = {}
+        for scale in (0.0, 1.0):
+            instance = _apply_stress(
+                build_wenchuan_instance(seed=1),
+                2.0,
+                2,
+                capacity_scale=0.05,
+                crew_transfer_time_scale=scale,
+                crew_min_access_progress=0.30,
+            )
+            captured = []
+            run_mechanism(
+                instance,
+                mechanism,
+                40001,
+                0.30,
+                state_callback=captured.append,
+            )
+            snapshots[scale] = captured
+
+        transfer_minutes = sum(
+            item["minutes"]
+            for transfers in snapshots[1.0][1]["crew_transfers"].values()
+            for item in transfers
+        )
+        self.assertGreater(transfer_minutes, 0.0)
+        self.assertLess(
+            sum(snapshots[1.0][1]["road_progress"].values()),
+            sum(snapshots[0.0][1]["road_progress"].values()),
+        )
+        for snapshot in snapshots[1.0][1:]:
+            before = snapshot["road_progress_before"]
+            for transfers in snapshot["crew_transfers"].values():
+                for transfer in transfers:
+                    for u, v in zip(transfer["path"], transfer["path"][1:]):
+                        damage_id = instance.base.graph[u][v].get("damage_id")
+                        if damage_id is not None:
+                            self.assertGreaterEqual(
+                                before[damage_id],
+                                instance.crew_min_access_progress - 1e-9,
+                            )
 
     def test_revealed_repair_efficiency_can_change_rolling_decisions(self):
         instance = _apply_stress(

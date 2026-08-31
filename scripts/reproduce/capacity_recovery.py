@@ -51,6 +51,8 @@ class CapacityExperimentInstance:
     recovery_stages: list[RecoveryStage]
     capacity_scale: float = 1.0
     repair_time_weight: float = 0.05
+    crew_transfer_time_scale: float = 0.0
+    crew_min_access_progress: float = 0.0
 
 
 @dataclass
@@ -60,6 +62,8 @@ class TimedRepairTask:
     start_time: float
     finish_time: float
     repair_time: float
+    transfer_time: float = 0.0
+    transfer_path: tuple[int, ...] = ()
 
 
 @dataclass
@@ -427,7 +431,12 @@ def evaluate_capacity_solution(
     individual: CapacityIndividual,
 ) -> tuple[tuple[float, float, float], dict[str, float]]:
     base = instance.base
-    schedule = _decode_timed_schedule(base, individual.repair_order, individual.team_assignment)
+    schedule = _decode_timed_schedule(
+        base,
+        individual.repair_order,
+        individual.team_assignment,
+        instance.crew_transfer_time_scale,
+    )
     remaining_supply = dict(base.supply_amounts)
     delivered = {demand: 0.0 for demand in base.demands}
     total_delivery_time = 0.0
@@ -435,6 +444,15 @@ def evaluate_capacity_solution(
         max(0.0, min(task.finish_time, base.horizon_minutes) - task.start_time)
         for task in schedule
         if task.start_time < base.horizon_minutes
+    )
+    total_crew_transfer_time = sum(
+        max(
+            0.0,
+            min(task.start_time, base.horizon_minutes)
+            - max(0.0, task.start_time - task.transfer_time),
+        )
+        for task in schedule
+        if task.start_time - task.transfer_time < base.horizon_minutes
     )
     unmet_area = 0.0
     reachable_ratios: list[float] = []
@@ -499,7 +517,8 @@ def evaluate_capacity_solution(
     all_vehicle_tons = sum(vehicle_ton_by_type.values())
     time_cost = (
         total_delivery_time
-        + instance.repair_time_weight * total_repair_work
+        + instance.repair_time_weight
+        * (total_repair_work + total_crew_transfer_time)
     )
     objectives = (
         unmet_area,
@@ -509,12 +528,14 @@ def evaluate_capacity_solution(
     metrics = {
         "capacity_scale": instance.capacity_scale,
         "repair_time_weight": instance.repair_time_weight,
+        "crew_transfer_time_scale": instance.crew_transfer_time_scale,
         "final_total_satisfaction": final_total_satisfaction,
         "final_min_satisfaction": final_min_satisfaction,
         "average_reachable_ratio": sum(reachable_ratios) / max(len(reachable_ratios), 1),
         "final_repaired_ratio": repaired_count / max(len(base.damaged_edges), 1),
         "total_delivery_time": total_delivery_time,
         "total_repair_work": total_repair_work,
+        "total_crew_transfer_time": total_crew_transfer_time,
         "partial_recovery_edge_periods": float(partial_recovery_edge_periods),
         "small_vehicle_share": small_vehicle_tons / max(all_vehicle_tons, 1e-9),
         "max_edge_utilization": max(max_edge_utilizations, default=0.0),
@@ -529,8 +550,16 @@ def _decode_timed_schedule(
     base: RandomInstance,
     repair_order: list[int],
     team_assignment: list[int],
+    crew_transfer_time_scale: float = 0.0,
 ) -> list[TimedRepairTask]:
     team_free = {team_id: 0.0 for team_id in range(base.repair_crews)}
+    team_locations = {
+        team_id: {
+            "kind": "node",
+            "node_id": base.suppliers[team_id % len(base.suppliers)],
+        }
+        for team_id in range(base.repair_crews)
+    }
     tasks: list[TimedRepairTask] = []
     seen: set[int] = set()
     for idx, damage_id in enumerate(repair_order):
@@ -539,9 +568,16 @@ def _decode_timed_schedule(
         seen.add(damage_id)
         team_id = team_assignment[idx] % base.repair_crews
         repair_time = base.damaged_edges[damage_id].repair_time
-        start_time = team_free[team_id]
+        transfer_time, transfer_path = _crew_transfer(
+            base,
+            team_locations[team_id],
+            damage_id,
+            crew_transfer_time_scale,
+        )
+        start_time = team_free[team_id] + transfer_time
         finish_time = start_time + repair_time
         team_free[team_id] = finish_time
+        team_locations[team_id] = {"kind": "edge", "damage_id": damage_id}
         tasks.append(
             TimedRepairTask(
                 damage_id=damage_id,
@@ -549,9 +585,87 @@ def _decode_timed_schedule(
                 start_time=start_time,
                 finish_time=finish_time,
                 repair_time=repair_time,
+                transfer_time=transfer_time,
+                transfer_path=tuple(transfer_path),
             )
         )
     return tasks
+
+
+def _crew_transfer(
+    base: RandomInstance,
+    origin: dict[str, Any],
+    target_damage_id: int,
+    time_scale: float,
+    road_progress: dict[int, float] | None = None,
+    min_access_progress: float = 0.30,
+) -> tuple[float, list[int]]:
+    """Approximate midpoint-to-midpoint crew transfer on the physical network."""
+    if origin.get("kind") == "edge" and origin.get("damage_id") == target_damage_id:
+        return 0.0, []
+
+    target = base.damaged_edges[target_damage_id]
+    target_endpoints = (target.u, target.v)
+    target_half = 0.5 * float(
+        base.graph[target.u][target.v].get(
+            "free_time",
+            base.graph[target.u][target.v].get("weight", 0.0),
+        )
+    )
+    if origin.get("kind") == "edge":
+        source = base.damaged_edges[int(origin["damage_id"])]
+        if (
+            road_progress is not None
+            and road_progress.get(source.damage_id, 0.0)
+            < min_access_progress - 1e-9
+            and origin.get("access_node") is not None
+        ):
+            source_endpoints = (int(origin["access_node"]),)
+        else:
+            source_endpoints = (source.u, source.v)
+        source_half = 0.5 * float(
+            base.graph[source.u][source.v].get(
+                "free_time",
+                base.graph[source.u][source.v].get("weight", 0.0),
+            )
+        )
+    else:
+        source_endpoints = (int(origin["node_id"]),)
+        source_half = 0.0
+
+    transfer_graph = base.graph
+    if road_progress is not None:
+        transfer_graph = nx.Graph()
+        transfer_graph.add_nodes_from(base.graph.nodes(data=True))
+        for u, v, data in base.graph.edges(data=True):
+            damage_id = data.get("damage_id")
+            if (
+                damage_id is None
+                or road_progress.get(int(damage_id), 0.0)
+                >= min_access_progress - 1e-9
+            ):
+                transfer_graph.add_edge(u, v, **data)
+
+    best: tuple[float, list[int]] | None = None
+    for source_node in source_endpoints:
+        for target_node in target_endpoints:
+            try:
+                length, path = nx.single_source_dijkstra(
+                    transfer_graph,
+                    source_node,
+                    target_node,
+                    weight=lambda _u, _v, data: float(
+                        data.get("free_time", data.get("weight", 1.0))
+                    ),
+                )
+            except (nx.NetworkXNoPath, nx.NodeNotFound):
+                continue
+            candidate = (source_half + float(length) + target_half, list(path))
+            if best is None or candidate[0] < best[0]:
+                best = candidate
+    if best is None:
+        return math.inf, []
+    return best[0] * max(time_scale, 0.0), best[1]
 
 
 def _repair_progress_by_damage(
@@ -597,6 +711,7 @@ def _dispatch_with_vehicle_types(
     vehicle_tons = {vehicle.vehicle_type: 0.0 for vehicle in instance.vehicles}
     vehicle_trips = {vehicle.vehicle_type: 0 for vehicle in instance.vehicles}
     capacity_blocked_demands: set[int] = set()
+    allocations: list[dict[str, Any]] = []
     delivery_time = 0.0
     reachable_demands = [
         demand
@@ -643,6 +758,7 @@ def _dispatch_with_vehicle_types(
         vehicle_trips,
         fair_targets,
         capacity_blocked_demands,
+        allocations,
     )
     residual_targets = {
         demand: min(
@@ -664,6 +780,7 @@ def _dispatch_with_vehicle_types(
         vehicle_trips,
         residual_targets,
         capacity_blocked_demands,
+        allocations,
     )
 
     max_edge_utilization, high_utilization_edges = _edge_utilization_stats(
@@ -679,6 +796,8 @@ def _dispatch_with_vehicle_types(
         "delivered": delivered,
         "delivery_time": delivery_time,
         "reachable_count": len(reachable),
+        "reachable_demands": sorted(reachable),
+        "allocations": allocations,
         "vehicle_tons": vehicle_tons,
         "vehicle_trips": vehicle_trips,
         "max_edge_utilization": max_edge_utilization,
@@ -726,6 +845,7 @@ def _allocate_vehicle_aware(
     vehicle_trips: dict[int, int],
     targets: dict[int, float],
     capacity_blocked_demands: set[int],
+    allocations: list[dict[str, Any]],
 ) -> float:
     delivery_time = 0.0
     for supplier, demand in dispatch_priority:
@@ -794,6 +914,15 @@ def _allocate_vehicle_aware(
             delivered[demand] += amount
             vehicle_tons[vehicle.vehicle_type] += amount
             vehicle_trips[vehicle.vehicle_type] += trips
+            allocations.append({
+                "supplier": supplier,
+                "demand": demand,
+                "vehicle_type": vehicle.vehicle_type,
+                "amount": amount,
+                "trips": trips,
+                "travel_time": travel_time,
+                "path": list(path),
+            })
             capacity_use = trips * vehicle.pcu_per_vehicle
             for u, v in zip(path, path[1:]):
                 edge_key = _edge_key(u, v)
@@ -1376,6 +1505,8 @@ def _experiment_parameters(
         "model": {
             "capacity_scale": instance.capacity_scale,
             "repair_time_weight": instance.repair_time_weight,
+            "crew_transfer_time_scale": instance.crew_transfer_time_scale,
+            "crew_min_access_progress": instance.crew_min_access_progress,
             "vehicles": [asdict(vehicle) for vehicle in instance.vehicles],
             "recovery_stages": [asdict(stage) for stage in instance.recovery_stages],
         },
@@ -1388,6 +1519,10 @@ def run_cli() -> None:
         raise SystemExit("--capacity-scale must be greater than zero")
     if args.repair_time_weight < 0:
         raise SystemExit("--repair-time-weight must be non-negative")
+    if args.crew_transfer_time_scale < 0:
+        raise SystemExit("--crew-transfer-time-scale must be non-negative")
+    if not 0.0 <= args.crew_min_access_progress <= 1.0:
+        raise SystemExit("--crew-min-access-progress must be in [0, 1]")
     if args.pop_size < 2:
         raise SystemExit("--pop-size must be at least 2")
     if args.generations <= 0:
@@ -1421,6 +1556,8 @@ def run_cli() -> None:
                 instance = build_wenchuan_instance(seed)
             instance.capacity_scale = args.capacity_scale
             instance.repair_time_weight = args.repair_time_weight
+            instance.crew_transfer_time_scale = args.crew_transfer_time_scale
+            instance.crew_min_access_progress = args.crew_min_access_progress
             print(
                 f"Solving {scenario} seed={seed} "
                 f"nodes={instance.base.num_nodes} damaged={len(instance.base.damaged_edges)}"
@@ -1467,6 +1604,21 @@ def _parse_args() -> argparse.Namespace:
         type=float,
         default=0.05,
         help="Weight lambda_R applied to repair work in the time objective.",
+    )
+    parser.add_argument(
+        "--crew-transfer-time-scale",
+        type=float,
+        default=0.0,
+        help=(
+            "Multiplier for midpoint-to-midpoint repair-crew transfer time; "
+            "0 preserves the original no-transfer assumption."
+        ),
+    )
+    parser.add_argument(
+        "--crew-min-access-progress",
+        type=float,
+        default=0.0,
+        help="Minimum recovery progress usable by a moving repair crew.",
     )
     parser.add_argument(
         "--output-dir",
