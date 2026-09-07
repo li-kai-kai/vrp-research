@@ -5,7 +5,7 @@ build/
 dist/
 wheels/
 *.egg-info
-\n# OS metadata
+# OS metadata
 .DS_Store
 
 # Virtual environments
@@ -20,8 +20,3 @@ figures/
 *.svg
 *.pdf
 !references/*.pdf
-!presentations/*.pptx
-
-# Local/downloaded literature assets
-downloads/xju/pdfbox/
-downloads/xju/ocr/

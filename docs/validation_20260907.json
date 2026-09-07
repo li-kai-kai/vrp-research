@@ -1,0 +1,218 @@
+{
+  "verified_on": "2026-09-07",
+  "status": "smoke_only_not_publication",
+  "verification": {
+    "tests": {
+      "passed": 21,
+      "original_test_bodies_preserved": true
+    },
+    "benchmark_and_ablation": "Existing manifests match current source hashes; not rerun during final documentation pass",
+    "dynamic_s8": "Rerun with current code; all three CSV files byte-identical",
+    "historical_archive": "72 indexed files and archive SHA-256 verified",
+    "plots": "Benchmark CSV plot and Wenchuan network rendered and visually checked; Chinese font fallback corrected"
+  },
+  "source_files_sha256": {
+    "scripts/reproduce/__init__.py": "76c6346522bdda6b67bfb95472dffd5a7d88faa0c6371b8631d30681789e26d9",
+    "scripts/reproduce/benchmark_algorithms.py": "55d638e5f9c1bf7d02ad7b995354a600ba45eec5ecaa72c287f930654413a163",
+    "scripts/reproduce/benchmark_suite.py": "57d7dbdaf9c7b3f98bdd6b592efe213417fea3f54bb7e528e3a11c0c27cea78f",
+    "scripts/reproduce/capacity_recovery.py": "a3a55b85ebbd1f0bf82b52752d48beec3cc5562369559cb94bf9d3f662255575",
+    "scripts/reproduce/dispatch.py": "b62d2940a71c9ce7bf6902c863e3594ba39ed98a941fb371c697c5a29075cf5a",
+    "scripts/reproduce/dynamic_interaction_experiments.py": "f5283eac1a33163a322b0af63a3e83ceb2385318b01dc723797d4e2cd0e09634",
+    "scripts/reproduce/dynamic_interaction_grid.py": "107b301f9cb5e5229ff080e1eb3d3c367ceb4b18a7df209ab04f8348c91a31da",
+    "scripts/reproduce/ga_solver.py": "d5266b2cbc9364fb98da561e98c79db0d1187e320db8ffd80120c84e6534fa64",
+    "scripts/reproduce/instance_generator.py": "f121ea469e6bc7f547abc1b241c0baa35792960e465bdca0ea90098307712021",
+    "scripts/reproduce/metrics.py": "3a53584d0a5c714c85f0007aae5ffa29a9965d2018972f11564bcbf67186732b",
+    "scripts/reproduce/model.py": "ca01ca70a94751139e2e082c99e13d23b09bfcbf6088061e1a09dbdce43528e2",
+    "scripts/reproduce/model_ablation_analysis.py": "bb9c9bb4a0a915763d0382c291e8a3f617b4421cfa49a0c90486cb6d8594788e",
+    "scripts/reproduce/run_benchmark.py": "a4333ff20e239a44057a759dbac6d483477eb91e76a6f4a39372f8502fef8d04",
+    "scripts/reproduce/run_model_ablation.py": "6a39f58edd89f22cf9924ab58f4c485d97ce731264dac4b779e9c8b9ec722439",
+    "scripts/reproduce/run_random_experiments.py": "9d3e7ac4297ae5ed97b2a843d142e0d09c254fc6abec6b065152bc574555149c",
+    "scripts/reproduce/stage_visualization.py": "4efcd79bc1c7294e531a2df4b4a569fc8e8d45d7a787a0663d65f80f0c98fb65",
+    "scripts/reproduce/visualize.py": "00824313b52dc9f046899d83a290bd6b09e305db80428e2d70d68bc8673ac90d"
+  },
+  "uv_lock_sha256": "5b0cf64796c740d6c261a36e44622a83bb92c9e1886ca5a0fc233c56911fac5c",
+  "artifacts_sha256": {
+    "outputs/validation_20260907/benchmark/aggregate_by_size.csv": "99f4ebe39e6b504354194001f0a431d9dc2b9bcaf97e897a12ff0abaae722580",
+    "outputs/validation_20260907/benchmark/convergence.csv": "4e443df9730fe0ddc433bf9146723f91e7e97a625e83e39b68ea6369ae0be52c",
+    "outputs/validation_20260907/benchmark/experiment_manifest.json": "5d2a76f40fd82daf07f8bd814d21a232047bb81308f569388220f2320d59bc2e",
+    "outputs/validation_20260907/benchmark/instances.csv": "1e4677982c839c84a1eeebcf0bc308fb2fd095a5ee1e99e9a2ae0eb6142b81d2",
+    "outputs/validation_20260907/benchmark/pareto_points.csv": "b5e159c09617a81487bd38697a2c298c6d6b24b67a7359c0880a0c253656f659",
+    "outputs/validation_20260907/benchmark/runs.csv": "e9681660d10cc13d01da25470eb83949b87758a019dee1cf7c23879d67f34066",
+    "outputs/validation_20260907/dynamic_s8/mechanism_summary.csv": "a33f399f311ddcef013dce4afa8ac5d7f3fa499ca90411f6a3eee16d9a186ace",
+    "outputs/validation_20260907/dynamic_s8/period_dynamics.csv": "93fb1fc05cd5bc5e499b56d7bf70845a9191c635015cba97d9331de026ef92d7",
+    "outputs/validation_20260907/dynamic_s8/repair_efficiency_realizations.csv": "3cb7b09306bbe757b81b49c4f419c4c4d9dc721bce7235a8d1e6fbd31dd0a79e",
+    "outputs/validation_20260907/model_ablation/experiment_manifest.json": "5d24554b0a596c7e6f0b5034466807e832acc99d3815987433c19dccfff0843e",
+    "outputs/validation_20260907/model_ablation/factor_effects.csv": "ef30883ff95fe93145cd61defb93abbdeccdd0a9b6c906d9091469be0d8219e2",
+    "outputs/validation_20260907/model_ablation/factor_effects_raw.csv": "18547273f772ff7a9eec9df722d166ecae08c28b9f768fa9e5c89fb8c4e41076",
+    "outputs/validation_20260907/model_ablation/factorial_completeness.csv": "bd196df15598121bd2777c3a13ac97917c80e6c73f414991784d35598185e586",
+    "outputs/validation_20260907/model_ablation/model_ablation.csv": "539eb4d3a5fc88663af4856f06f4be552a0cc397533e2af695c67a7e00b0527a",
+    "outputs/validation_20260907/model_ablation/model_summary.csv": "49ee29393930e7e63e710136a340d45dac73b6321d544df6ff5ecc7f3740f2c0",
+    "outputs/validation_20260907/model_ablation/pareto_points.csv": "6450948124c1a6a6c2a0ac93c26d1b847b01ebb4728ffa001c4a478e281355f2",
+    "outputs/validation_20260907/model_ablation/pooled_reference_front.csv": "a21aae4513c40bc11ba22619f5cb5c19d30e610993a23f9ad4c272fa2914304b"
+  },
+  "dynamic_parameters": {
+    "scenario": "wenchuan",
+    "seed_start": 1,
+    "seeds": 5,
+    "repair_scale": 2,
+    "crews": 2,
+    "capacity_scale": 0.05,
+    "repair_efficiency_deviation": 0.3,
+    "crew_transfer_time_scale": 0,
+    "crew_min_access_progress": 0
+  },
+  "dynamic_means": {
+    "binary_static": {
+      "cumulative_unmet_area": 4.193458845685347,
+      "final_total_satisfaction": 0.5982344352186753,
+      "final_min_satisfaction": 0.0,
+      "average_reachable_ratio": 0.7085714285714286
+    },
+    "progressive_static": {
+      "cumulative_unmet_area": 2.9479829178598234,
+      "final_total_satisfaction": 0.7973068745570387,
+      "final_min_satisfaction": 0.7973068745568526,
+      "average_reachable_ratio": 0.8857142857142858
+    },
+    "progressive_openloop": {
+      "cumulative_unmet_area": 2.5986130120269237,
+      "final_total_satisfaction": 0.7889721641390992,
+      "final_min_satisfaction": 0.6378454996454821,
+      "average_reachable_ratio": 0.9161904761904761
+    },
+    "progressive_rolling": {
+      "cumulative_unmet_area": 2.545638157675592,
+      "final_total_satisfaction": 0.7973068745570422,
+      "final_min_satisfaction": 0.7973068745568526,
+      "average_reachable_ratio": 0.9238095238095237
+    }
+  },
+  "dynamic_openloop_minus_rolling_cua": [
+    0.02825325565407688,
+    0.0,
+    0.0,
+    0.20836776044850458,
+    0.02825325565407688
+  ],
+  "dynamic_mean_cua_improvement": 0.05297485435133167,
+  "benchmark": {
+    "runs": 12,
+    "instance_seeds": [
+      1
+    ],
+    "solver_repeats": 1,
+    "max_evaluations": 12,
+    "pop_size": 4,
+    "hv_igd": [
+      {
+        "case_id": "S020",
+        "algorithm": "spt",
+        "solver_seed": "60000",
+        "evaluations": "1",
+        "hypervolume": "0.03867115133560133",
+        "igd": "0.7341226711345592"
+      },
+      {
+        "case_id": "S020",
+        "algorithm": "vnd",
+        "solver_seed": "60000",
+        "evaluations": "12",
+        "hypervolume": "1.228229248710866",
+        "igd": "0.21448613329749439"
+      },
+      {
+        "case_id": "S020",
+        "algorithm": "nsga2",
+        "solver_seed": "60000",
+        "evaluations": "12",
+        "hypervolume": "0.2574120887977551",
+        "igd": "0.42353450916346896"
+      },
+      {
+        "case_id": "S020",
+        "algorithm": "nsga2_alns",
+        "solver_seed": "60000",
+        "evaluations": "12",
+        "hypervolume": "0.24633876026603757",
+        "igd": "0.3858458693214577"
+      },
+      {
+        "case_id": "M060",
+        "algorithm": "spt",
+        "solver_seed": "60000",
+        "evaluations": "1",
+        "hypervolume": "0.009006823302822419",
+        "igd": "1.1992636580211837"
+      },
+      {
+        "case_id": "M060",
+        "algorithm": "vnd",
+        "solver_seed": "60000",
+        "evaluations": "12",
+        "hypervolume": "0.1550053645496871",
+        "igd": "0.7068541310545206"
+      },
+      {
+        "case_id": "M060",
+        "algorithm": "nsga2",
+        "solver_seed": "60000",
+        "evaluations": "12",
+        "hypervolume": "1.1601085977966914",
+        "igd": "0.083959372132068"
+      },
+      {
+        "case_id": "M060",
+        "algorithm": "nsga2_alns",
+        "solver_seed": "60000",
+        "evaluations": "12",
+        "hypervolume": "0.5850696199427281",
+        "igd": "0.34165817667476417"
+      },
+      {
+        "case_id": "L120",
+        "algorithm": "spt",
+        "solver_seed": "60000",
+        "evaluations": "1",
+        "hypervolume": "0.01332832933741095",
+        "igd": "0.7614556083943401"
+      },
+      {
+        "case_id": "L120",
+        "algorithm": "vnd",
+        "solver_seed": "60000",
+        "evaluations": "12",
+        "hypervolume": "0.022417356010763362",
+        "igd": "0.7127217393894721"
+      },
+      {
+        "case_id": "L120",
+        "algorithm": "nsga2",
+        "solver_seed": "60000",
+        "evaluations": "12",
+        "hypervolume": "0.40399164057898385",
+        "igd": "0.3711901185716763"
+      },
+      {
+        "case_id": "L120",
+        "algorithm": "nsga2_alns",
+        "solver_seed": "60000",
+        "evaluations": "12",
+        "hypervolume": "0.21814400430220132",
+        "igd": "0.47347726564803844"
+      }
+    ]
+  },
+  "model_ablation": {
+    "runs": 24,
+    "complete_paired_blocks": 3,
+    "models_per_block": 8,
+    "max_evaluations": 12,
+    "pop_size": 4,
+    "statistical_units_per_case": 1
+  },
+  "plot_source_files_sha256": {
+    "scripts/plot_benchmark_results.py": "f58bd8bd22522dd14fc9e98d44ceff8187be2c4baf18af6aff72f0ec9b2f7476",
+    "scripts/plot_initial_network.py": "caabba0579c3354e572f4c392425f6e31495d53e88b1316ec56fa0ef6f8b9cfc"
+  },
+  "source_snapshot_note": "Source hashes preserve the pre-legacy-migration verification snapshot. Five ordinary-GA modules later moved from scripts/reproduce to scripts/legacy with internal imports updated; see cleanup_inventory.json. Shared research modules and benchmark/ablation manifest source files remain in place."
+}

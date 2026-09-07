@@ -1,28 +1,29 @@
 # 脚本说明
 
-本目录保存围绕汶川案例、原论文基线和最新容量渐进恢复 proposal 的 Python 复现代码。
+本目录保存围绕汶川案例、原论文基线和容量渐进恢复研究 的 Python 复现代码。
+
+当前模型口径见[研究说明](../docs/research.md)，已核验结果见[实验进展](../docs/experiments.md)。`capacity_recovery.py` 的固定概率局部强化与 benchmark 的自适应实现不同，不能混用算法名称或评价预算。
 
 ## 主线脚本
 
 | 脚本 | 作用 | 备注 |
 |---|---|---|
-| `reproduce/capacity_recovery.py` | 道路容量渐进恢复、车型阈值、边—周期 pcu 吞吐和 NSGA-II + ALNS 原型实验 | 最新 proposal 主入口 |
-| `reproduce/dynamic_interaction_experiments.py` | 二元/渐进、open-loop/rolling 对照，输出容量指标、进度预测误差和维修效率实现 | 机制验证主入口 |
+| `reproduce/run_benchmark.py` | SPT、VND、NSGA-II、自适应 NSGA-II + ALNS 的同预算算法比较 | 算法对照主入口 |
+| `plot_benchmark_results.py` | 显式读取 benchmark `runs.csv` 绘图 | 不含硬编码实验数值 |
+| `reproduce/capacity_recovery.py` | 道路容量渐进恢复、车型阈值、边—周期 pcu 吞吐和 NSGA-II + ALNS 原型实验 | 决策/Pareto 原型入口；固定概率局部搜索 |
+| `reproduce/dynamic_interaction_experiments.py` | 二元静态、渐进静态、渐进 open-loop/rolling 对照，输出容量指标、进度预测误差和维修效率实现 | 机制验证主入口 |
 | `reproduce/dynamic_interaction_grid.py` | 运行多种子 × 12 组资源设置并生成四机制配对汇总，支持容量与维修效率敏感性 | 网格复现入口 |
 | `reproduce/run_model_ablation.py` | 对渐进恢复、异质车型阈值和边—周期容量约束运行完整 `2^3` 配对消融 | 模型 factorial 入口 |
 | `reproduce/model_ablation_analysis.py` | 合并消融分片，重算统一 pooled HV/IGD，并估计主效应、二阶交互及配对统计 | 正式消融分析入口 |
 | `reproduce/stage_visualization.py` | 按周期绘制道路、需求、维修队快照，并输出维修与配送决策时序图 | 阶段状态展示入口 |
-| `reproduce/run_random_experiments.py` | 论文随机算例与普通 GA 实验，输出 CSV/JSON/PNG | 基线和对照入口 |
 | `reproduce/model.py` 等模块 | 实例、调度、配送、指标、求解和可视化 | 主线共享实现 |
 | `plot_initial_network.py` | 绘制初始路网、供给点、需求点和受损路段 | 用于检查表格数据和网络结构 |
 
-早期单目标、二元道路和展示型实验已删除。后续新增实验应作为 `reproduce/` 的配置、基线或消融组实现，避免再次复制整套数据与求解逻辑。
+过时的独立展示入口已清理，原模型/普通 GA 与二元机制仍保留为基线。后续新增实验应作为 `reproduce/` 的配置、基线或消融组实现，避免再次复制整套数据与求解逻辑。
 
-## 工具脚本
+## 历史复现
 
-| 脚本 | 作用 | 定位 |
-|---|---|---|
-| `tools/ocr_xju_downloads.py` | 对 `downloads/xju/pdfbox/<fid>/page_*.jpg` 执行 OCR，并写入 `downloads/xju/ocr/` | 本地资料处理工具，不属于算法复现实验 |
+普通 GA 链已迁至 [legacy/](legacy/README.md)，包含实验入口、求解器、旧配送/评价和绘图五个模块；共享实例与数据结构留在 `reproduce/`。它用于历史参考，当前算法对照使用 `reproduce/run_benchmark.py`。旧模型测试继续参与全量测试。
 
 ## 运行方式
 
@@ -30,15 +31,16 @@
 
 ```bash
 uv sync
-uv run python scripts/plot_initial_network.py
-uv run python scripts/reproduce/run_random_experiments.py --config quick
-uv run python scripts/reproduce/run_random_experiments.py --nodes 50 --gamma 4 --damage 0.3 --eta 8 --seeds 5
+uv run python scripts/plot_initial_network.py --mode wenchuan
+uv run python scripts/reproduce/run_benchmark.py --suite smoke --max-evaluations 12 --pop-size 4 --output-dir outputs/benchmark_smoke
+uv run python scripts/plot_benchmark_results.py --input outputs/benchmark_smoke/runs.csv --output-dir outputs/figures/benchmark_smoke
+uv run python scripts/legacy/run_random_experiments.py --config quick
+uv run python scripts/legacy/run_random_experiments.py --nodes 50 --gamma 4 --damage 0.3 --eta 8 --seeds 5
 uv run python scripts/reproduce/capacity_recovery.py --scenario both --seeds 1 --sim-nodes 25 --pop-size 24 --generations 20 --alns-iterations 8 --output-dir outputs/capacity_recovery
 uv run python scripts/reproduce/dynamic_interaction_experiments.py --scenario wenchuan --seeds 5 --repair-scale 2 --crews 2 --capacity-scale 0.05 --repair-efficiency-deviation 0.30 --output-dir outputs/dynamic_interaction_uncertain_s8
 uv run python scripts/reproduce/dynamic_interaction_grid.py --seed 1 --seeds 5 --capacity-scale 0.05 --repair-efficiency-deviation 0.30 --output-dir outputs/dynamic_grid_uncertain
 uv run python scripts/reproduce/run_model_ablation.py --suite smoke --output-dir outputs/model_ablation_smoke
 uv run python scripts/reproduce/stage_visualization.py --scenario wenchuan --mechanism progressive_rolling --seed 1 --repair-scale 2 --crews 2 --capacity-scale 0.05 --repair-efficiency-deviation 0.30 --crew-transfer-time-scale 1.0 --crew-min-access-progress 0.30 --output-dir outputs/stage_visualization_s8_v7
-uv run python scripts/tools/ocr_xju_downloads.py
 ```
 
 如果只想快速验证随机算例框架，可以给复现实验入口追加较小的 GA 参数，例如 `--pop-size 10 --generations 3`。
@@ -58,7 +60,7 @@ uv run python scripts/reproduce/model_ablation_analysis.py --input-root outputs/
 
 ## 维护建议
 
-`capacity_scale=1.0` 保留项目估算容量；更低数值仅用于压力测试，不代表汶川现场实测容量。当前车型单车当量 1.0/1.5/2.0/2.5 同样是待标定场景值。后续实验应复用 `reproduce/` 中的公共数据结构和评价函数，并优先补齐 proposal 要求的基线、消融、多种子统计与完整 Pareto 前沿输出。
+`capacity_scale=1.0` 保留项目估算容量；更低数值仅用于压力测试，不代表汶川现场实测容量。当前车型单车当量 1.0/1.5/2.0/2.5 同样是待标定场景值。后续实验应复用 `reproduce/` 中的公共数据结构和评价函数，现已具备基线、消融、统计分析和 Pareto 输出框架；正式多实例、多重复运行仍待完成。
 维修效率偏差使用共同随机数：同一种子下四种机制面对相同的 `xi_a^t`。`repair-efficiency-deviation=0` 用于验证没有新信息时 open-loop 与 rolling 不应产生虚假优势。
 动态实验目录中的 `repair_efficiency_realizations.csv` 保存每个周期、每条受损道路的实际效率，便于独立审计共同随机数与复现实验。
 阶段可视化会生成 `stage_00.png` 至 `stage_09.png`、`stage_overview.png`、`delivery_timeline.png`、`operation_sequence.png` 和 `stage_states.json`。需求点填色表示累计满足率，青色描边和节点大小表示本期新增配送；未配送点统一为白底橙圈，不在地图上额外标记不可达状态。每支维修队使用独立颜色和符号，彩色点线表示本期转场路径。`dispatch_routes/` 保存每个 Stage 的物资配送路线图，需求点旁按供应来源标注本期吨位；`dispatch_manifest.csv` 逐条保存供应点、需求点、吨位、车型、趟数、运输时间和完整路径。
@@ -68,3 +70,5 @@ uv run python scripts/reproduce/model_ablation_analysis.py --input-root outputs/
 `--crew-min-access-progress 0.30` 要求维修队转场路径上的受损道路至少达到临时通行状态。维修队到达尚未打通的目标路段后会保留实际进入端点；在该路段达到通行阈值前，不能从另一端穿越到更深的待修路段。每期还会计算“本期实际修复后配送”与“保持期初道路状态、不实施本期修复”的反事实配送，报告修复新增吨位和新增可达点。
 
 渐进恢复状态的默认含义为：`blocked`（进度 0–30%，容量和速度为 0）、`temporary`（30–60%，临时便道，容量/速度恢复到 30%）、`one_lane`（60–80%，单车道通行，恢复到 60%）、`basic`（80–100%，基本恢复，恢复到 80%）和 `full`（100%，完全恢复）。车型仍需同时满足自身进度阈值 30%、50%、70% 和 80% 才能通行。
+
+正式算法 benchmark 使用 `--suite publication`。汶川应单独指定 `--cases WEN38 --instance-seeds 1`，否则该入口会遍历默认实例种子而重复同一固定网络；合成案例按默认多实例运行。SPT 仅一次构造评价，其余搜索受 `max-evaluations` 上限约束。benchmark 汇总与绘图先平均实例内 solver 重复，图中误差条为实例间标准差；固定汶川实例的零误差条不表示求解器没有随机波动，应另查看各 solver 运行。
