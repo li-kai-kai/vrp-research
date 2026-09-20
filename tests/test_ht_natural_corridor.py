@@ -28,6 +28,7 @@ from scripts.reproduce.ht_natural_corridor import (
     corridor_ranking,
     damage_overlay,
     edge_structure,
+    total_od_pairs,
     fixed_decision_effect,
     role_overlay,
     scenario_stratum,
@@ -232,8 +233,79 @@ class ExposureTest(unittest.TestCase):
         for row in exposure["od_rows"]:
             with self.subTest(period=row["period"]):
                 self.assertTrue(
-                    row["vehicle_feasibility_split"] or row["vehicle_shortest_path_split"]
+                    row["vehicle_feasibility_split"]
+                    or row["vehicle_path_split"]
+                    or row["vehicle_travel_time_split"]
                 )
+
+    def test_od_travel_times_come_from_the_evaluator_graph(self):
+        """Times must be the evaluator's, not a raw free_time Dijkstra.
+
+        Using free_time alone prices a partially recovered road as if it were
+        fully restored, which manufactures travel-time splits that the model
+        does not have.
+        """
+        from scripts.reproduce.capacity_recovery import _shortest_paths_for_vehicle
+
+        instance = _instance()
+        decision = fixed_decisions(instance, random_decisions=1, seed=1)["random_0"]
+        trace = period_trace(instance, decision)
+        progress_by_period = {s.period: s.progress for s in trace.snapshots}
+        exposure = threshold_exposure(instance, decision, "random_0")
+
+        rows = [r for r in exposure["od_rows"]][:5]
+        self.assertTrue(rows, "the fixture expects at least one sensitive OD")
+        for row in rows:
+            with self.subTest(period=row["period"], demand=row["demand"]):
+                progress = progress_by_period[int(row["period"])]
+                reported = {
+                    int(part.split(":")[0]): part.split(":")[1]
+                    for part in row["best_travel_time_by_vehicle"].split("|")
+                }
+                for vehicle in instance.vehicles:
+                    entry = _shortest_paths_for_vehicle(
+                        instance, progress, vehicle
+                    ).get((int(row["supplier"]), int(row["demand"])))
+                    value = "inf" if entry is None else str(round(entry[0], 3))
+                    self.assertEqual(reported[vehicle.vehicle_type], value)
+
+    def test_partial_recovery_is_not_priced_at_free_flow_speed(self):
+        """A damaged edge in a partial stage costs more than its free_time.
+
+        This is the property that made the corrected exposure counts differ;
+        if it ever stops holding, the weighting has silently reverted.
+        """
+        from scripts.reproduce.capacity_recovery import (
+            _build_vehicle_graph,
+            _speed_ratio,
+        )
+
+        instance = _instance()
+        decision = fixed_decisions(instance, random_decisions=19, seed=1)["spt"]
+        trace = period_trace(instance, decision)
+        vehicle = instance.vehicles[0]
+
+        checked = 0
+        for snapshot in trace.snapshots:
+            graph = _build_vehicle_graph(instance, snapshot.progress, vehicle)
+            for damage_id, damaged in instance.base.damaged_edges.items():
+                progress = snapshot.progress.get(damage_id, 0.0)
+                if not 0.0 < progress < 1.0:
+                    continue
+                if not graph.has_edge(int(damaged.u), int(damaged.v)):
+                    continue
+                free_time = float(
+                    instance.base.graph[int(damaged.u)][int(damaged.v)]["free_time"]
+                )
+                weighted = graph[int(damaged.u)][int(damaged.v)]["weight"]
+                speed = _speed_ratio(instance.recovery_stages, progress)
+                self.assertLess(speed, 1.0)
+                self.assertAlmostEqual(
+                    weighted, free_time / max(speed, 0.1) / vehicle.speed_factor, places=9
+                )
+                self.assertGreater(weighted, free_time)
+                checked += 1
+        self.assertGreater(checked, 0, "the fixture expects a partially recovered edge")
 
     def test_summary_counts_match_the_emitted_rows(self):
         instance = _instance()
@@ -289,6 +361,29 @@ class DetourTest(unittest.TestCase):
                     self.assertAlmostEqual(
                         row["detour_ratio_max"], max(ratios), places=9
                     )
+
+    def test_dependency_fraction_is_a_fraction(self):
+        """Dependency over OD *pairs*, so it can never exceed 1.
+
+        Dividing by the demand count instead lets an edge that two suppliers
+        both depend on report more than one, which is not a fraction at all.
+        """
+        instance = _instance()
+        pairs = total_od_pairs(instance)
+        self.assertEqual(pairs, len(instance.base.suppliers) * len(instance.base.demands))
+        for row in edge_structure(instance):
+            with self.subTest(damage_id=row["damage_id"]):
+                self.assertEqual(row["od_pairs_total"], pairs)
+                self.assertGreaterEqual(row["od_dependency_fraction"], 0.0)
+                self.assertLessEqual(row["od_dependency_fraction"], 1.0)
+                self.assertLessEqual(
+                    row["od_shortest_path_dependency_count"], row["od_pairs_total"]
+                )
+                self.assertAlmostEqual(
+                    row["od_dependency_fraction"],
+                    row["od_shortest_path_dependency_count"] / row["od_pairs_total"],
+                    places=12,
+                )
 
     def test_a_bridge_reports_severed_flows_not_a_diluted_mean(self):
         instance = _instance()
@@ -394,11 +489,14 @@ class SharedMachineryTest(unittest.TestCase):
             before["flags"],
         )
 
-    def test_ht_off_is_a_relaxation_of_ht_on(self):
-        """Uniform 0.30 admits every vehicle that the declared thresholds do.
+    def test_ht_off_admits_a_superset_of_vehicles(self):
+        """Uniform 0.30 admits every vehicle the declared thresholds do.
 
-        That is why the F2 difference has a fixed sign and only its magnitude
-        is empirical -- worth pinning so the result is not read backwards.
+        This is a statement about the FEASIBLE SET only. It does NOT make the
+        objective monotone: dispatch is generated by a greedy decoder, so a
+        larger feasible set does not guarantee a better plan. The sign and the
+        size of any F2 difference are empirical findings, not corollaries --
+        pinned here so the result is not read the other way round.
         """
         from scripts.reproduce.ht_natural_corridor import HT_VARIANT
 
@@ -413,6 +511,8 @@ class SharedMachineryTest(unittest.TestCase):
                 on = {v.vehicle_type for v in instance.vehicles if _passable(instance, progress, v)}
                 off = {v.vehicle_type for v in variant.vehicles if _passable(variant, progress, v)}
                 self.assertTrue(on.issubset(off))
+        # Feasible-set containment says nothing about objective monotonicity:
+        # no assertion about F1/F2/F3 ordering belongs in this test.
 
 
 class CorridorClassifierTest(unittest.TestCase):
@@ -528,6 +628,36 @@ class PublishedAuditTest(unittest.TestCase):
     def _rows(self, name):
         with (self.AUDIT / name).open() as handle:
             return list(csv.DictReader(handle))
+
+    def test_manifest_bridge_count_matches_the_edge_structure_table(self):
+        """The manifest's damaged-bridge count must agree with the scan.
+
+        The count was previously computed with a set intersection that is
+        always empty, so it read zero for every overlay while the edge table
+        said otherwise. This pins the two together.
+        """
+        manifest = json.loads((self.AUDIT / "manifest.json").read_text())
+        structure = self._rows("wen38_edge_structure.csv")
+        expected = sum(1 for row in structure if row["is_bridge"] == "True")
+        self.assertEqual(manifest["network"]["damaged_bridge_count"], expected)
+        self.assertGreater(expected, 0, "WEN38 has damaged bridges; a zero is the bug")
+        self.assertEqual(
+            manifest["network"]["damaged_edge_count"], len(structure)
+        )
+
+    def test_overlay_bridge_counts_are_recomputable_and_not_all_zero(self):
+        """Overlay counts come from the same helper, and sampling is uniform."""
+        import statistics
+
+        overlay_rows = self._rows("semi_real_overlay_manifest.csv")
+        counts = [int(row["damaged_bridge_count"]) for row in overlay_rows]
+        self.assertEqual(
+            sum(1 for row in overlay_rows if "damaged_bridge_count" not in row), 0
+        )
+        # A uniform draw of 16 of 51 edges with 8 bridges expects ~2.5; all
+        # zero would mean the membership test is broken again.
+        self.assertGreater(statistics.fmean(counts), 1.0)
+        self.assertLessEqual(max(counts), len(self._rows("wen38_edge_structure.csv")))
 
     def test_manifest_records_one_physical_network(self):
         manifest = json.loads((self.AUDIT / "manifest.json").read_text())

@@ -12,7 +12,7 @@
     "num_edges": 51,
     "graph_bridge_count": 8,
     "damaged_edge_count": 16,
-    "damaged_bridge_count": 0,
+    "damaged_bridge_count": 5,
     "supplier_count": 3,
     "demand_count": 35,
     "total_demand": 11288.0,
@@ -118,18 +118,24 @@
       "Full",
       "No-HT"
     ],
+    "representative_rule": "lowest overlay_seed within each stratum, fixed by rule rather than selected on the measured effect",
+    "representativeness": "one diagnostic representative per stratum; the replay figures are not a population average over overlays",
+    "strata_searched": [
+      "natural-active",
+      "strong-natural-active"
+    ],
     "execution_model": "Full",
-    "replayed_rows": 188
+    "replayed_rows": 196
   },
   "objective_comparison": "V2_PRECISION quantized key, all three objectives",
   "allocation_comparison": "shared canonical allocation multiset (supplier, demand, vehicle, route, amount, trips, travel time) with per-field and pairing flags",
   "code": {
-    "git_sha": "ae564ae12e63f1a1ea095a76db48791453a0b64f",
+    "git_sha": "2f375ac1a51faf3916a6c7ea1b56c34f6cd8658d",
     "git_dirty": true,
     "python": "3.12.11 (main, Sep  2 2025, 14:12:30) [Clang 20.1.4 ]",
     "python_version": "3.12.11",
     "platform": "macOS-27.0-arm64-arm-64bit",
-    "created_at_utc": "2026-09-20T13:15:29.603593+00:00"
+    "created_at_utc": "2026-09-20T13:26:01.834745+00:00"
   },
   "source_hashes": {
     "scripts/reproduce/mechanism_applicability.py": "7f90ab192cfe7174035c50d74ba4c5364ee593e94bc3b2dfe6050a422563e1bc",
@@ -139,6 +145,6 @@
     "scripts/reproduce/instance_generator.py": "f121ea469e6bc7f547abc1b241c0baa35792960e465bdca0ea90098307712021",
     "scripts/reproduce/objective_precision.py": "2db2a9b81c4e6a5d099a686a51bb312420cabc9d30dea8cb73ad8bd44522c84f",
     "scripts/reproduce/solution_io.py": "4f4bcae51716fee0f066fb48cc9c8bdc137822682f1c0733f2ebf66684e710c1",
-    "scripts/reproduce/ht_natural_corridor.py": "c049d63a3e648ffb76a93146223427668dd38cc0e6b5189e069000dd183b7431"
+    "scripts/reproduce/ht_natural_corridor.py": "6b422409453c4f9e2b75c81aafa7efbf897983cff3d7d6a52117113f41ecbbbd"
   }
 }

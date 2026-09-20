@@ -54,6 +54,7 @@ from scripts.reproduce.capacity_recovery import (
     CapacityIndividual,
     FullExecutionProfile,
     DamagedEdge,
+    _shortest_paths_for_vehicle,
     evaluate_capacity_solution_detailed,
     model_factor_variant,
 )
@@ -141,6 +142,31 @@ def topology_fingerprint(instance) -> str:
     return hashlib.sha256(encoded.encode()).hexdigest()
 
 
+def damaged_bridge_count(instance) -> int:
+    """How many of the damaged edges are graph bridges.
+
+    Written once, as a membership test. The obvious-looking set intersection
+    (``frozenset(edge) & {frozenset(...), ...}``) is always empty -- it
+    intersects a set of node ids with a set of edge keys -- and reported zero
+    bridges for every overlay until it was caught.
+    """
+    damaged = {
+        frozenset((int(edge.u), int(edge.v)))
+        for edge in instance.base.damaged_edges.values()
+    }
+    return sum(1 for edge in nx.bridges(instance.base.graph) if frozenset(edge) in damaged)
+
+
+def total_od_pairs(instance) -> int:
+    """Number of ordered supplier-demand pairs; the denominator of dependency."""
+    return sum(
+        1
+        for supplier in instance.base.suppliers
+        for demand in instance.base.demands
+        if supplier != demand
+    )
+
+
 def assert_single_physical_network(spec: BenchmarkSpec) -> None:
     """WEN38 must not be presented as several independent road networks."""
     fingerprints = {
@@ -182,6 +208,11 @@ def edge_structure(instance) -> list[dict[str, Any]]:
       needed by -- removing it lengthens the route or severs it. This is the
       unambiguous "does this road matter for that flow" measure and it is what
       the corridor classification uses.
+    Weights here are the restored network's free-flow times: this scan asks
+    what losing a road costs the *network*, independent of any period's
+    recovery state. The dynamic exposure below answers a different question
+    and therefore uses the evaluator's own progress-weighted vehicle graph.
+
     - ``detour_ratio``: ``d_without_edge(s,d) / d(s,d)``, aggregated only over
       the OD pairs this edge actually affects. Infinite when the pair becomes
       unreachable, and those are counted separately in
@@ -198,6 +229,11 @@ def edge_structure(instance) -> list[dict[str, Any]]:
 
     sources = list(base.suppliers)
     sinks = list(base.demands)
+    # The denominator of the dependency fraction is the number of OD pairs
+    # considered, not the number of demand nodes: dividing by the demand count
+    # lets the fraction exceed 1 whenever an edge is needed by more than one
+    # supplier for the same demand.
+    pair_total = total_od_pairs(instance)
     # All-pairs distances are computed once. Recomputing a Dijkstra inside the
     # OD loop would be a few thousand runs for no benefit.
     all_pairs = {node: _distance(graph, node, "free_time") for node in graph.nodes()}
@@ -260,12 +296,12 @@ def edge_structure(instance) -> list[dict[str, Any]]:
                 "edge_betweenness_time": betweenness_time.get(
                     (u, v), betweenness_time.get((v, u), 0.0)
                 ),
-                "od_pairs_total": sum(
-                    1 for s in sources for d in sinks if s != d
-                ),
+                "od_pairs_total": pair_total,
                 "od_shortest_path_usage_count": usage,
                 "od_shortest_path_dependency_count": dependency,
-                "od_dependency_fraction": dependency / max(len(sinks), 1),
+                "od_dependency_fraction": (
+                    dependency / pair_total if pair_total else 0.0
+                ),
                 "alternative_path_exists": disconnected == 0,
                 "od_disconnected_count": disconnected,
                 "detour_ratio_mean": (
@@ -356,37 +392,23 @@ def threshold_exposure(instance, decision, decision_id: str) -> dict[str, Any]:
                 }
             )
 
-        # One subgraph per vehicle type: only edges that type may traverse.
+        # The evaluator's own vehicle graph and OD paths. Using raw free_time
+        # here would ignore the recovery speed ratio and the vehicle speed
+        # factor, and would let the diagnostic disagree with the model it is
+        # measuring -- the travel times below are the ones the evaluator
+        # actually routes on.
         vehicle_types = [vehicle.vehicle_type for vehicle in instance.vehicles]
-        distances: dict[int, dict[int, dict[int, float]]] = {}
-        predecessors: dict[int, dict[int, dict[int, list[int]]]] = {}
-        for vehicle in instance.vehicles:
-            sub = nx.Graph()
-            sub.add_nodes_from(graph.nodes())
-            for a, b, data in graph.edges(data=True):
-                damage_id = data.get("damage_id")
-                progress_value = (
-                    1.0 if damage_id is None else snapshot.progress.get(int(damage_id), 0.0)
-                )
-                if _passable(instance, progress_value, vehicle):
-                    sub.add_edge(a, b, free_time=data["free_time"])
-            distances[vehicle.vehicle_type] = {}
-            predecessors[vehicle.vehicle_type] = {}
-            for source in base.suppliers:
-                pred, dist = nx.dijkstra_predecessor_and_distance(
-                    sub, source, weight="free_time"
-                )
-                distances[vehicle.vehicle_type][source] = dist
-                predecessors[vehicle.vehicle_type][source] = pred
-
-        sensitive_edge_ids = {
-            damage_id
-            for damage_id in damaged_ids
-            if 0 < len(allowed_by_edge[damage_id]) < total_types
+        paths: dict[int, dict[tuple[int, int], tuple[float, list[int]]]] = {
+            vehicle.vehicle_type: _shortest_paths_for_vehicle(
+                instance, snapshot.progress, vehicle
+            )
+            for vehicle in instance.vehicles
         }
+
         sensitive_pairs = {
             frozenset((int(base.damaged_edges[i].u), int(base.damaged_edges[i].v)))
-            for i in sensitive_edge_ids
+            for i in damaged_ids
+            if 0 < len(allowed_by_edge[i]) < total_types
         }
 
         for source in base.suppliers:
@@ -395,36 +417,40 @@ def threshold_exposure(instance, decision, decision_id: str) -> dict[str, Any]:
                     continue
                 od_periods_considered += 1
                 best: dict[int, float] = {}
+                routes: dict[int, list[int]] = {}
                 for vehicle_type in vehicle_types:
-                    best[vehicle_type] = distances[vehicle_type][source].get(
-                        sink, float("inf")
-                    )
+                    entry = paths[vehicle_type].get((source, sink))
+                    if entry is None:
+                        best[vehicle_type] = float("inf")
+                    else:
+                        best[vehicle_type], routes[vehicle_type] = entry
                 reachable = [t for t in vehicle_types if best[t] < float("inf")]
                 unreachable = [t for t in vehicle_types if best[t] == float("inf")]
                 feasibility_split = bool(reachable) and bool(unreachable)
-                finite_times = {best[t] for t in reachable}
-                path_split = len(finite_times) > 1
 
-                # Threshold-sensitive edges lying on a route some vehicle type
-                # would actually use: reconstructed from the shortest-path
-                # predecessors of the type's own feasible subgraph. No
-                # detour band or other tuned constant enters here.
+                # Two separate questions, reported separately: do the types
+                # take different routes, and do they take different amounts of
+                # time? Equal-length routes that differ are a path split but
+                # not a travel-time split, and only the latter changes F2.
+                edge_sets = {
+                    frozenset(
+                        frozenset((int(a), int(b)))
+                        for a, b in zip(routes[t], routes[t][1:])
+                    )
+                    for t in reachable
+                }
+                time_sets = {round(best[t], 9) for t in reachable}
+                path_split = len(edge_sets) > 1
+                travel_time_split = len(time_sets) > 1
+
                 on_path: set[frozenset] = set()
                 for vehicle_type in reachable:
-                    predecessor = predecessors[vehicle_type][source].get(sink)
-                    if not predecessor:
-                        continue
-                    node = sink
-                    while node != source:
-                        previous = predecessor[0]
-                        on_path.add(frozenset((int(previous), int(node))))
-                        node = previous
-                        predecessor = predecessors[vehicle_type][source].get(node)
-                        if not predecessor:
-                            break
+                    route = routes[vehicle_type]
+                    for a, b in zip(route, route[1:]):
+                        on_path.add(frozenset((int(a), int(b))))
                 sensitive_edges = len(on_path & sensitive_pairs)
 
-                if not (feasibility_split or path_split):
+                if not (feasibility_split or path_split or travel_time_split):
                     continue
                 sensitive_od_periods += 1
                 access_set_changes += int(feasibility_split)
@@ -435,7 +461,8 @@ def threshold_exposure(instance, decision, decision_id: str) -> dict[str, Any]:
                         "supplier": int(source),
                         "demand": int(sink),
                         "vehicle_feasibility_split": feasibility_split,
-                        "vehicle_shortest_path_split": path_split,
+                        "vehicle_path_split": path_split,
+                        "vehicle_travel_time_split": travel_time_split,
                         "reachable_vehicle_types": "|".join(str(t) for t in reachable),
                         "threshold_sensitive_edges_on_candidate_paths": sensitive_edges,
                         "best_travel_time_min": min(best.values()),
@@ -878,15 +905,7 @@ def main() -> None:
                     "suppliers": "|".join(str(s) for s in overlay.base.suppliers),
                     "demand_count": len(overlay.base.demands),
                     "damaged_edge_count": len(overlay.base.damaged_edges),
-                    "damaged_bridge_count": sum(
-                        1
-                        for edge in nx.bridges(overlay.base.graph)
-                        if frozenset(edge)
-                        & {
-                            frozenset((int(d.u), int(d.v)))
-                            for d in overlay.base.damaged_edges.values()
-                        }
-                    ),
+                    "damaged_bridge_count": damaged_bridge_count(overlay),
                     "total_demand": overlay.base.total_demand,
                     "total_supply": overlay.base.total_supply,
                 }
@@ -961,6 +980,13 @@ def main() -> None:
 
 
 def _run_search(instance, summary_rows, args) -> list[dict[str, Any]]:
+    """One representative per stratum, chosen by a rule fixed in advance.
+
+    The result is a diagnostic representative, not a population average: it is
+    one overlay per stratum, so the replay figures below describe what happens
+    in those two overlays and must not be read as the typical natural-scenario
+    effect size.
+    """
     rows: list[dict[str, Any]] = []
     budget = BenchmarkBudget(max_evaluations=args.max_evaluations, pop_size=args.pop_size)
     by_stratum: dict[str, list[dict[str, Any]]] = {}
@@ -970,9 +996,11 @@ def _run_search(instance, summary_rows, args) -> list[dict[str, Any]]:
         candidates = by_stratum.get(stratum, [])
         if not candidates:
             continue
-        # The strongest representative of the stratum, chosen by the fixed
-        # decisions rather than by the search outcome.
-        chosen = max(candidates, key=lambda r: r["decisions_with_objective_change"])
+        # The LOWEST overlay seed in the stratum, fixed by rule before any
+        # search runs. Picking the overlay with the most objective changes
+        # would select on the very quantity being measured and turn the replay
+        # figures into a best case rather than a representative one.
+        chosen = min(candidates, key=lambda r: int(r["overlay_seed"]))
         builder = {name: fn for name, _desc, fn in OVERLAYS}[chosen["overlay_type"]]
         overlay = builder(instance, int(chosen["overlay_seed"]))
         rows.extend(
@@ -1030,15 +1058,7 @@ def _manifest(
             "num_edges": instance.base.graph.number_of_edges(),
             "graph_bridge_count": len(list(nx.bridges(instance.base.graph))),
             "damaged_edge_count": len(instance.base.damaged_edges),
-            "damaged_bridge_count": sum(
-                1
-                for edge in nx.bridges(instance.base.graph)
-                if frozenset(edge)
-                & {
-                    frozenset((int(d.u), int(d.v)))
-                    for d in instance.base.damaged_edges.values()
-                }
-            ),
+            "damaged_bridge_count": damaged_bridge_count(instance),
             "supplier_count": len(instance.base.suppliers),
             "demand_count": len(instance.base.demands),
             "total_demand": instance.base.total_demand,
@@ -1114,6 +1134,17 @@ def _manifest(
             "pop_size": args.pop_size,
             "solver_seeds": list(args.solver_seeds),
             "planning_models": ["Full", "No-HT"],
+            "representative_rule": (
+                "lowest overlay_seed within each stratum, fixed by rule rather "
+                "than selected on the measured effect"
+            ),
+            "representativeness": (
+                "one diagnostic representative per stratum; the replay figures "
+                "are not a population average over overlays"
+            ),
+            "strata_searched": sorted(
+                {row["label"].rsplit("_", 1)[-1] for row in replay_rows}
+            ),
             "execution_model": "Full",
             "replayed_rows": len(replay_rows),
         },
