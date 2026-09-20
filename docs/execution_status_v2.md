@@ -12,9 +12,9 @@
 |---|---|---|---|
 | P0 | 基线核验与范围冻结 | 通过 | 本节；[模型合同](model_v2_contract.md)；`outputs/claude_v2/baseline_legacy/` |
 | P1 | 公平配给、时间轴与守恒 | 通过 | `tests/test_model_contract.py` M01–M11（12 个用例）；`EvaluationConfig`；见下 |
-| P2 | 完整决策保存、恢复和同模型回放 | 待执行 | — |
-| P3 | 搜索档案、预算与评分修正 | 待执行 | — |
-| P4 | 不同规划模型统一执行回放 | 待执行 | — |
+| P2 | 完整决策保存、恢复和同模型回放 | 通过 | `scripts/reproduce/solution_io.py`、`replay_solutions.py`；`tests/test_solution_io.py`（9 个用例） |
+| P3 | 搜索档案、预算与评分修正 | 通过 | `benchmark_algorithms.py`；`tests/test_search_contract.py`（13 个用例） |
+| P4 | 不同规划模型统一执行回放 | 通过 | `run_model_ablation.py` 子集入口、`replay_solutions.py --execution-model full`；`tests/test_common_execution.py`（8 个用例） |
 | P5 | 小预算诊断与交付 | 待执行 | — |
 | P6 | 正式实验方案与运行 | 待执行（本轮不启动） | — |
 | P7 | 专用大邻域与动态扩展 | 待执行（本轮不实现） | — |

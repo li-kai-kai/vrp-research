@@ -573,31 +573,42 @@ def make_run_key(
     model_fingerprint_value: str,
     source_fingerprint: str,
     solver_repeat: int = 0,
+    model_id: str = "",
 ) -> str:
     """Content-addressed run identifier.
 
-    Carries the case, instance, algorithm and solver seed for readability and a
-    digest over the full configuration so two different configurations cannot
-    collide on the same key.
+    Carries the case, instance, algorithm, model slot and solver seed for
+    readability plus a digest over the full configuration, so two different
+    configurations cannot collide on the same key.
     """
-    for label, value in (("case_id", case_id), ("algorithm", algorithm)):
-        if not value or ":" in value or "/" in value:
+    for label, value in (
+        ("case_id", case_id),
+        ("algorithm", algorithm),
+        ("model_id", model_id),
+    ):
+        if value and (":" in value or "/" in value):
             raise SolutionIOError(
-                f"{label} must be non-empty and free of ':' or '/', got {value!r}"
+                f"{label} must be free of ':' or '/', got {value!r}"
             )
+    if not case_id or not algorithm:
+        raise SolutionIOError(
+            f"case_id and algorithm must be non-empty, got {case_id!r}, {algorithm!r}"
+        )
     payload = {
         "case_id": case_id,
         "instance_seed": int(instance_seed),
         "algorithm": algorithm,
+        "model_id": model_id,
         "solver_seed": int(solver_seed),
         "solver_repeat": int(solver_repeat),
         "budget": budget,
         "model_fingerprint": model_fingerprint_value,
         "source_fingerprint": source_fingerprint,
     }
+    model_slot = f":{model_id}" if model_id else ""
     return (
         f"{case_id}:i{int(instance_seed)}:{algorithm}:s{int(solver_seed)}"
-        f":r{int(solver_repeat)}:{_digest(payload)[:12]}"
+        f":r{int(solver_repeat)}{model_slot}:{_digest(payload)[:12]}"
     )
 
 
