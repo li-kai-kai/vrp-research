@@ -1059,27 +1059,64 @@ def scale_supply(
     )
 
 
+def scale_road_capacity(
+    instance: CapacityExperimentInstance,
+    multiplier: float,
+) -> CapacityExperimentInstance:
+    """A variant with more (or less) road throughput, relative to this instance.
+
+    The axis has to be relative for the same reason fleet and supply are:
+    ``capacity_scale`` is an absolute calibration, so passing a small absolute
+    number *tightens* the road constraint on a scenario that is already below
+    it. Calling that a relaxation would report the effect of adding a
+    constraint while labelling it as removing one.
+    """
+    if multiplier <= 0:
+        raise ValueError("capacity multiplier must be positive")
+    return scale_capacity(instance, instance.capacity_scale * multiplier)
+
+
 def bottleneck_classification(
     instance: CapacityExperimentInstance,
     decision: CapacityIndividual,
     *,
     fleet_multiplier: float = 2.0,
     supply_multiplier: float = 1.5,
-    capacity_scale: float | None = None,
+    capacity_multiplier: float | None = 2.0,
 ) -> dict[str, Any]:
     """Classify the bottleneck by *relaxing* each resource and re-evaluating.
 
     A constraint is called binding when loosening it changes the objective.
     More than one can bind, and none has to: the answer is a diagnosis of this
     scenario and decision, not a single label for the model.
+
+    Every axis is a multiplier above 1.0, so every probe loosens its resource.
+    A probe that changed the objective while *tightening* its resource would
+    say nothing about whether that resource is binding, so a multiplier at or
+    below 1.0 is rejected rather than quietly run.
     """
+    for name, multiplier in (
+        ("fleet_multiplier", fleet_multiplier),
+        ("supply_multiplier", supply_multiplier),
+    ):
+        if multiplier <= 1.0:
+            raise ValueError(
+                f"{name} must be greater than 1: a bottleneck probe has to "
+                "loosen its resource, not tighten it"
+            )
+    if capacity_multiplier is not None and capacity_multiplier <= 1.0:
+        raise ValueError(
+            "capacity_multiplier must be greater than 1: a bottleneck probe "
+            "has to loosen its resource, not tighten it"
+        )
+
     baseline = period_trace(instance, decision).objectives
     probes = {
         "fleet": scale_fleet(instance, fleet_multiplier),
         "supply": scale_supply(instance, supply_multiplier),
     }
-    if capacity_scale is not None:
-        probes["road_capacity"] = scale_capacity(instance, capacity_scale)
+    if capacity_multiplier is not None:
+        probes["road_capacity"] = scale_road_capacity(instance, capacity_multiplier)
 
     row: dict[str, Any] = {}
     for label, relaxed in probes.items():
@@ -1134,6 +1171,12 @@ def resource_grid(
                     list(decision.dispatch_priority),
                 ),
             ).objectives
+            # "Did removing the accounting change the outcome?" must be the
+            # same question the rest of the pipeline answers, on the same
+            # quantized key. A per-component tolerance disagrees with the key
+            # near a bin boundary and would make this grid the one place where
+            # EC is judged by different rules.
+            ec_flags = objective_changed(trace.objectives, ec_off_objectives)
             rows.append(
                 {
                     "fleet_multiplier": fleet,
@@ -1155,11 +1198,10 @@ def resource_grid(
                     "EC_same_decision_delta_F1": ec_off_objectives[0] - trace.objectives[0],
                     "EC_same_decision_delta_F2": ec_off_objectives[1] - trace.objectives[1],
                     "EC_same_decision_delta_F3": ec_off_objectives[2] - trace.objectives[2],
-                    "EC_same_decision_changed": any(
-                        abs(ec_off_objectives[i] - trace.objectives[i])
-                        > V2_PRECISION.resolutions[i]
-                        for i in range(3)
-                    ),
+                    "EC_same_decision_changed": ec_flags["changed"],
+                    "EC_same_decision_changed_F1": ec_flags["changed_F1"],
+                    "EC_same_decision_changed_F2": ec_flags["changed_F2"],
+                    "EC_same_decision_changed_F3": ec_flags["changed_F3"],
                 }
             )
     return rows
@@ -1315,7 +1357,9 @@ def main() -> None:
                     **bottleneck_classification(
                         instance,
                         decisions["spt"],
-                        capacity_scale=args.bottleneck_capacity_scale,
+                        fleet_multiplier=args.bottleneck_fleet_multiplier,
+                        supply_multiplier=args.bottleneck_supply_multiplier,
+                        capacity_multiplier=args.bottleneck_capacity_multiplier,
                     ),
                 }
             )
@@ -1384,6 +1428,19 @@ def main() -> None:
             "fleet_multipliers": list(args.fleet_multipliers),
             "capacity_scales": list(args.capacity_scales),
             "repair_time_multipliers": list(args.repair_time_multipliers),
+            "bottleneck_axes": {
+                "fleet_multiplier": args.bottleneck_fleet_multiplier,
+                "supply_multiplier": args.bottleneck_supply_multiplier,
+                "capacity_multiplier": args.bottleneck_capacity_multiplier,
+                "note": (
+                    "every axis is a multiple of the instance's own value and "
+                    "greater than 1, so every probe loosens its resource"
+                ),
+            },
+            "objective_comparison": (
+                "V2_PRECISION quantized key; used by bottleneck_classification, "
+                "resource_grid and the audit's replay summary alike"
+            ),
             "stress_scenario_note": (
                 "fleet multipliers, capacity scales and repair-time multipliers "
                 "are stress diagnostics, not measured Wenchuan parameters"
@@ -1449,11 +1506,29 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         help="classify the bottleneck by relaxing fleet, road capacity and supply",
     )
-    parser.add_argument("--bottleneck-capacity-scale", type=float, default=None)
+    parser.add_argument("--bottleneck-fleet-multiplier", type=float, default=2.0)
+    parser.add_argument("--bottleneck-supply-multiplier", type=float, default=1.5)
+    parser.add_argument(
+        "--bottleneck-capacity-multiplier",
+        type=float,
+        default=2.0,
+        help=(
+            "road-throughput relaxation for the bottleneck probe, as a "
+            "multiple of this instance's own capacity_scale; >1 loosens. A "
+            "small absolute scale would tighten instead, so it is not accepted."
+        ),
+    )
     parser.add_argument("--output-dir", default="outputs/mechanism_probe/S025")
     args = parser.parse_args()
     if args.random_decisions < 0:
         parser.error("--random-decisions must be non-negative")
+    for axis in ("fleet", "supply", "capacity"):
+        value = getattr(args, f"bottleneck_{axis}_multiplier")
+        if value <= 1.0:
+            parser.error(
+                f"--bottleneck-{axis}-multiplier must be greater than 1: a "
+                "bottleneck probe has to loosen its resource, not tighten it"
+            )
     return args
 
 

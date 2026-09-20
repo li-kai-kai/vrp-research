@@ -7,6 +7,7 @@ import json
 import random
 import unittest
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import networkx as nx
 
@@ -30,6 +31,8 @@ from scripts.reproduce.mechanism_applicability import (
     objective_changed,
     period_trace,
     require_corridor_scenario,
+    scale_capacity,
+    scale_road_capacity,
     scale_supply,
     stress_topology_instance,
 )
@@ -372,10 +375,54 @@ class SupplyAndBottleneckTest(unittest.TestCase):
             instance.base.total_supply, original.base.total_supply, places=9
         )
 
+    def test_road_capacity_probe_loosens_rather_than_tightens(self):
+        """A probe that tightened its resource would answer the wrong question.
+
+        ``capacity_scale`` is an absolute calibration, so passing a small
+        absolute number to it *adds* a constraint to an already-calibrated
+        scenario while the result is labelled a relaxation.
+        """
+        instance = build_benchmark_instance(_spec(), instance_seed=101, model_version="v2")
+        baseline = instance.capacity_scale
+        relaxed = scale_road_capacity(instance, 2.0)
+        self.assertAlmostEqual(relaxed.capacity_scale, baseline * 2.0, places=12)
+        self.assertGreater(relaxed.capacity_scale, baseline)
+        # The instance itself is untouched.
+        self.assertAlmostEqual(instance.capacity_scale, baseline, places=12)
+
+    def test_bottleneck_refuses_an_axis_that_would_tighten(self):
+        instance = build_benchmark_instance(_spec(), instance_seed=101, model_version="v2")
+        decision = fixed_decisions(instance, random_decisions=0, seed=101)["spt"]
+        for axis in ("fleet_multiplier", "supply_multiplier", "capacity_multiplier"):
+            with self.subTest(axis=axis):
+                with self.assertRaises(ValueError):
+                    bottleneck_classification(instance, decision, **{axis: 0.5})
+
+    def test_road_probe_is_sensitive_where_capacity_binds(self):
+        """A zero from the road probe must mean "not binding", not "broken".
+
+        The same probe has to fire when road throughput genuinely binds, or a
+        zero elsewhere carries no information.
+        """
+        spec = _spec()
+        scenario = corridor_stress_instance(spec, instance_seed=101)
+        placements = {zone: (scale, achieved) for zone, scale, achieved in calibrate_zones(scenario, 101)}
+
+        readings = {}
+        for zone in ("inactive", "binding"):
+            scale, _ = placements[zone]
+            instance = scale_capacity(scenario, scale)
+            decision = fixed_decisions(instance, random_decisions=0, seed=101)["spt"]
+            row = bottleneck_classification(instance, decision)
+            readings[zone] = row["relax_road_capacity_changed_objective"]
+
+        self.assertFalse(readings["inactive"])
+        self.assertTrue(readings["binding"])
+
     def test_bottleneck_is_classified_by_relaxation(self):
         instance = build_benchmark_instance(_spec(), instance_seed=101, model_version="v2")
         decision = fixed_decisions(instance, random_decisions=0, seed=101)["spt"]
-        row = bottleneck_classification(instance, decision, capacity_scale=0.002)
+        row = bottleneck_classification(instance, decision)
         for key in (
             "relax_fleet_changed_objective",
             "relax_supply_changed_objective",
@@ -463,6 +510,7 @@ class PublishedAuditTest(unittest.TestCase):
     """
 
     AUDIT = Path("outputs/mechanism_probe_audit")
+    PROBE_ROOT = Path("outputs/mechanism_probe")
 
     def setUp(self):
         if not (self.AUDIT / "manifest.json").is_file():
@@ -500,6 +548,41 @@ class PublishedAuditTest(unittest.TestCase):
                 self.assertLessEqual(
                     int(row["damaged_bridge_count"]), int(row["graph_bridge_count"])
                 )
+
+    def test_replay_summary_agrees_with_a_recount_on_the_quantized_key(self):
+        """The summary must count changes the same way the pipeline does."""
+        source = self.PROBE_ROOT / "zone_search" / "zone_replay.csv"
+        if not source.is_file():
+            self.skipTest("wide zone-replay table is not present")
+        with source.open() as handle:
+            rows = list(csv.DictReader(handle))
+        grouped: dict[tuple[str, str], list[dict[str, str]]] = {}
+        for row in rows:
+            grouped.setdefault((row["zone"], row["model_id"]), []).append(row)
+
+        summary = {
+            (row["zone"], row["model_id"]): row
+            for row in self._rows("zone_replay_summary.csv")
+        }
+        for key, group in grouped.items():
+            with self.subTest(zone=key[0], model=key[1]):
+                expected = sum(
+                    1
+                    for row in group
+                    if objective_changed(
+                        (float(row["planning_F1"]), float(row["planning_F2"]),
+                         float(row["planning_F3"])),
+                        (float(row["execution_F1"]), float(row["execution_F2"]),
+                         float(row["execution_F3"])),
+                    )["changed"]
+                )
+                self.assertEqual(summary[key]["objective_changed"], str(expected))
+                # The overall count includes every objective, so it dominates
+                # each per-objective count.
+                for objective in ("F1", "F2", "F3"):
+                    self.assertLessEqual(
+                        int(summary[key][f"objective_changed_{objective}"]), expected
+                    )
 
     def test_manifest_records_the_identity_control_as_exact(self):
         manifest = json.loads((self.AUDIT / "manifest.json").read_text())

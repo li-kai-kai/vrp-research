@@ -23,7 +23,7 @@ from typing import Any, Iterable, Sequence
 if __package__ == "" or __package__ is None:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from scripts.reproduce.mechanism_applicability import DIAGNOSTIC_SOURCES
+from scripts.reproduce.mechanism_applicability import DIAGNOSTIC_SOURCES, objective_changed
 from scripts.reproduce.solution_io import (
     code_environment,
     source_hashes,
@@ -239,6 +239,33 @@ def zone_exposure_summary() -> list[dict[str, Any]]:
     ]
 
 
+def zone_bottleneck_summary() -> list[dict[str, Any]]:
+    """Per zone: whether relaxing each resource moves the objective.
+
+    This is an independent route to the same claim as the EC on/off column in
+    ``zone_exposure.csv``: capacity relaxation can only change the objective
+    where road throughput actually binds.
+    """
+    path = PROBE_ROOT / "zone_search" / "zone_bottleneck.csv"
+    if not path.is_file():
+        return []
+    rows: list[dict[str, Any]] = []
+    for row in read_rows(path):
+        entry: dict[str, Any] = {
+            "zone": row["zone"],
+            "instance_seed": as_int(row, "instance_seed"),
+            "measured_utilization": as_float(row, "measured_utilization"),
+            "baseline_F1": as_float(row, "baseline_F1"),
+        }
+        for axis in ("fleet", "supply", "road_capacity"):
+            entry[f"relax_{axis}_changed_objective"] = as_bool(
+                row, f"relax_{axis}_changed_objective"
+            )
+            entry[f"relax_{axis}_delta_F1"] = as_float(row, f"relax_{axis}_delta_F1")
+        rows.append(entry)
+    return rows
+
+
 def zone_replay_summary() -> list[dict[str, Any]]:
     """Stage 3, one row per (zone, planning model).
 
@@ -258,24 +285,43 @@ def zone_replay_summary() -> list[dict[str, Any]]:
     for (zone, model_id), group in sorted(grouped.items()):
         deltas_f1 = [as_float(row, "execution_minus_planning_F1") for row in group]
         deltas_f2 = [as_float(row, "execution_minus_planning_F2") for row in group]
+        deltas_f3 = [as_float(row, "execution_minus_planning_F3") for row in group]
+        # "Did execution differ from the plan?" is the same question the rest
+        # of the pipeline answers, so it is asked on the same quantized key --
+        # over all three objectives, F3 included. A raw float comparison would
+        # call two sub-resolution differences a change and count a pure F3
+        # difference as none.
+        changed = [
+            objective_changed(
+                (
+                    as_float(row, "planning_F1"),
+                    as_float(row, "planning_F2"),
+                    as_float(row, "planning_F3"),
+                ),
+                (
+                    as_float(row, "execution_F1"),
+                    as_float(row, "execution_F2"),
+                    as_float(row, "execution_F3"),
+                ),
+            )
+            for row in group
+        ]
         rows.append(
             {
                 "zone": zone,
                 "model_id": model_id,
                 "is_full_self_replay": model_id == FULL_MODEL,
                 "decisions": len(group),
-                "objective_changed": sum(
-                    1 for f1, f2 in zip(deltas_f1, deltas_f2) if f1 != 0.0 or f2 != 0.0
-                ),
+                "objective_changed": sum(1 for flags in changed if flags["changed"]),
+                "objective_changed_F1": sum(1 for flags in changed if flags["changed_F1"]),
+                "objective_changed_F2": sum(1 for flags in changed if flags["changed_F2"]),
+                "objective_changed_F3": sum(1 for flags in changed if flags["changed_F3"]),
                 "mean_delta_F1": statistics.fmean(deltas_f1),
                 "mean_delta_F2": statistics.fmean(deltas_f2),
+                "mean_delta_F3": statistics.fmean(deltas_f3),
                 "max_abs_delta_F1": max(abs(value) for value in deltas_f1),
                 "max_abs_delta_F2": max(abs(value) for value in deltas_f2),
-                "max_abs_delta_F1_planning_models": (
-                    0.0
-                    if model_id == FULL_MODEL
-                    else max(abs(value) for value in deltas_f1)
-                ),
+                "max_abs_delta_F3": max(abs(value) for value in deltas_f3),
             }
         )
     return rows
@@ -373,6 +419,7 @@ def main() -> None:
         "resource_grid_summary.csv": resource_grid_summary(),
         "bottleneck_summary.csv": bottleneck_summary(),
         "zone_exposure.csv": zone_exposure_summary(),
+        "zone_bottleneck.csv": zone_bottleneck_summary(),
         "zone_replay_summary.csv": zone_replay_summary(),
     }
 

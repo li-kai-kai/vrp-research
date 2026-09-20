@@ -35,6 +35,7 @@ from scripts.reproduce.capacity_recovery import (
 )
 from scripts.reproduce.mechanism_applicability import (
     DIAGNOSTIC_SOURCES,
+    bottleneck_classification,
     bridge_diagnostics,
     corridor_stress_instance,
     fixed_decisions,
@@ -74,6 +75,13 @@ ZONE_TARGETS = (
 # to get to the target before the search is accepted.
 ZONE_SCALE_BOUNDS = (1e-5, 0.5)
 ZONE_UTILIZATION_TOLERANCE = 0.01
+
+# Every bottleneck probe loosens its resource; see bottleneck_classification.
+BOTTLENECK_AXES = {
+    "fleet_multiplier": 2.0,
+    "supply_multiplier": 1.5,
+    "capacity_multiplier": 2.0,
+}
 
 PLANNING_MODELS = (
     ("PR1_HT1_EC1", dict(progressive_recovery=True,
@@ -203,7 +211,7 @@ def main() -> None:
     )
 
     exposure_rows: list[dict[str, Any]] = []
-    zone_rows: list[dict[str, Any]] = []
+    bottleneck_rows: list[dict[str, Any]] = []
     run_rows: list[dict[str, Any]] = []
     replay_rows: list[dict[str, Any]] = []
     # Every replayed solution keeps its full three-part decision, so a
@@ -227,6 +235,22 @@ def main() -> None:
             # Measure the zone instead of trusting its label.
             probe = fixed_decisions(instance, random_decisions=0, seed=instance_seed)["spt"]
             exposure = mechanism_report(instance, probe, "spt")
+            # Independent cross-check of the zone: relax each resource and see
+            # whether the objective moves. This is a second, causal route to
+            # the same claim as "turning EC off changed the dispatch", and the
+            # road axis only becomes sensitive where capacity really binds.
+            bottleneck_rows.append(
+                {
+                    "zone": zone,
+                    "case_id": spec.case_id,
+                    "instance_seed": instance_seed,
+                    "scenario": args.scenario,
+                    "capacity_scale": capacity_scale,
+                    "measured_utilization": exposure["max_edge_utilization"],
+                    "damaged_bridge_count": diagnostics["damaged_bridge_count"],
+                    **bottleneck_classification(instance, probe, **BOTTLENECK_AXES),
+                }
+            )
             exposure_rows.append(
                 {
                     "zone": zone,
@@ -298,6 +322,9 @@ def main() -> None:
                         )
 
     write_csv_atomic(output_dir / "zone_exposure.csv", exposure_rows, list(exposure_rows[0]))
+    write_csv_atomic(
+        output_dir / "zone_bottleneck.csv", bottleneck_rows, list(bottleneck_rows[0])
+    )
     write_csv_atomic(output_dir / "zone_runs.csv", run_rows, list(run_rows[0]))
     write_csv_atomic(output_dir / "zone_replay.csv", replay_rows, list(replay_rows[0]))
     write_json_atomic(output_dir / "zone_decisions.json", decisions)
@@ -312,6 +339,7 @@ def main() -> None:
             "suite": args.suite,
             "instance_seeds": list(args.instance_seeds),
             "zone_targets": [{"zone": z, "target_utilization": t} for z, t in ZONE_TARGETS],
+            "bottleneck_axes": dict(BOTTLENECK_AXES),
             "zone_calibration": {
                 "method": (
                     "capacity_scale bisected per (scenario, instance seed) until "

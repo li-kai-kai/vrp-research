@@ -1,15 +1,15 @@
 {
   "scope": "mechanism applicability (PR / HT / EC) diagnostic evidence; the diagnostic is read-only with respect to the model, the search, replay, numerical precision and FullExecutionProfile",
   "code": {
-    "git_sha": "ee41247e3c679352e012200983f92888acd98d23",
+    "git_sha": "fd6413e3b7245e436732b18b6d82e3f9bac7f50e",
     "git_dirty": true,
     "python": "3.12.11 (main, Sep  2 2025, 14:12:30) [Clang 20.1.4 ]",
     "python_version": "3.12.11",
     "platform": "macOS-27.0-arm64-arm-64bit",
-    "created_at_utc": "2026-09-20T11:52:46.139278+00:00"
+    "created_at_utc": "2026-09-20T12:12:59.045730+00:00"
   },
   "source_hashes": {
-    "scripts/reproduce/mechanism_applicability.py": "805e9cb34b8705f829c42abc5b1bc7862c906cb4f82de685ef7be8680313f6e5",
+    "scripts/reproduce/mechanism_applicability.py": "fc943a4761aa58dd0663dec9a90e980634482eef5ced86da050861388f7e17be",
     "scripts/reproduce/benchmark_algorithms.py": "b5b686e955da0dbea46d78d0d94376af7aac791ec0dc56f3d9200c9b1743e034",
     "scripts/reproduce/benchmark_suite.py": "2477265e0943ae24100fbd4b093fbda5e12fc2e3f0ba38c3544d5886aba175e5",
     "scripts/reproduce/capacity_recovery.py": "5a016c1d7c0acab2e681b6d49c02a40e3d3e0d24c5d90b2b7cdf6b671a4fc817",
@@ -25,6 +25,7 @@
     "resource_grid_summary.csv": 640,
     "bottleneck_summary.csv": 8,
     "zone_exposure.csv": 6,
+    "zone_bottleneck.csv": 6,
     "zone_replay_summary.csv": 12
   },
   "topology_cells": [
@@ -122,6 +123,11 @@
         "target_utilization": 0.99
       }
     ],
+    "bottleneck_axes": {
+      "fleet_multiplier": 2.0,
+      "supply_multiplier": 1.5,
+      "capacity_multiplier": 2.0
+    },
     "zone_calibration": {
       "method": "capacity_scale bisected per (scenario, instance seed) until the measured maximum edge utilization reaches the target",
       "scale_bounds": [
@@ -202,15 +208,15 @@
     "replayed_decisions": 813,
     "distinct_decisions": 463,
     "code": {
-      "git_sha": "4881b6211a010cc4462817841a6a1ff07de00dfd",
+      "git_sha": "fd6413e3b7245e436732b18b6d82e3f9bac7f50e",
       "git_dirty": true,
       "python": "3.12.11 (main, Sep  2 2025, 14:12:30) [Clang 20.1.4 ]",
       "python_version": "3.12.11",
       "platform": "macOS-27.0-arm64-arm-64bit",
-      "created_at_utc": "2026-09-20T11:48:41.760032+00:00"
+      "created_at_utc": "2026-09-20T12:11:58.520989+00:00"
     },
     "source_hashes": {
-      "scripts/reproduce/mechanism_applicability.py": "805e9cb34b8705f829c42abc5b1bc7862c906cb4f82de685ef7be8680313f6e5",
+      "scripts/reproduce/mechanism_applicability.py": "629a5fad7c438ef6738d8e3ade6d0aa5a033e90f4fb35816b2195efde38df870",
       "scripts/reproduce/benchmark_algorithms.py": "b5b686e955da0dbea46d78d0d94376af7aac791ec0dc56f3d9200c9b1743e034",
       "scripts/reproduce/benchmark_suite.py": "2477265e0943ae24100fbd4b093fbda5e12fc2e3f0ba38c3544d5886aba175e5",
       "scripts/reproduce/capacity_recovery.py": "5a016c1d7c0acab2e681b6d49c02a40e3d3e0d24c5d90b2b7cdf6b671a4fc817",
