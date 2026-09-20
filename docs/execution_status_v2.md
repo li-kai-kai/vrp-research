@@ -3,7 +3,7 @@
 状态只允许四种取值：**待执行**、**执行中**、**通过**、**阻塞**。
 最后更新：2026-09-20（文档一致性清理轮）。当前基准 HEAD：`7c7a6ab`。
 
-**当前状态**：全量测试 `uv run python -m unittest discover -s tests -v` → **167 个，167 通过，0 失败，0 错误**。
+**当前状态**：全量测试 `uv run python -m unittest discover -s tests -v` → **193 个，193 通过，0 失败，0 错误**。
 **当前结论依据目录**：`outputs/claude_v2_reviewfix2/`。`outputs/claude_v2/`（首轮）与
 `outputs/claude_v2_reviewfix/`（第一轮修正后）**仅作为修复历史与前后对照**，不再作为当前结果。
 
@@ -65,7 +65,7 @@ uv run python scripts/reproduce/run_benchmark.py \
 
 ## P5 执行记录（当前状态，取自 `outputs/claude_v2_reviewfix2/`）
 
-当前全量测试：`uv run python -m unittest discover -s tests -v` → **167 个，167 通过，0 失败，0 错误**。
+当前全量测试：`uv run python -m unittest discover -s tests -v` → **193 个，193 通过，0 失败，0 错误**。
 执行的诊断命令、评价预算核对、算法与模型诊断结果、产物路径与限制全部见
 [v2 小预算诊断报告](pilot_v2_report.md)。
 
@@ -84,7 +84,7 @@ uv run python scripts/reproduce/run_benchmark.py \
 ## R1–R5 复审修正
 
 首轮 P0–P5 交付后审读提出的五项问题**全部复现属实**并已修复。
-该轮完成时回归用例为 110 个（当时值）；当前总数为 167 个（含机制诊断 37 例）。
+该轮完成时回归用例为 110 个（当时值）；当前总数为 193 个（含机制诊断 37 例、WEN38 天然 corridor 26 例）。
 本轮结论依据当时为 `outputs/claude_v2_reviewfix/`，现已被第二轮取代。
 
 | 项 | 问题 | 修复 | 回归（当前用例数） |
@@ -110,7 +110,7 @@ uv run python scripts/reproduce/run_benchmark.py \
 | B | 从降级实例直接重新打开开关会继续携带降级数据 | `model_factor_variant` 从声明档案恢复；无档案可恢复时显式报错 | 同上 |
 
 本轮起结论依据为 `outputs/claude_v2_reviewfix2/`；`outputs/claude_v2/` 与 `outputs/claude_v2_reviewfix/` 保留为对照。
-第二轮结束时全量测试为 130 个全通过；当前为 167 个（新增机制诊断 37 例）。第二轮的两项修复
+第二轮结束时全量测试为 130 个全通过；当前为 193 个（新增机制诊断 37 例、WEN38 天然 corridor 26 例）。第二轮的两项修复
 （量化坐标、Full 曲线校验）已纳入上方阶段表的「复审第二轮」一行，属于**当前验收状态**。
 
 ## 机制适用条件诊断（当前状态）

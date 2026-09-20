@@ -1,0 +1,144 @@
+{
+  "scope": "natural HT threshold-sensitive corridor diagnostic on the WEN38 road network and semi-real overlays of it; WEN38 topology, travel times, capacities, thresholds and v2 semantics are unmodified",
+  "case_id": "WEN38",
+  "suite": "benchmark",
+  "instance_seeds": [
+    1
+  ],
+  "single_physical_network": true,
+  "wen38_topology_fingerprint": "d5591f0e909bb53c26a24a15db143202001b3b944562ca67eed144a61533dd5c",
+  "network": {
+    "num_nodes": 38,
+    "num_edges": 51,
+    "graph_bridge_count": 8,
+    "damaged_edge_count": 16,
+    "damaged_bridge_count": 0,
+    "supplier_count": 3,
+    "demand_count": 35,
+    "total_demand": 11288.0,
+    "total_supply": 9000.0
+  },
+  "vehicle_thresholds": [
+    {
+      "vehicle_type": 1,
+      "min_recovery_progress": 0.3
+    },
+    {
+      "vehicle_type": 2,
+      "min_recovery_progress": 0.5
+    },
+    {
+      "vehicle_type": 3,
+      "min_recovery_progress": 0.7
+    },
+    {
+      "vehicle_type": 4,
+      "min_recovery_progress": 0.8
+    }
+  ],
+  "recovery_stages": [
+    0.0,
+    0.3,
+    0.6,
+    0.8,
+    1.0
+  ],
+  "eta_hours": 8,
+  "horizon_hours": 72,
+  "periods": 9,
+  "fixed_decisions": {
+    "original_random_decisions": 19,
+    "overlay_random_decisions": 4,
+    "original_decisions_tested": 20
+  },
+  "scenario_strata": [
+    {
+      "label": "inactive",
+      "min_changed_decisions": 0,
+      "max_changed_decisions": 0
+    },
+    {
+      "label": "natural-active",
+      "min_changed_decisions": 1,
+      "max_changed_decisions": 2
+    },
+    {
+      "label": "strong-natural-active",
+      "min_changed_decisions": 3,
+      "max_changed_decisions": 5
+    }
+  ],
+  "original_network_result": {
+    "decisions_tested": 20,
+    "decisions_with_exposure": 20,
+    "decisions_with_dispatch_change": 19,
+    "decisions_with_objective_change": 19,
+    "structural_corridor_edges": 15,
+    "dynamic_threshold_corridor_edges": 16,
+    "operational_corridor_edges": 16,
+    "objective_binding_corridor_edges": 16,
+    "structural_corridor_bridges": 5,
+    "operational_corridor_bridges": 5
+  },
+  "damage_sampling_check": {
+    "draws": 200,
+    "network_bridge_share": 0.1568627450980392,
+    "mean_sampled_bridge_share": 0.1528125,
+    "min_sampled_bridge_share": 0.0,
+    "max_sampled_bridge_share": 0.375,
+    "within_base_rate_band": true
+  },
+  "overlay_design": {
+    "types": [
+      "SR-A",
+      "SR-B",
+      "SR-C"
+    ],
+    "seeds_per_type": 20,
+    "statistical_unit": "scenario overlays on one common physical topology; not independent road networks",
+    "constraints": "damage is sampled uniformly over edges with the original repair-time multiset re-assigned; no bridge or betweenness preference, no repair-time adjustment, no threshold change",
+    "topology_invariant_across_overlays": true,
+    "overlays_run": 60,
+    "strata_counts": {
+      "inactive": 0,
+      "natural-active": 2,
+      "strong-natural-active": 58
+    }
+  },
+  "search": {
+    "enabled": true,
+    "algorithm": "nsga2",
+    "max_evaluations": 200,
+    "pop_size": 16,
+    "solver_seeds": [
+      70001,
+      70002
+    ],
+    "planning_models": [
+      "Full",
+      "No-HT"
+    ],
+    "execution_model": "Full",
+    "replayed_rows": 188
+  },
+  "objective_comparison": "V2_PRECISION quantized key, all three objectives",
+  "allocation_comparison": "shared canonical allocation multiset (supplier, demand, vehicle, route, amount, trips, travel time) with per-field and pairing flags",
+  "code": {
+    "git_sha": "502bede8d641c39d1f3933d30adf067152a8c276",
+    "git_dirty": true,
+    "python": "3.12.11 (main, Sep  2 2025, 14:12:30) [Clang 20.1.4 ]",
+    "python_version": "3.12.11",
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "created_at_utc": "2026-09-20T13:12:45.112333+00:00"
+  },
+  "source_hashes": {
+    "scripts/reproduce/mechanism_applicability.py": "7f90ab192cfe7174035c50d74ba4c5364ee593e94bc3b2dfe6050a422563e1bc",
+    "scripts/reproduce/benchmark_algorithms.py": "b5b686e955da0dbea46d78d0d94376af7aac791ec0dc56f3d9200c9b1743e034",
+    "scripts/reproduce/benchmark_suite.py": "2477265e0943ae24100fbd4b093fbda5e12fc2e3f0ba38c3544d5886aba175e5",
+    "scripts/reproduce/capacity_recovery.py": "5a016c1d7c0acab2e681b6d49c02a40e3d3e0d24c5d90b2b7cdf6b671a4fc817",
+    "scripts/reproduce/instance_generator.py": "f121ea469e6bc7f547abc1b241c0baa35792960e465bdca0ea90098307712021",
+    "scripts/reproduce/objective_precision.py": "2db2a9b81c4e6a5d099a686a51bb312420cabc9d30dea8cb73ad8bd44522c84f",
+    "scripts/reproduce/solution_io.py": "4f4bcae51716fee0f066fb48cc9c8bdc137822682f1c0733f2ebf66684e710c1",
+    "scripts/reproduce/ht_natural_corridor.py": "c049d63a3e648ffb76a93146223427668dd38cc0e6b5189e069000dd183b7431"
+  }
+}

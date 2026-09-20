@@ -13,6 +13,7 @@
 | `reproduce/solution_io.py` | 实例快照、生效配置、完整决策的共享序列化与原子写入，运行指纹与完整性校验 | 所有入口共用，不重复实现 |
 | `reproduce/mechanism_applicability.py` | 固定决策的 PR/HT/EC 暴露度、资源网格、车队/供给/道路容量放宽对照、维修时长扫描、桥接诊断 | 机制适用条件诊断；不运行优化器。瓶颈三轴均为**相对自身标定的倍数且必须 > 1** |
 | `reproduce/mechanism_zone_search.py` | 按 (场景, 种子) 标定不绑定/过渡/绑定三个分区，在其上做小预算搜索、统一 Full 回放与逐分区放宽对照 | 机制诊断阶段 2/3；保存完整三段决策 |
+| `reproduce/ht_natural_corridor.py` | WEN38 结构扫描（桥/介数/OD 依赖/绕行比）、逐周期 threshold exposure、固定决策 HT on/off、半真实 overlay（SR-A/B/C）、小预算 Full vs No-HT 回放 | 天然 corridor 诊断；只读复用模型与共享评价器，不改 WEN38 |
 | `reproduce/build_mechanism_audit.py` | 把 `outputs/mechanism_probe/` 的宽表汇总为可审计证据集与 manifest | 只做投影与聚合，不重新推导机制结果 |
 | `reproduce/plot_pilot_diagnostics.py` | 只读真实 CSV 与运行记录绘制 v2 小预算诊断图 | 无硬编码数值 |
 | `plot_benchmark_results.py` | 显式读取 benchmark `runs.csv` 绘图 | 不含硬编码实验数值 |

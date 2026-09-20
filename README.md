@@ -16,6 +16,8 @@ v2 使用期初路况、当期到货时间检查与新的配给政策。两套�
 - [机制适用条件诊断](docs/mechanism_applicability_report.md)：PR / HT / EC 在什么条件下真正参与决策，
   含不绑定区、过渡区与绑定区；区分机制暴露 / 配送参与 / 目标效应三个层次，
   并记录已被实验推翻的旧结论。跨规模复核覆盖 S025 / S050 / M100。
+- [WEN38 天然 HT corridor 诊断](docs/ht_natural_corridor_report.md)：真实路网中是否天然存在
+  threshold-sensitive corridor，含半真实 overlay 与四级证据链。
 - [脚本指南](scripts/README.md)：实验入口、参数和输出。
 - [清理记录](docs/maintenance.md)：文件去留、测试分组和历史产物恢复方法。
 - [汶川输入资料](docs/background/wenchuan_case_model_inputs.md)：原论文数据背景。

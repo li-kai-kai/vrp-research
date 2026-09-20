@@ -27,6 +27,9 @@ wheels/
 # plus a provenance manifest; the wide per-cell CSVs it is projected from stay
 # untracked under outputs/mechanism_probe/.
 #
+# outputs/ht_natural_corridor_audit/ is the evidence set behind
+# docs/ht_natural_corridor_report.md -- the WEN38 natural-corridor diagnostic.
+#
 # Note the wildcard: "outputs/" would exclude the directory itself, and a
 # file inside an excluded directory cannot be re-included.
 outputs/*
@@ -34,6 +37,7 @@ outputs/*
 !outputs/claude_v2_reviewfix/
 !outputs/claude_v2_reviewfix2/
 !outputs/mechanism_probe_audit/
+!outputs/ht_natural_corridor_audit/
 figures/
 *.png
 *.jpg
