@@ -147,7 +147,9 @@ def _plot_mechanism_binding(axis, rows: list[dict[str, str]], plt) -> None:
     axis.text(
         0.02,
         0.06,
-        "HT and EC are exactly inert here:\nno blocked tonnage, no objective change",
+        "At this one fixed decision: HT and EC change nothing.\n"
+        "This does not generalise to other decisions or calibrations --\n"
+        "front-wide replay does show non-zero effects on other solutions.",
         transform=axis.transAxes,
         fontsize=8.5,
         color=TEXT_SECONDARY,
