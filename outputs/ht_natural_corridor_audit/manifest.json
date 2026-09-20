@@ -130,12 +130,12 @@
   "objective_comparison": "V2_PRECISION quantized key, all three objectives",
   "allocation_comparison": "shared canonical allocation multiset (supplier, demand, vehicle, route, amount, trips, travel time) with per-field and pairing flags",
   "code": {
-    "git_sha": "2f375ac1a51faf3916a6c7ea1b56c34f6cd8658d",
+    "git_sha": "ca6d7f9c44ac52a82b91a0af6f195ae3d4022b85",
     "git_dirty": true,
     "python": "3.12.11 (main, Sep  2 2025, 14:12:30) [Clang 20.1.4 ]",
     "python_version": "3.12.11",
     "platform": "macOS-27.0-arm64-arm-64bit",
-    "created_at_utc": "2026-09-20T13:26:01.834745+00:00"
+    "created_at_utc": "2026-09-20T13:32:05.863729+00:00"
   },
   "source_hashes": {
     "scripts/reproduce/mechanism_applicability.py": "7f90ab192cfe7174035c50d74ba4c5364ee593e94bc3b2dfe6050a422563e1bc",
