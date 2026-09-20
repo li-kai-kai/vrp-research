@@ -115,6 +115,18 @@ v2 评价语义下的首轮小预算诊断已完成，入口为 `--model-version
 - **86 个 same-model replay**（`--execution-model saved`）与 **37 个 Full replay**（`--execution-model full`）
   均 0 失败，最大绝对误差 0.0。
 
+## 机制适用条件诊断（2026-09-20）
+
+回答"PR / HT / EC 在什么条件下真正改变决策"，结论与分区证据见
+[机制适用条件诊断报告](mechanism_applicability_report.md)。要点：
+
+- 给出**充要判据**：`partial_edge_used_periods`（PR）、`HT_allocations_changed`（HT）、
+  `EC_same_decision_changed`（EC）。只看可达性或候选路径会漏判——实测中它们只是必要条件。
+- EC 的绑定边界：利用率 < 0.85 从不绑定，0.85–0.97 过渡，≥ 0.97 全部绑定。
+- 基准标定 S025 **既不是车队也不是道路容量受限，而是总供给受限**；
+  这修正了此前"车队比道路更紧"的推测。
+- HT 的适用条件是**拓扑**（受损道路是否为必经走廊），不是标定。
+
 ## 历史结果怎么使用
 
 - [2026-08-09 Pareto 报告](archive/pareto_experiment_analysis_20260809.md)记录过基础/压力场景各三个种子的前沿数值，但对应 CSV/manifest 当前不在本地，保留为历史报告，不纳入当前证据表。

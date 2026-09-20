@@ -13,6 +13,8 @@ v2 使用期初路况、当期到货时间检查与新的配给政策。两套�
 - [模型 v2 合同](docs/model_v2_contract.md)：v2 的配给政策、时间轴、单位、指标与指纹规则。
 - [v2 小预算诊断报告](docs/pilot_v2_report.md)：v2 已执行的测试、算法诊断与模型价值诊断。
 - [v2 执行状态表](docs/execution_status_v2.md)：各阶段状态与验收证据。
+- [机制适用条件诊断](docs/mechanism_applicability_report.md)：PR / HT / EC 在什么条件下真正参与决策，
+  含不绑定区、过渡区与绑定区。
 - [脚本指南](scripts/README.md)：实验入口、参数和输出。
 - [清理记录](docs/maintenance.md)：文件去留、测试分组和历史产物恢复方法。
 - [汶川输入资料](docs/background/wenchuan_case_model_inputs.md)：原论文数据背景。
