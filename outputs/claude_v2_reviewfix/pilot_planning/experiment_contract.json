@@ -1,0 +1,55 @@
+{
+  "format": "capacity_recovery_experiment_contract",
+  "format_version": 1,
+  "created_at_utc": "2026-09-20T07:54:15.146536+00:00",
+  "fixed": {
+    "suite": "benchmark",
+    "model_version": "v2",
+    "algorithm": "nsga2",
+    "evaluation": {
+      "model_version": "v2",
+      "fair_share_cap": false,
+      "dispatch_timing": "period_start",
+      "enforce_within_period_arrival": true,
+      "fleet_semantics": "exogenous_period_trip_budget"
+    },
+    "evaluation_fingerprint": "a94798a40d5036ec",
+    "budget": {
+      "max_evaluations": 200,
+      "pop_size": 16,
+      "crossover_probability": 0.9,
+      "mutation_probability": 0.2,
+      "alns_probability": 0.35,
+      "alns_iterations": 4
+    },
+    "source_fingerprint": "6e04da8ee536951f3c844ad4d411d1620f30f74111fa461fc177576ed9e63cbf",
+    "entry_point": "run_model_ablation"
+  },
+  "varying": {
+    "cases": [
+      "S025"
+    ],
+    "instance_seeds": [
+      101
+    ],
+    "model_ids": [
+      "PR0_HT1_EC1",
+      "PR1_HT0_EC1",
+      "PR1_HT1_EC0",
+      "PR1_HT1_EC1"
+    ],
+    "solver_repeat_start": 0,
+    "solver_repeats": 2,
+    "solver_seed_start": 50000
+  },
+  "revisions": [
+    {
+      "git_sha": "ee18c41fc3eda7305b2e7cf9d4ed568a1c778479",
+      "git_dirty": true,
+      "python": "3.12.11 (main, Sep  2 2025, 14:12:30) [Clang 20.1.4 ]",
+      "python_version": "3.12.11",
+      "platform": "macOS-27.0-arm64-arm-64bit",
+      "created_at_utc": "2026-09-20T07:54:15.303088+00:00"
+    }
+  ]
+}

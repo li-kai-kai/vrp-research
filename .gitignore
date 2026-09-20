@@ -13,9 +13,11 @@ wheels/
 
 # Experiment outputs
 #
-# Regenerable artifacts stay out of version control. The one exception is
-# outputs/claude_v2/, the result set behind docs/pilot_v2_report.md: its run
-# records, replay tables and diagnostic figure are kept so the reported
+# Regenerable artifacts stay out of version control. The exceptions are the
+# result sets behind docs/pilot_v2_report.md: outputs/claude_v2/ is the first
+# delivery, kept as the before/after reference for the R1-R5 review fixes, and
+# outputs/claude_v2_reviewfix/ is the corrected run the report now cites. Their
+# run records, replay tables and diagnostic figures are kept so the reported
 # numbers can be checked without re-running anything. Everything else under
 # outputs/ is rebuilt by the commands in scripts/README.md.
 #
@@ -23,6 +25,7 @@ wheels/
 # file inside an excluded directory cannot be re-included.
 outputs/*
 !outputs/claude_v2/
+!outputs/claude_v2_reviewfix/
 figures/
 *.png
 *.jpg
@@ -32,5 +35,6 @@ figures/
 !references/*.pdf
 
 # Must come after the extension rules above, which would otherwise exclude
-# the diagnostic figure.
+# the diagnostic figures.
 !outputs/claude_v2/pilot_diagnostics.png
+!outputs/claude_v2_reviewfix/pilot_diagnostics.png

@@ -1,0 +1,1101 @@
+{
+  "format": "capacity_recovery_instance",
+  "format_version": 1,
+  "name": "S025_seed102",
+  "instance_seed": 102,
+  "num_nodes": 25,
+  "gamma": 3,
+  "damage_ratio": 0.15,
+  "eta_hours": 8,
+  "horizon_hours": 72,
+  "repair_crews": 2,
+  "vehicle_capacity": 100.0,
+  "vehicle_count": 3,
+  "suppliers": [
+    4,
+    16
+  ],
+  "demands": [
+    0,
+    1,
+    2,
+    6,
+    10,
+    13,
+    17,
+    18,
+    22
+  ],
+  "demand_amounts": [
+    [
+      0,
+      158.0
+    ],
+    [
+      1,
+      58.0
+    ],
+    [
+      2,
+      57.0
+    ],
+    [
+      6,
+      172.0
+    ],
+    [
+      10,
+      138.0
+    ],
+    [
+      13,
+      189.0
+    ],
+    [
+      17,
+      144.0
+    ],
+    [
+      18,
+      119.0
+    ],
+    [
+      22,
+      124.0
+    ]
+  ],
+  "supply_amounts": [
+    [
+      4,
+      827.258430669853
+    ],
+    [
+      16,
+      215.84156933014705
+    ]
+  ],
+  "nodes": [
+    {
+      "id": 0,
+      "attrs": {}
+    },
+    {
+      "id": 1,
+      "attrs": {}
+    },
+    {
+      "id": 2,
+      "attrs": {}
+    },
+    {
+      "id": 3,
+      "attrs": {}
+    },
+    {
+      "id": 4,
+      "attrs": {}
+    },
+    {
+      "id": 5,
+      "attrs": {}
+    },
+    {
+      "id": 6,
+      "attrs": {}
+    },
+    {
+      "id": 7,
+      "attrs": {}
+    },
+    {
+      "id": 8,
+      "attrs": {}
+    },
+    {
+      "id": 9,
+      "attrs": {}
+    },
+    {
+      "id": 10,
+      "attrs": {}
+    },
+    {
+      "id": 11,
+      "attrs": {}
+    },
+    {
+      "id": 12,
+      "attrs": {}
+    },
+    {
+      "id": 13,
+      "attrs": {}
+    },
+    {
+      "id": 14,
+      "attrs": {}
+    },
+    {
+      "id": 15,
+      "attrs": {}
+    },
+    {
+      "id": 16,
+      "attrs": {}
+    },
+    {
+      "id": 17,
+      "attrs": {}
+    },
+    {
+      "id": 18,
+      "attrs": {}
+    },
+    {
+      "id": 19,
+      "attrs": {}
+    },
+    {
+      "id": 20,
+      "attrs": {}
+    },
+    {
+      "id": 21,
+      "attrs": {}
+    },
+    {
+      "id": 22,
+      "attrs": {}
+    },
+    {
+      "id": 23,
+      "attrs": {}
+    },
+    {
+      "id": 24,
+      "attrs": {}
+    }
+  ],
+  "edges": [
+    {
+      "u": 0,
+      "v": 2,
+      "free_time": 8.947091184598944,
+      "weight": 8.947091184598944,
+      "capacity": 2556.9585139058627,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 0,
+      "v": 4,
+      "free_time": 22.097445781731032,
+      "weight": 22.097445781731032,
+      "capacity": 2733.7561367171556,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 0,
+      "v": 7,
+      "free_time": 2.7515634682621384,
+      "weight": 2.7515634682621384,
+      "capacity": 1376.9866178808875,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 0,
+      "v": 11,
+      "free_time": 28.54352411388709,
+      "weight": 28.54352411388709,
+      "capacity": 1284.1785272349716,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 0,
+      "v": 14,
+      "free_time": 14.085438226050309,
+      "weight": 14.085438226050309,
+      "capacity": 2203.4889072616766,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 1,
+      "v": 2,
+      "free_time": 14.980801056937818,
+      "weight": 14.980801056937818,
+      "capacity": 2758.537040269969,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 1,
+      "v": 7,
+      "free_time": 28.706784181883464,
+      "weight": 28.706784181883464,
+      "capacity": 1682.6250634107848,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 1,
+      "v": 12,
+      "free_time": 4.896489810832252,
+      "weight": 4.896489810832252,
+      "capacity": 2829.0105579524375,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 1,
+      "v": 15,
+      "free_time": 14.154171025490953,
+      "weight": 14.154171025490953,
+      "capacity": 1497.3816840840216,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 2,
+      "v": 5,
+      "free_time": 5.009580975179601,
+      "weight": 5.009580975179601,
+      "capacity": 1018.0763790130935,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 2,
+      "v": 7,
+      "free_time": 17.89808066483981,
+      "weight": 17.89808066483981,
+      "capacity": 1562.0013460558143,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 2,
+      "v": 18,
+      "free_time": 17.13391819876688,
+      "weight": 17.13391819876688,
+      "capacity": 2848.683983081093,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 2,
+      "v": 20,
+      "free_time": 15.046174724353412,
+      "weight": 15.046174724353412,
+      "capacity": 2906.8109422366424,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 2,
+      "v": 24,
+      "free_time": 2.9371952161683383,
+      "weight": 2.9371952161683383,
+      "capacity": 2516.0948419298475,
+      "damaged": true,
+      "damage_id": 8,
+      "repair_time": 1585.9304766055968
+    },
+    {
+      "u": 3,
+      "v": 4,
+      "free_time": 22.885490155759708,
+      "weight": 22.885490155759708,
+      "capacity": 2917.6445222673956,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 3,
+      "v": 5,
+      "free_time": 1.8977493379908814,
+      "weight": 1.8977493379908814,
+      "capacity": 2013.3212131382932,
+      "damaged": true,
+      "damage_id": 6,
+      "repair_time": 3514.4775383194265
+    },
+    {
+      "u": 3,
+      "v": 6,
+      "free_time": 17.134701749688112,
+      "weight": 17.134701749688112,
+      "capacity": 2196.540760429786,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 3,
+      "v": 15,
+      "free_time": 14.663841272615521,
+      "weight": 14.663841272615521,
+      "capacity": 1545.8329930790314,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 3,
+      "v": 24,
+      "free_time": 27.181883388183458,
+      "weight": 27.181883388183458,
+      "capacity": 2755.9372894477547,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 4,
+      "v": 5,
+      "free_time": 21.336363526728164,
+      "weight": 21.336363526728164,
+      "capacity": 2918.406251963267,
+      "damaged": true,
+      "damage_id": 4,
+      "repair_time": 1107.4051533944844
+    },
+    {
+      "u": 4,
+      "v": 14,
+      "free_time": 17.04998935944959,
+      "weight": 17.04998935944959,
+      "capacity": 1158.8978289203185,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 4,
+      "v": 17,
+      "free_time": 21.126717874208534,
+      "weight": 21.126717874208534,
+      "capacity": 1209.760950832615,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 4,
+      "v": 19,
+      "free_time": 22.775309164919328,
+      "weight": 22.775309164919328,
+      "capacity": 2297.26762559356,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 5,
+      "v": 6,
+      "free_time": 6.999965389558891,
+      "weight": 6.999965389558891,
+      "capacity": 1304.8351820843625,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 5,
+      "v": 7,
+      "free_time": 2.957022073572169,
+      "weight": 2.957022073572169,
+      "capacity": 1353.7235836281761,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 5,
+      "v": 8,
+      "free_time": 29.36312493321781,
+      "weight": 29.36312493321781,
+      "capacity": 1455.9012150520198,
+      "damaged": true,
+      "damage_id": 11,
+      "repair_time": 1577.6582520686047
+    },
+    {
+      "u": 5,
+      "v": 9,
+      "free_time": 26.636549645822125,
+      "weight": 26.636549645822125,
+      "capacity": 1268.9138173295075,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 5,
+      "v": 17,
+      "free_time": 10.820032222329624,
+      "weight": 10.820032222329624,
+      "capacity": 1944.5141147766235,
+      "damaged": true,
+      "damage_id": 3,
+      "repair_time": 3538.98229083444
+    },
+    {
+      "u": 5,
+      "v": 22,
+      "free_time": 11.392238032555579,
+      "weight": 11.392238032555579,
+      "capacity": 2928.712359764574,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 6,
+      "v": 11,
+      "free_time": 7.964292705308656,
+      "weight": 7.964292705308656,
+      "capacity": 1967.203597299941,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 6,
+      "v": 14,
+      "free_time": 6.949199076028207,
+      "weight": 6.949199076028207,
+      "capacity": 1218.224779371936,
+      "damaged": true,
+      "damage_id": 1,
+      "repair_time": 1328.2909025559673
+    },
+    {
+      "u": 6,
+      "v": 18,
+      "free_time": 21.02342797981506,
+      "weight": 21.02342797981506,
+      "capacity": 1678.2401106862658,
+      "damaged": true,
+      "damage_id": 0,
+      "repair_time": 3020.1857348322865
+    },
+    {
+      "u": 6,
+      "v": 21,
+      "free_time": 15.124136295663531,
+      "weight": 15.124136295663531,
+      "capacity": 2385.5488258901387,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 6,
+      "v": 22,
+      "free_time": 3.5764705485617583,
+      "weight": 3.5764705485617583,
+      "capacity": 1108.9804883299498,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 6,
+      "v": 23,
+      "free_time": 20.93824747361086,
+      "weight": 20.93824747361086,
+      "capacity": 2987.509581623766,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 7,
+      "v": 8,
+      "free_time": 1.535782221624292,
+      "weight": 1.535782221624292,
+      "capacity": 1904.4552151220587,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 7,
+      "v": 12,
+      "free_time": 29.844967315163647,
+      "weight": 29.844967315163647,
+      "capacity": 2666.067659173384,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 7,
+      "v": 13,
+      "free_time": 29.69201753077416,
+      "weight": 29.69201753077416,
+      "capacity": 2058.378662565181,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 7,
+      "v": 17,
+      "free_time": 29.181316276157165,
+      "weight": 29.181316276157165,
+      "capacity": 1111.910982797293,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 7,
+      "v": 20,
+      "free_time": 14.687031231865957,
+      "weight": 14.687031231865957,
+      "capacity": 2695.679243021458,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 7,
+      "v": 22,
+      "free_time": 12.32833675848059,
+      "weight": 12.32833675848059,
+      "capacity": 1881.286132291219,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 7,
+      "v": 23,
+      "free_time": 14.022772149722826,
+      "weight": 14.022772149722826,
+      "capacity": 1759.5081773621791,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 7,
+      "v": 24,
+      "free_time": 24.575570520385586,
+      "weight": 24.575570520385586,
+      "capacity": 2945.6233477295027,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 8,
+      "v": 10,
+      "free_time": 7.691623712849114,
+      "weight": 7.691623712849114,
+      "capacity": 1644.944253305458,
+      "damaged": true,
+      "damage_id": 2,
+      "repair_time": 2802.033349007362
+    },
+    {
+      "u": 8,
+      "v": 12,
+      "free_time": 24.311174139504715,
+      "weight": 24.311174139504715,
+      "capacity": 2487.863227091573,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 8,
+      "v": 13,
+      "free_time": 24.614919691899537,
+      "weight": 24.614919691899537,
+      "capacity": 2363.6845188734114,
+      "damaged": true,
+      "damage_id": 10,
+      "repair_time": 3087.7548294085973
+    },
+    {
+      "u": 8,
+      "v": 15,
+      "free_time": 27.533338894881627,
+      "weight": 27.533338894881627,
+      "capacity": 2689.8098157575123,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 8,
+      "v": 23,
+      "free_time": 19.37668657965144,
+      "weight": 19.37668657965144,
+      "capacity": 1567.286560615718,
+      "damaged": true,
+      "damage_id": 5,
+      "repair_time": 1710.8780026731051
+    },
+    {
+      "u": 9,
+      "v": 13,
+      "free_time": 3.4686896078646035,
+      "weight": 3.4686896078646035,
+      "capacity": 2720.0311355711456,
+      "damaged": true,
+      "damage_id": 9,
+      "repair_time": 1060.4309613340572
+    },
+    {
+      "u": 9,
+      "v": 21,
+      "free_time": 25.88371172322556,
+      "weight": 25.88371172322556,
+      "capacity": 2783.021492317568,
+      "damaged": true,
+      "damage_id": 7,
+      "repair_time": 1810.2511852017255
+    },
+    {
+      "u": 9,
+      "v": 23,
+      "free_time": 8.682724680002138,
+      "weight": 8.682724680002138,
+      "capacity": 2476.9336210785214,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 10,
+      "v": 14,
+      "free_time": 27.984489475102848,
+      "weight": 27.984489475102848,
+      "capacity": 1413.5122311173723,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 10,
+      "v": 15,
+      "free_time": 1.6835403449894155,
+      "weight": 1.6835403449894155,
+      "capacity": 1348.0423471953688,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 11,
+      "v": 16,
+      "free_time": 7.346602781771119,
+      "weight": 7.346602781771119,
+      "capacity": 2360.0032120306614,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 12,
+      "v": 13,
+      "free_time": 24.818542934071832,
+      "weight": 24.818542934071832,
+      "capacity": 2637.5475809688824,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 12,
+      "v": 16,
+      "free_time": 20.983805068360468,
+      "weight": 20.983805068360468,
+      "capacity": 2956.788036306406,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 12,
+      "v": 22,
+      "free_time": 29.196041837290842,
+      "weight": 29.196041837290842,
+      "capacity": 1878.777334034404,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 13,
+      "v": 16,
+      "free_time": 27.723417041100767,
+      "weight": 27.723417041100767,
+      "capacity": 2438.0400718960364,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 13,
+      "v": 20,
+      "free_time": 8.106460664003341,
+      "weight": 8.106460664003341,
+      "capacity": 2170.620332638041,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 13,
+      "v": 21,
+      "free_time": 5.945342250757715,
+      "weight": 5.945342250757715,
+      "capacity": 1799.6475620606618,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 13,
+      "v": 23,
+      "free_time": 24.576918466711007,
+      "weight": 24.576918466711007,
+      "capacity": 1019.8023588778186,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 14,
+      "v": 17,
+      "free_time": 16.558855203380965,
+      "weight": 16.558855203380965,
+      "capacity": 1871.3708057482581,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 14,
+      "v": 19,
+      "free_time": 9.206883643633883,
+      "weight": 9.206883643633883,
+      "capacity": 1129.3395302412098,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 14,
+      "v": 23,
+      "free_time": 16.177615254317427,
+      "weight": 16.177615254317427,
+      "capacity": 1667.1225491136402,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 15,
+      "v": 17,
+      "free_time": 3.823988114969749,
+      "weight": 3.823988114969749,
+      "capacity": 1802.8805840162408,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 15,
+      "v": 20,
+      "free_time": 20.700824483221663,
+      "weight": 20.700824483221663,
+      "capacity": 1159.207529182299,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 15,
+      "v": 21,
+      "free_time": 23.77113332955434,
+      "weight": 23.77113332955434,
+      "capacity": 1166.543088853226,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 16,
+      "v": 18,
+      "free_time": 14.646866625321948,
+      "weight": 14.646866625321948,
+      "capacity": 1733.1911318804086,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 16,
+      "v": 20,
+      "free_time": 25.863238136724505,
+      "weight": 25.863238136724505,
+      "capacity": 2785.7171399531353,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 17,
+      "v": 19,
+      "free_time": 22.37962862055804,
+      "weight": 22.37962862055804,
+      "capacity": 1588.4490461851087,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 18,
+      "v": 19,
+      "free_time": 10.410842707857466,
+      "weight": 10.410842707857466,
+      "capacity": 2649.644426903432,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 19,
+      "v": 23,
+      "free_time": 15.786504113318852,
+      "weight": 15.786504113318852,
+      "capacity": 2270.429596889777,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 20,
+      "v": 23,
+      "free_time": 21.992463225838822,
+      "weight": 21.992463225838822,
+      "capacity": 1383.4618509681186,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 21,
+      "v": 24,
+      "free_time": 12.158066838674761,
+      "weight": 12.158066838674761,
+      "capacity": 2908.67749427351,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 22,
+      "v": 24,
+      "free_time": 10.63172776605117,
+      "weight": 10.63172776605117,
+      "capacity": 2696.8400614072707,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    }
+  ],
+  "damaged_edges": [
+    {
+      "damage_id": 0,
+      "u": 6,
+      "v": 18,
+      "repair_time": 3020.1857348322865
+    },
+    {
+      "damage_id": 1,
+      "u": 6,
+      "v": 14,
+      "repair_time": 1328.2909025559673
+    },
+    {
+      "damage_id": 2,
+      "u": 8,
+      "v": 10,
+      "repair_time": 2802.033349007362
+    },
+    {
+      "damage_id": 3,
+      "u": 5,
+      "v": 17,
+      "repair_time": 3538.98229083444
+    },
+    {
+      "damage_id": 4,
+      "u": 4,
+      "v": 5,
+      "repair_time": 1107.4051533944844
+    },
+    {
+      "damage_id": 5,
+      "u": 8,
+      "v": 23,
+      "repair_time": 1710.8780026731051
+    },
+    {
+      "damage_id": 6,
+      "u": 3,
+      "v": 5,
+      "repair_time": 3514.4775383194265
+    },
+    {
+      "damage_id": 7,
+      "u": 9,
+      "v": 21,
+      "repair_time": 1810.2511852017255
+    },
+    {
+      "damage_id": 8,
+      "u": 2,
+      "v": 24,
+      "repair_time": 1585.9304766055968
+    },
+    {
+      "damage_id": 9,
+      "u": 9,
+      "v": 13,
+      "repair_time": 1060.4309613340572
+    },
+    {
+      "damage_id": 10,
+      "u": 8,
+      "v": 13,
+      "repair_time": 3087.7548294085973
+    },
+    {
+      "damage_id": 11,
+      "u": 5,
+      "v": 8,
+      "repair_time": 1577.6582520686047
+    }
+  ],
+  "model": {
+    "capacity_scale": 0.05,
+    "repair_time_weight": 0.05,
+    "crew_transfer_time_scale": 0.0,
+    "crew_min_access_progress": 0.0,
+    "progressive_recovery": true,
+    "heterogeneous_vehicle_thresholds": true,
+    "edge_capacity_constraint": true,
+    "evaluation": {
+      "model_version": "v2",
+      "fair_share_cap": false,
+      "dispatch_timing": "period_start",
+      "enforce_within_period_arrival": true,
+      "fleet_semantics": "exogenous_period_trip_budget"
+    },
+    "vehicles": [
+      {
+        "vehicle_type": 1,
+        "capacity_ton": 5.0,
+        "count": 7,
+        "occupied_od_pcu_h": 300.0,
+        "min_recovery_progress": 0.3,
+        "pcu_per_vehicle": 1.0,
+        "speed_factor": 1.0
+      },
+      {
+        "vehicle_type": 2,
+        "capacity_ton": 10.0,
+        "count": 5,
+        "occupied_od_pcu_h": 500.0,
+        "min_recovery_progress": 0.5,
+        "pcu_per_vehicle": 1.5,
+        "speed_factor": 1.0
+      },
+      {
+        "vehicle_type": 3,
+        "capacity_ton": 15.0,
+        "count": 3,
+        "occupied_od_pcu_h": 800.0,
+        "min_recovery_progress": 0.7,
+        "pcu_per_vehicle": 2.0,
+        "speed_factor": 1.0
+      },
+      {
+        "vehicle_type": 4,
+        "capacity_ton": 20.0,
+        "count": 2,
+        "occupied_od_pcu_h": 1000.0,
+        "min_recovery_progress": 0.8,
+        "pcu_per_vehicle": 2.5,
+        "speed_factor": 1.0
+      }
+    ],
+    "recovery_stages": [
+      {
+        "lower": 0.0,
+        "upper": 0.3,
+        "capacity_ratio": 0.0,
+        "label": "blocked",
+        "speed_ratio": 0.0
+      },
+      {
+        "lower": 0.3,
+        "upper": 0.6,
+        "capacity_ratio": 0.3,
+        "label": "temporary",
+        "speed_ratio": 0.3
+      },
+      {
+        "lower": 0.6,
+        "upper": 0.8,
+        "capacity_ratio": 0.6,
+        "label": "one_lane",
+        "speed_ratio": 0.6
+      },
+      {
+        "lower": 0.8,
+        "upper": 1.0,
+        "capacity_ratio": 0.8,
+        "label": "basic",
+        "speed_ratio": 0.8
+      },
+      {
+        "lower": 1.0,
+        "upper": 1.01,
+        "capacity_ratio": 1.0,
+        "label": "full",
+        "speed_ratio": 1.0
+      }
+    ]
+  },
+  "snapshot_sha256": "b26be375c593c548c8ab1e2898c9c04c1f2f2b0ed990e6462f0ee6d04db1fefa",
+  "physical_instance_hash": "54b772c06ceecbc181565e172d89fe2bc931aaa3c82f564d9776b6a6473cc406",
+  "model_fingerprint": "d4a9e5d5cc55e7b48b856a4714048051354fb1bdd399e8a84ffc688e330e0319",
+  "is_full_execution": true,
+  "full_execution_problems": []
+}

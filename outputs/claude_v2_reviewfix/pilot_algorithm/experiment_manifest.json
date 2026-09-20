@@ -1,0 +1,78 @@
+{
+  "created_at_utc": "2026-09-20T07:56:53.358615+00:00",
+  "model_version": "v2",
+  "evaluation": {
+    "model_version": "v2",
+    "fair_share_cap": false,
+    "dispatch_timing": "period_start",
+    "enforce_within_period_arrival": true,
+    "fleet_semantics": "exogenous_period_trip_budget"
+  },
+  "evaluation_fingerprint": "a94798a40d5036ec",
+  "source_fingerprint": "ae44d19a9fdcd72978d362bc650cc60fdca1ff7b6d068a85e3a47da6b45d8e45",
+  "planned_runs": 18,
+  "runs_in_directory": 18,
+  "runs_this_invocation": 18,
+  "resumed_runs": 18,
+  "git_sha": "fabdaed527df00e18b1253ce8619d4a2cae1fe19",
+  "git_dirty": true,
+  "source_files_sha256": {
+    "scripts/reproduce/run_benchmark.py": "01101c3e92be509e9895e647a60c0636de07be69ad1d9c9c0017d6339fdcebc3",
+    "scripts/reproduce/benchmark_suite.py": "40667610f5b8ec43058e70fb84738796be286bc60d1b50ab17987437831c16ed",
+    "scripts/reproduce/benchmark_algorithms.py": "b5b686e955da0dbea46d78d0d94376af7aac791ec0dc56f3d9200c9b1743e034",
+    "scripts/reproduce/capacity_recovery.py": "a27c976854f3d79813ef25581772eb873b54ad2e772b1a35dcbf98911c812a80",
+    "scripts/reproduce/instance_generator.py": "f121ea469e6bc7f547abc1b241c0baa35792960e465bdca0ea90098307712021",
+    "scripts/reproduce/model.py": "ca01ca70a94751139e2e082c99e13d23b09bfcbf6088061e1a09dbdce43528e2",
+    "scripts/reproduce/solution_io.py": "05fd24ae2eb1ee8da9b2f5303ba39685bd78ffa1ac67477f55a8f5f2e8b9eb08",
+    "scripts/reproduce/objective_precision.py": "49124130e0f308b0e105fa14af9a03a5dd01d2592cad3cbec00b744909942668",
+    "pyproject.toml": "27788f5f0293c62cc6e6cde8b1de425210ad4ba56523795aeecd5688aa979bdb",
+    "uv.lock": "5b0cf64796c740d6c261a36e44622a83bb92c9e1886ca5a0fc233c56911fac5c"
+  },
+  "python": "3.12.11 (main, Sep  2 2025, 14:12:30) [Clang 20.1.4 ]",
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "suite": "benchmark",
+  "cases": [
+    {
+      "case_id": "S025",
+      "size_group": "small",
+      "num_nodes": 25,
+      "gamma": 3,
+      "damage_ratio": 0.15,
+      "eta_hours": 8,
+      "capacity_scale": 0.05,
+      "supply_ratio": 0.9,
+      "source": "synthetic",
+      "fleet_capacity_ratio": 0.14
+    }
+  ],
+  "instance_seeds": [
+    101,
+    102
+  ],
+  "solver_seed_start": 50000,
+  "solver_repeats_stochastic": 3,
+  "deterministic_repeats": 1,
+  "algorithms": [
+    "nsga2",
+    "nsga2_ls",
+    "nsga2_alns"
+  ],
+  "budget": {
+    "max_evaluations": 500,
+    "pop_size": 32,
+    "crossover_probability": 0.9,
+    "mutation_probability": 0.2,
+    "alns_probability": 0.35,
+    "alns_iterations": 4
+  },
+  "objectives": [
+    "min_unmet_area",
+    "min_time_cost",
+    "min_neg_min_satisfaction"
+  ],
+  "representative_rule": "lexicographic min of (F3, F1, F2), applied before any replay and recorded per solution as representative_selected_before_replay",
+  "quality_indicators": {
+    "hypervolume": "exact normalized 3D HV; pooled reference point (1.1, 1.1, 1.1)",
+    "igd": "normalized Euclidean IGD to pooled non-dominated front per instance"
+  }
+}

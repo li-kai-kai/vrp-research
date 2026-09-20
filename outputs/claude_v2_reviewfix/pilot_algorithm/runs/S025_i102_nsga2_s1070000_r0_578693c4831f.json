@@ -1,0 +1,1341 @@
+{
+  "run_key": "S025:i102:nsga2:s1070000:r0:578693c4831f",
+  "case_id": "S025",
+  "suite": "benchmark",
+  "source": "synthetic",
+  "size_group": "small",
+  "num_nodes": 25,
+  "instance_seed": 102,
+  "solver_seed": 1070000,
+  "solver_repeat": 0,
+  "algorithm": "nsga2",
+  "budget": {
+    "max_evaluations": 500,
+    "pop_size": 32,
+    "crossover_probability": 0.9,
+    "mutation_probability": 0.2,
+    "alns_probability": 0.35,
+    "alns_iterations": 4
+  },
+  "evaluations": 500,
+  "runtime_seconds": 12.923163792002015,
+  "termination_reason": "budget_exhausted",
+  "physical_instance_hash": "54b772c06ceecbc181565e172d89fe2bc931aaa3c82f564d9776b6a6473cc406",
+  "model_fingerprint": "d4a9e5d5cc55e7b48b856a4714048051354fb1bdd399e8a84ffc688e330e0319",
+  "evaluation": {
+    "model_version": "v2",
+    "fair_share_cap": false,
+    "dispatch_timing": "period_start",
+    "enforce_within_period_arrival": true,
+    "fleet_semantics": "exogenous_period_trip_budget"
+  },
+  "evaluation_fingerprint": "a94798a40d5036ec",
+  "objective_precision": {
+    "label": "v2_service_resolution",
+    "resolutions": [
+      1e-08,
+      1e-06,
+      1e-08
+    ],
+    "exact": false
+  },
+  "objective_precision_fingerprint": "ec44b6c6bd6ced4c",
+  "source_fingerprint": "ae44d19a9fdcd72978d362bc650cc60fdca1ff7b6d068a85e3a47da6b45d8e45",
+  "objectives": [
+    3.7825807265863522,
+    4492.659099318153,
+    -0.8999999999996675
+  ],
+  "metrics": {
+    "capacity_scale": 0.05,
+    "repair_time_weight": 0.05,
+    "crew_transfer_time_scale": 0.0,
+    "progressive_recovery": 1.0,
+    "heterogeneous_vehicle_thresholds": 1.0,
+    "edge_capacity_constraint": 1.0,
+    "final_total_satisfaction": 0.8999999999996676,
+    "final_min_satisfaction": 0.8999999999996675,
+    "average_reachable_ratio": 1.0,
+    "final_repaired_ratio": 0.3333333333333333,
+    "total_delivery_time": 4060.6590993181526,
+    "total_repair_work": 8640.0,
+    "total_crew_transfer_time": 0.0,
+    "partial_recovery_edge_periods": 16.0,
+    "small_vehicle_share": 0.5332313937273879,
+    "max_edge_utilization": 0.029122498254607155,
+    "high_utilization_edge_periods": 0.0,
+    "capacity_blocked_tons": 0.0,
+    "total_vehicle_trips": 132.0,
+    "unmet_ratio_hours": 30.260645812690818,
+    "zero_service_ratio": 0.0,
+    "remaining_supply": 3.8537706359420554e-10,
+    "total_delivered": 1043.0999999996147,
+    "min_period_delivered": 0.0,
+    "max_period_delivered": 146.14443922341002,
+    "time_infeasible_candidates": 0.0,
+    "time_feasible_demand_periods": 81.0
+  },
+  "decision_hash": "cf4f15ca7d92c072",
+  "representative_decision": {
+    "repair_order": [
+      1,
+      4,
+      11,
+      3,
+      9,
+      10,
+      6,
+      5,
+      7,
+      0,
+      2,
+      8
+    ],
+    "team_assignment": [
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      1
+    ],
+    "dispatch_priority": [
+      [
+        16,
+        22
+      ],
+      [
+        16,
+        17
+      ],
+      [
+        16,
+        13
+      ],
+      [
+        4,
+        22
+      ],
+      [
+        16,
+        18
+      ],
+      [
+        16,
+        6
+      ],
+      [
+        4,
+        17
+      ],
+      [
+        16,
+        2
+      ],
+      [
+        4,
+        6
+      ],
+      [
+        4,
+        18
+      ],
+      [
+        16,
+        0
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        16,
+        1
+      ],
+      [
+        4,
+        2
+      ],
+      [
+        4,
+        10
+      ],
+      [
+        4,
+        13
+      ],
+      [
+        16,
+        10
+      ],
+      [
+        4,
+        1
+      ]
+    ]
+  },
+  "pareto_front": [
+    {
+      "solution_id": "p0001",
+      "decision_hash": "b8d4c2a1f60a480d",
+      "objectives": [
+        3.9822821001563136,
+        3956.788924361139,
+        -0.8999999999998738
+      ],
+      "metrics": {
+        "capacity_scale": 0.05,
+        "repair_time_weight": 0.05,
+        "crew_transfer_time_scale": 0.0,
+        "progressive_recovery": 1.0,
+        "heterogeneous_vehicle_thresholds": 1.0,
+        "edge_capacity_constraint": 1.0,
+        "final_total_satisfaction": 0.8999999999998738,
+        "final_min_satisfaction": 0.8999999999998738,
+        "average_reachable_ratio": 1.0,
+        "final_repaired_ratio": 0.3333333333333333,
+        "total_delivery_time": 3524.788924361139,
+        "total_repair_work": 8640.0,
+        "total_crew_transfer_time": 0.0,
+        "partial_recovery_edge_periods": 16.0,
+        "small_vehicle_share": 0.5168636859770798,
+        "max_edge_utilization": 0.021698501660128395,
+        "high_utilization_edge_periods": 0.0,
+        "capacity_blocked_tons": 0.0,
+        "total_vehicle_trips": 132.0,
+        "unmet_ratio_hours": 31.85825680125051,
+        "zero_service_ratio": 0.0,
+        "remaining_supply": 1.4633627642979263e-10,
+        "total_delivered": 1043.0999999998537,
+        "min_period_delivered": 0.0,
+        "max_period_delivered": 144.0540309204435,
+        "time_infeasible_candidates": 0.0,
+        "time_feasible_demand_periods": 81.0
+      },
+      "crowding_distance": null,
+      "decision": {
+        "repair_order": [
+          1,
+          9,
+          10,
+          4,
+          11,
+          8,
+          6,
+          5,
+          3,
+          2,
+          0,
+          7
+        ],
+        "team_assignment": [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "dispatch_priority": [
+          [
+            4,
+            17
+          ],
+          [
+            16,
+            13
+          ],
+          [
+            4,
+            22
+          ],
+          [
+            16,
+            17
+          ],
+          [
+            16,
+            6
+          ],
+          [
+            16,
+            1
+          ],
+          [
+            4,
+            6
+          ],
+          [
+            16,
+            18
+          ],
+          [
+            16,
+            2
+          ],
+          [
+            4,
+            13
+          ],
+          [
+            16,
+            22
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            18
+          ],
+          [
+            16,
+            0
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            4,
+            10
+          ],
+          [
+            16,
+            10
+          ]
+        ]
+      }
+    },
+    {
+      "solution_id": "p0002",
+      "decision_hash": "f17dc83e2b4c49a0",
+      "objectives": [
+        3.868340638860616,
+        4126.7936196765695,
+        -0.8999999999998738
+      ],
+      "metrics": {
+        "capacity_scale": 0.05,
+        "repair_time_weight": 0.05,
+        "crew_transfer_time_scale": 0.0,
+        "progressive_recovery": 1.0,
+        "heterogeneous_vehicle_thresholds": 1.0,
+        "edge_capacity_constraint": 1.0,
+        "final_total_satisfaction": 0.8999999999998738,
+        "final_min_satisfaction": 0.8999999999998738,
+        "average_reachable_ratio": 1.0,
+        "final_repaired_ratio": 0.3333333333333333,
+        "total_delivery_time": 3694.7936196765695,
+        "total_repair_work": 8640.0,
+        "total_crew_transfer_time": 0.0,
+        "partial_recovery_edge_periods": 16.0,
+        "small_vehicle_share": 0.5325026318618591,
+        "max_edge_utilization": 0.021572220929338633,
+        "high_utilization_edge_periods": 0.0,
+        "capacity_blocked_tons": 0.0,
+        "total_vehicle_trips": 132.0,
+        "unmet_ratio_hours": 30.946725110884927,
+        "zero_service_ratio": 0.0,
+        "remaining_supply": 1.4632206557507743e-10,
+        "total_delivered": 1043.0999999998537,
+        "min_period_delivered": 0.0,
+        "max_period_delivered": 147.62551282408086,
+        "time_infeasible_candidates": 0.0,
+        "time_feasible_demand_periods": 81.0
+      },
+      "crowding_distance": 0.406344568510387,
+      "decision": {
+        "repair_order": [
+          1,
+          9,
+          10,
+          4,
+          11,
+          8,
+          2,
+          5,
+          0,
+          3,
+          7,
+          6
+        ],
+        "team_assignment": [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "dispatch_priority": [
+          [
+            4,
+            17
+          ],
+          [
+            16,
+            6
+          ],
+          [
+            4,
+            22
+          ],
+          [
+            16,
+            17
+          ],
+          [
+            16,
+            13
+          ],
+          [
+            16,
+            1
+          ],
+          [
+            4,
+            6
+          ],
+          [
+            16,
+            2
+          ],
+          [
+            4,
+            13
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            16,
+            22
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            18
+          ],
+          [
+            16,
+            0
+          ],
+          [
+            16,
+            18
+          ],
+          [
+            4,
+            10
+          ],
+          [
+            16,
+            10
+          ]
+        ]
+      }
+    },
+    {
+      "solution_id": "p0003",
+      "decision_hash": "81e4916bdc398bee",
+      "objectives": [
+        3.830036147930328,
+        4131.46609321814,
+        -0.8999999999998738
+      ],
+      "metrics": {
+        "capacity_scale": 0.05,
+        "repair_time_weight": 0.05,
+        "crew_transfer_time_scale": 0.0,
+        "progressive_recovery": 1.0,
+        "heterogeneous_vehicle_thresholds": 1.0,
+        "edge_capacity_constraint": 1.0,
+        "final_total_satisfaction": 0.8999999999998738,
+        "final_min_satisfaction": 0.8999999999998738,
+        "average_reachable_ratio": 1.0,
+        "final_repaired_ratio": 0.25,
+        "total_delivery_time": 3699.4660932181396,
+        "total_repair_work": 8640.0,
+        "total_crew_transfer_time": 0.0,
+        "partial_recovery_edge_periods": 16.0,
+        "small_vehicle_share": 0.5233861501138454,
+        "max_edge_utilization": 0.021698501660128395,
+        "high_utilization_edge_periods": 0.0,
+        "capacity_blocked_tons": 0.0,
+        "total_vehicle_trips": 132.0,
+        "unmet_ratio_hours": 30.640289183442626,
+        "zero_service_ratio": 0.0,
+        "remaining_supply": 1.4638601442129584e-10,
+        "total_delivered": 1043.0999999998537,
+        "min_period_delivered": 0.0,
+        "max_period_delivered": 148.22753039629697,
+        "time_infeasible_candidates": 0.0,
+        "time_feasible_demand_periods": 81.0
+      },
+      "crowding_distance": null,
+      "decision": {
+        "repair_order": [
+          4,
+          10,
+          0,
+          1,
+          2,
+          11,
+          6,
+          5,
+          3,
+          9,
+          7,
+          8
+        ],
+        "team_assignment": [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        "dispatch_priority": [
+          [
+            4,
+            17
+          ],
+          [
+            16,
+            13
+          ],
+          [
+            4,
+            22
+          ],
+          [
+            16,
+            18
+          ],
+          [
+            16,
+            17
+          ],
+          [
+            16,
+            6
+          ],
+          [
+            16,
+            1
+          ],
+          [
+            4,
+            6
+          ],
+          [
+            16,
+            2
+          ],
+          [
+            4,
+            13
+          ],
+          [
+            16,
+            0
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            18
+          ],
+          [
+            16,
+            22
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            4,
+            10
+          ],
+          [
+            16,
+            10
+          ]
+        ]
+      }
+    },
+    {
+      "solution_id": "p0004",
+      "decision_hash": "21a16921c5413fd5",
+      "objectives": [
+        3.7874067625231387,
+        4181.937140326689,
+        -0.8999999999998738
+      ],
+      "metrics": {
+        "capacity_scale": 0.05,
+        "repair_time_weight": 0.05,
+        "crew_transfer_time_scale": 0.0,
+        "progressive_recovery": 1.0,
+        "heterogeneous_vehicle_thresholds": 1.0,
+        "edge_capacity_constraint": 1.0,
+        "final_total_satisfaction": 0.8999999999998738,
+        "final_min_satisfaction": 0.8999999999998738,
+        "average_reachable_ratio": 1.0,
+        "final_repaired_ratio": 0.25,
+        "total_delivery_time": 3749.9371403266887,
+        "total_repair_work": 8640.0,
+        "total_crew_transfer_time": 0.0,
+        "partial_recovery_edge_periods": 16.0,
+        "small_vehicle_share": 0.5201962796681081,
+        "max_edge_utilization": 0.021698501660128395,
+        "high_utilization_edge_periods": 0.0,
+        "capacity_blocked_tons": 0.0,
+        "total_vehicle_trips": 132.0,
+        "unmet_ratio_hours": 30.29925410018511,
+        "zero_service_ratio": 0.0,
+        "remaining_supply": 1.4654943925052066e-10,
+        "total_delivered": 1043.0999999998537,
+        "min_period_delivered": 0.0,
+        "max_period_delivered": 147.41353383784067,
+        "time_infeasible_candidates": 0.0,
+        "time_feasible_demand_periods": 81.0
+      },
+      "crowding_distance": 0.9116627288864152,
+      "decision": {
+        "repair_order": [
+          1,
+          9,
+          10,
+          4,
+          11,
+          8,
+          6,
+          5,
+          7,
+          3,
+          2,
+          0
+        ],
+        "team_assignment": [
+          1,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        "dispatch_priority": [
+          [
+            16,
+            22
+          ],
+          [
+            16,
+            17
+          ],
+          [
+            16,
+            13
+          ],
+          [
+            4,
+            22
+          ],
+          [
+            16,
+            18
+          ],
+          [
+            4,
+            17
+          ],
+          [
+            16,
+            6
+          ],
+          [
+            16,
+            1
+          ],
+          [
+            4,
+            6
+          ],
+          [
+            16,
+            2
+          ],
+          [
+            4,
+            13
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            18
+          ],
+          [
+            16,
+            0
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            4,
+            10
+          ],
+          [
+            16,
+            10
+          ]
+        ]
+      }
+    },
+    {
+      "solution_id": "p0005",
+      "decision_hash": "73e4152df1119cbf",
+      "objectives": [
+        3.903374975050344,
+        3972.6849202857684,
+        -0.8999999999998669
+      ],
+      "metrics": {
+        "capacity_scale": 0.05,
+        "repair_time_weight": 0.05,
+        "crew_transfer_time_scale": 0.0,
+        "progressive_recovery": 1.0,
+        "heterogeneous_vehicle_thresholds": 1.0,
+        "edge_capacity_constraint": 1.0,
+        "final_total_satisfaction": 0.8999999999998669,
+        "final_min_satisfaction": 0.8999999999998669,
+        "average_reachable_ratio": 1.0,
+        "final_repaired_ratio": 0.3333333333333333,
+        "total_delivery_time": 3540.6849202857684,
+        "total_repair_work": 8640.0,
+        "total_crew_transfer_time": 0.0,
+        "partial_recovery_edge_periods": 16.0,
+        "small_vehicle_share": 0.5209484693721959,
+        "max_edge_utilization": 0.021572220929338633,
+        "high_utilization_edge_periods": 0.0,
+        "capacity_blocked_tons": 0.0,
+        "total_vehicle_trips": 131.0,
+        "unmet_ratio_hours": 31.22699980040275,
+        "zero_service_ratio": 0.0,
+        "remaining_supply": 1.5441514733538497e-10,
+        "total_delivered": 1043.0999999998457,
+        "min_period_delivered": 0.0,
+        "max_period_delivered": 146.62686844092465,
+        "time_infeasible_candidates": 0.0,
+        "time_feasible_demand_periods": 81.0
+      },
+      "crowding_distance": 0.6819927026031978,
+      "decision": {
+        "repair_order": [
+          1,
+          9,
+          10,
+          4,
+          11,
+          8,
+          6,
+          5,
+          3,
+          2,
+          0,
+          7
+        ],
+        "team_assignment": [
+          1,
+          0,
+          1,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "dispatch_priority": [
+          [
+            4,
+            17
+          ],
+          [
+            16,
+            6
+          ],
+          [
+            4,
+            22
+          ],
+          [
+            16,
+            17
+          ],
+          [
+            16,
+            13
+          ],
+          [
+            16,
+            1
+          ],
+          [
+            4,
+            6
+          ],
+          [
+            16,
+            18
+          ],
+          [
+            16,
+            2
+          ],
+          [
+            4,
+            13
+          ],
+          [
+            16,
+            22
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            18
+          ],
+          [
+            16,
+            0
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            4,
+            10
+          ],
+          [
+            16,
+            10
+          ]
+        ]
+      }
+    },
+    {
+      "solution_id": "p0006",
+      "decision_hash": "eba6df8cc03ade31",
+      "objectives": [
+        3.898014998041581,
+        4096.129714269051,
+        -0.8999999999998669
+      ],
+      "metrics": {
+        "capacity_scale": 0.05,
+        "repair_time_weight": 0.05,
+        "crew_transfer_time_scale": 0.0,
+        "progressive_recovery": 1.0,
+        "heterogeneous_vehicle_thresholds": 1.0,
+        "edge_capacity_constraint": 1.0,
+        "final_total_satisfaction": 0.8999999999998669,
+        "final_min_satisfaction": 0.8999999999998669,
+        "average_reachable_ratio": 1.0,
+        "final_repaired_ratio": 0.3333333333333333,
+        "total_delivery_time": 3664.129714269051,
+        "total_repair_work": 8640.0,
+        "total_crew_transfer_time": 0.0,
+        "partial_recovery_edge_periods": 16.0,
+        "small_vehicle_share": 0.5297589033853078,
+        "max_edge_utilization": 0.021572220929338633,
+        "high_utilization_edge_periods": 0.0,
+        "capacity_blocked_tons": 0.0,
+        "total_vehicle_trips": 131.0,
+        "unmet_ratio_hours": 31.184119984332646,
+        "zero_service_ratio": 0.0,
+        "remaining_supply": 1.5426593336087535e-10,
+        "total_delivered": 1043.0999999998457,
+        "min_period_delivered": 0.0,
+        "max_period_delivered": 146.62981862343847,
+        "time_infeasible_candidates": 0.0,
+        "time_feasible_demand_periods": 81.0
+      },
+      "crowding_distance": 0.46301951318011153,
+      "decision": {
+        "repair_order": [
+          1,
+          9,
+          10,
+          4,
+          11,
+          8,
+          2,
+          5,
+          0,
+          3,
+          7,
+          6
+        ],
+        "team_assignment": [
+          1,
+          0,
+          1,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "dispatch_priority": [
+          [
+            4,
+            17
+          ],
+          [
+            16,
+            6
+          ],
+          [
+            4,
+            22
+          ],
+          [
+            16,
+            17
+          ],
+          [
+            16,
+            13
+          ],
+          [
+            16,
+            1
+          ],
+          [
+            4,
+            6
+          ],
+          [
+            16,
+            2
+          ],
+          [
+            4,
+            13
+          ],
+          [
+            16,
+            22
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            18
+          ],
+          [
+            16,
+            0
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            16,
+            18
+          ],
+          [
+            4,
+            10
+          ],
+          [
+            16,
+            10
+          ]
+        ]
+      }
+    },
+    {
+      "solution_id": "p0007",
+      "decision_hash": "cf4f15ca7d92c072",
+      "objectives": [
+        3.7825807265863522,
+        4492.659099318153,
+        -0.8999999999996675
+      ],
+      "metrics": {
+        "capacity_scale": 0.05,
+        "repair_time_weight": 0.05,
+        "crew_transfer_time_scale": 0.0,
+        "progressive_recovery": 1.0,
+        "heterogeneous_vehicle_thresholds": 1.0,
+        "edge_capacity_constraint": 1.0,
+        "final_total_satisfaction": 0.8999999999996676,
+        "final_min_satisfaction": 0.8999999999996675,
+        "average_reachable_ratio": 1.0,
+        "final_repaired_ratio": 0.3333333333333333,
+        "total_delivery_time": 4060.6590993181526,
+        "total_repair_work": 8640.0,
+        "total_crew_transfer_time": 0.0,
+        "partial_recovery_edge_periods": 16.0,
+        "small_vehicle_share": 0.5332313937273879,
+        "max_edge_utilization": 0.029122498254607155,
+        "high_utilization_edge_periods": 0.0,
+        "capacity_blocked_tons": 0.0,
+        "total_vehicle_trips": 132.0,
+        "unmet_ratio_hours": 30.260645812690818,
+        "zero_service_ratio": 0.0,
+        "remaining_supply": 3.8537706359420554e-10,
+        "total_delivered": 1043.0999999996147,
+        "min_period_delivered": 0.0,
+        "max_period_delivered": 146.14443922341002,
+        "time_infeasible_candidates": 0.0,
+        "time_feasible_demand_periods": 81.0
+      },
+      "crowding_distance": null,
+      "decision": {
+        "repair_order": [
+          1,
+          4,
+          11,
+          3,
+          9,
+          10,
+          6,
+          5,
+          7,
+          0,
+          2,
+          8
+        ],
+        "team_assignment": [
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        "dispatch_priority": [
+          [
+            16,
+            22
+          ],
+          [
+            16,
+            17
+          ],
+          [
+            16,
+            13
+          ],
+          [
+            4,
+            22
+          ],
+          [
+            16,
+            18
+          ],
+          [
+            16,
+            6
+          ],
+          [
+            4,
+            17
+          ],
+          [
+            16,
+            2
+          ],
+          [
+            4,
+            6
+          ],
+          [
+            4,
+            18
+          ],
+          [
+            16,
+            0
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            16,
+            1
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            4,
+            10
+          ],
+          [
+            4,
+            13
+          ],
+          [
+            16,
+            10
+          ],
+          [
+            4,
+            1
+          ]
+        ]
+      }
+    }
+  ],
+  "convergence": [
+    {
+      "evaluations": 32.0,
+      "unmet_area": 3.880872087213919,
+      "time_cost": 4512.478404665689,
+      "neg_min_satisfaction": -0.8999999999997972,
+      "final_total_satisfaction": 0.8999999999997973,
+      "final_min_satisfaction": 0.8999999999997972
+    },
+    {
+      "evaluations": 60.0,
+      "unmet_area": 3.880872087213919,
+      "time_cost": 4512.478404665689,
+      "neg_min_satisfaction": -0.8999999999997972,
+      "final_total_satisfaction": 0.8999999999997973,
+      "final_min_satisfaction": 0.8999999999997972
+    },
+    {
+      "evaluations": 89.0,
+      "unmet_area": 3.880872087213919,
+      "time_cost": 4512.478404665689,
+      "neg_min_satisfaction": -0.8999999999997972,
+      "final_total_satisfaction": 0.8999999999997973,
+      "final_min_satisfaction": 0.8999999999997972
+    },
+    {
+      "evaluations": 120.0,
+      "unmet_area": 3.8117270797377825,
+      "time_cost": 4636.507100718321,
+      "neg_min_satisfaction": -0.8999999999999103,
+      "final_total_satisfaction": 0.8999999999999103,
+      "final_min_satisfaction": 0.8999999999999103
+    },
+    {
+      "evaluations": 151.0,
+      "unmet_area": 3.8117270797377825,
+      "time_cost": 4636.507100718321,
+      "neg_min_satisfaction": -0.8999999999999103,
+      "final_total_satisfaction": 0.8999999999999103,
+      "final_min_satisfaction": 0.8999999999999103
+    },
+    {
+      "evaluations": 180.0,
+      "unmet_area": 3.8117270797377825,
+      "time_cost": 4636.507100718321,
+      "neg_min_satisfaction": -0.8999999999999103,
+      "final_total_satisfaction": 0.8999999999999103,
+      "final_min_satisfaction": 0.8999999999999103
+    },
+    {
+      "evaluations": 209.0,
+      "unmet_area": 3.7984359170925615,
+      "time_cost": 4438.575057846516,
+      "neg_min_satisfaction": -0.8999999999997856,
+      "final_total_satisfaction": 0.8999999999997856,
+      "final_min_satisfaction": 0.8999999999997856
+    },
+    {
+      "evaluations": 241.0,
+      "unmet_area": 3.7984359170925615,
+      "time_cost": 4438.575057846516,
+      "neg_min_satisfaction": -0.8999999999997856,
+      "final_total_satisfaction": 0.8999999999997856,
+      "final_min_satisfaction": 0.8999999999997856
+    },
+    {
+      "evaluations": 272.0,
+      "unmet_area": 3.7825807265863522,
+      "time_cost": 4492.659099318153,
+      "neg_min_satisfaction": -0.8999999999996675,
+      "final_total_satisfaction": 0.8999999999996676,
+      "final_min_satisfaction": 0.8999999999996675
+    },
+    {
+      "evaluations": 301.0,
+      "unmet_area": 3.7825807265863522,
+      "time_cost": 4492.659099318153,
+      "neg_min_satisfaction": -0.8999999999996675,
+      "final_total_satisfaction": 0.8999999999996676,
+      "final_min_satisfaction": 0.8999999999996675
+    },
+    {
+      "evaluations": 332.0,
+      "unmet_area": 3.7825807265863522,
+      "time_cost": 4492.659099318153,
+      "neg_min_satisfaction": -0.8999999999996675,
+      "final_total_satisfaction": 0.8999999999996676,
+      "final_min_satisfaction": 0.8999999999996675
+    },
+    {
+      "evaluations": 361.0,
+      "unmet_area": 3.7825807265863522,
+      "time_cost": 4492.659099318153,
+      "neg_min_satisfaction": -0.8999999999996675,
+      "final_total_satisfaction": 0.8999999999996676,
+      "final_min_satisfaction": 0.8999999999996675
+    },
+    {
+      "evaluations": 392.0,
+      "unmet_area": 3.7825807265863522,
+      "time_cost": 4492.659099318153,
+      "neg_min_satisfaction": -0.8999999999996675,
+      "final_total_satisfaction": 0.8999999999996676,
+      "final_min_satisfaction": 0.8999999999996675
+    },
+    {
+      "evaluations": 421.0,
+      "unmet_area": 3.7825807265863522,
+      "time_cost": 4492.659099318153,
+      "neg_min_satisfaction": -0.8999999999996675,
+      "final_total_satisfaction": 0.8999999999996676,
+      "final_min_satisfaction": 0.8999999999996675
+    },
+    {
+      "evaluations": 453.0,
+      "unmet_area": 3.7825807265863522,
+      "time_cost": 4492.659099318153,
+      "neg_min_satisfaction": -0.8999999999996675,
+      "final_total_satisfaction": 0.8999999999996676,
+      "final_min_satisfaction": 0.8999999999996675
+    },
+    {
+      "evaluations": 483.0,
+      "unmet_area": 3.7825807265863522,
+      "time_cost": 4492.659099318153,
+      "neg_min_satisfaction": -0.8999999999996675,
+      "final_total_satisfaction": 0.8999999999996676,
+      "final_min_satisfaction": 0.8999999999996675
+    },
+    {
+      "evaluations": 500.0,
+      "unmet_area": 3.7825807265863522,
+      "time_cost": 4492.659099318153,
+      "neg_min_satisfaction": -0.8999999999996675,
+      "final_total_satisfaction": 0.8999999999996676,
+      "final_min_satisfaction": 0.8999999999996675
+    }
+  ],
+  "complete": true,
+  "diagnostics": {
+    "proposals": 529.0,
+    "actual_evaluations": 500.0,
+    "evaluation_snapshots": 500.0,
+    "unique_decisions": 477.0,
+    "cache_hits": 29.0,
+    "local_search_evaluations": 0.0
+  },
+  "instance_file": "d4a9e5d5cc55e7b48b856a4714048051354fb1bdd399e8a84ffc688e330e0319",
+  "format": "capacity_recovery_run",
+  "format_version": 1,
+  "record_sha256": "855a2e1599752f10ceb9de0f595d90c7aab3feda62a48f064a8b725850c87f8a",
+  "hypervolume": 0.8683273827235016,
+  "igd": 0.22944711733637754,
+  "quality_precision": "v2_service_resolution",
+  "quality_effective_dimensions": 2
+}

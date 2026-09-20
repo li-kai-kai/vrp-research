@@ -15,7 +15,8 @@
 | P2 | 完整决策保存、恢复和同模型回放 | 通过 | `scripts/reproduce/solution_io.py`、`replay_solutions.py`；`tests/test_solution_io.py`（9 个用例） |
 | P3 | 搜索档案、预算与评分修正 | 通过 | `benchmark_algorithms.py`；`tests/test_search_contract.py`（13 个用例） |
 | P4 | 不同规划模型统一执行回放 | 通过 | `run_model_ablation.py` 子集入口、`replay_solutions.py --execution-model full`；`tests/test_common_execution.py`（8 个用例） |
-| P5 | 小预算诊断与交付 | 通过 | `outputs/claude_v2/`；[v2 小预算诊断报告](pilot_v2_report.md) |
+| R1–R5 | 复审修正（精度、目录约定、Full 校验、报告、加载） | 通过 | 见下；[v2 小预算诊断报告](pilot_v2_report.md) §10 |
+| P5 | 小预算诊断与交付 | 通过（已按 R1–R5 重跑） | `outputs/claude_v2/`；[v2 小预算诊断报告](pilot_v2_report.md) |
 | P6 | 正式实验方案与运行 | 待执行（本轮不启动） | — |
 | P7 | 专用大邻域与动态扩展 | 待执行（本轮不实现） | — |
 
@@ -69,6 +70,21 @@ uv run python scripts/reproduce/run_benchmark.py \
 - 统一 Full 执行回放 152 个决策，0 失败；Full 组自身规划目标与执行回放逐位一致。
 - 该标定下**异质阈值与边容量不改变任何目标**，绑定资源是车队趟次预算；这是需要下一轮定位的标定问题。
 - 四模型子集未输出任何主效应或交互显著性结果。
+
+## R1–R5 复审修正
+
+首轮 P0–P5 交付后审读提出的五项问题**全部复现属实**并已修复，回归用例 110 个全通过。
+结论依据已改为 `outputs/claude_v2_reviewfix/`；修正前产物保留在 `outputs/claude_v2/` 作对照。
+
+| 项 | 问题 | 修复 | 回归 |
+|---|---|---|---|
+| R1 | 目标以原始浮点比较，1e-13 噪声决定代表方案（18/18 运行） | 固定服务分辨率 + 量化比较键，贯通支配/档案/去重/拥挤距离/代表/质量指标；进入 model_fingerprint | `test_objective_precision.py` 17 例 |
+| R2 | run key 不碰撞 ≠ 目录不混用 | 目录级 `experiment_contract.json` 写入前校验；汇总与回放共用目录运行集合 | `test_experiment_contract.py` 9 例 |
+| R3 | `--execution-model full` 只查物理哈希 | 强制校验 v2/PR/HT/EC 并重新计算而非信任标签；同哈希不可换模型；同模型必须逐位复现 | `test_full_execution_validation.py` 11 例 |
+| R4 | "HT 完全无效" 与组均值当逐方案最大变化 | 新增 `summarize_replay.py`：运行内先归纳、三类结果分开汇报、给出非零数与最大差出处 | `test_replay_summary.py` 5 例 |
+| R5 | `int()` 静默截断；`distinct_evaluated` 名不副实 | 严格类型与完整排列校验；拆出 `actual_evaluations`/`evaluation_snapshots`/`unique_decisions` | `test_solution_io.py`/`test_search_contract.py` |
+
+修正带来的实质变化：代表方案 F1 均值 4.1244 → 3.7933，前沿点数 467 → 81（量化合并亚分辨率点）。
 
 ## 保护的用户已有改动
 

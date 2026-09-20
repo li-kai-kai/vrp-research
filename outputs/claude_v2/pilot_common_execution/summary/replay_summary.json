@@ -1,0 +1,11 @@
+{
+  "replay_results": "outputs/claude_v2/pilot_common_execution/replay_results.csv",
+  "solutions": 152,
+  "runs": 8,
+  "tolerances": {
+    "F1": 1e-08,
+    "F2": 1e-06,
+    "F3": 1e-08
+  },
+  "pooling_rule": "reduced within each run first; across-run figures are means of run-level statistics with equal weight per run"
+}
