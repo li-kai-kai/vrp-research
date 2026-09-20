@@ -279,6 +279,107 @@ class NearConstantDimensionTest(unittest.TestCase):
         self.assertAlmostEqual(score(base), score(noisy), places=9)
 
 
+class PooledCoordinateTest(unittest.TestCase):
+    """Pooled quality must be computed in comparison coordinates.
+
+    These use the pooled path directly rather than a hand-widened fixed
+    reference, so a difference that survives here is a real one.
+    """
+
+    A = (4.0, 3000.0, -0.9)
+    B = (4.0, 3000.0, -0.9 + 4e-9)   # same comparison key as A
+    C = (3.0, 4000.0, -0.9)
+
+    def test_key_identical_fronts_score_identically(self):
+        rows, metadata = pooled_quality_indicators([[self.A], [self.B]], V2_PRECISION)
+        self.assertEqual(metadata["reference_front_size"], 1)
+        self.assertAlmostEqual(rows[0]["hypervolume"], rows[1]["hypervolume"], places=12)
+        self.assertAlmostEqual(rows[0]["igd"], 0.0, places=12)
+        self.assertAlmostEqual(rows[1]["igd"], 0.0, places=12)
+
+    def test_equivalence_holds_with_two_active_dimensions(self):
+        rows, metadata = pooled_quality_indicators(
+            [[self.A, self.C], [self.B, self.C]], V2_PRECISION
+        )
+        self.assertEqual(metadata["reference_front_size"], 2)
+        self.assertEqual(metadata["effective_dimensions"], 2)
+        self.assertEqual(metadata["degenerate_dimensions"], [2])
+        self.assertAlmostEqual(rows[0]["hypervolume"], rows[1]["hypervolume"], places=12)
+        self.assertAlmostEqual(rows[0]["igd"], 0.0, places=12)
+        self.assertAlmostEqual(rows[1]["igd"], 0.0, places=12)
+
+    def test_adding_an_equivalent_point_does_not_reweigh_the_reference(self):
+        lean, lean_meta = pooled_quality_indicators([[self.A, self.C]], V2_PRECISION)
+        fat, fat_meta = pooled_quality_indicators(
+            [[self.A, self.B, self.C]], V2_PRECISION
+        )
+        self.assertEqual(lean_meta["reference_front_size"], fat_meta["reference_front_size"])
+        self.assertEqual(lean_meta["ideal_key"], fat_meta["ideal_key"])
+        self.assertEqual(lean_meta["nadir_key"], fat_meta["nadir_key"])
+        self.assertAlmostEqual(lean[0]["hypervolume"], fat[0]["hypervolume"], places=12)
+        self.assertAlmostEqual(lean[0]["igd"], fat[0]["igd"], places=12)
+
+    def test_raw_values_are_never_rewritten(self):
+        rows, metadata = pooled_quality_indicators([[self.A], [self.B]], V2_PRECISION)
+        self.assertEqual(metadata["ideal"], self.A)
+        # The raw range in the noise dimension is reported, not integrated.
+        self.assertGreater(metadata["raw_ranges"][2], 0.0)
+        self.assertEqual(metadata["key_spans"][2], 0)
+        self.assertEqual(metadata["coordinate_space"], "quantized comparison keys")
+
+    def test_a_real_front_is_invariant_to_key_preserving_jitter(self):
+        """End-to-end on measured objectives, not a synthetic pair."""
+        from scripts.reproduce.benchmark_suite import (
+            benchmark_specs,
+            build_benchmark_instance,
+        )
+        from scripts.reproduce.benchmark_algorithms import (
+            BenchmarkBudget,
+            solve_benchmark_algorithm,
+        )
+
+        instance = build_benchmark_instance(
+            benchmark_specs("smoke")[0], instance_seed=101, model_version="v2"
+        )
+        run = solve_benchmark_algorithm(
+            "nsga2", instance, BenchmarkBudget(max_evaluations=60, pop_size=8), seed=31
+        )
+        front = [tuple(item.objectives) for item in run.front]
+        self.assertGreater(len(front), 1)
+
+        # Move every raw objective to the centre of its own comparison bin.
+        # That keeps each key by construction while changing the raw values, so
+        # anything that still differs downstream is reading raw floats.
+        #
+        # A fixed small nudge is NOT equivalent: a value already near a bin
+        # boundary can cross it, which is a genuine limitation of quantization
+        # rather than a property this test should paper over.
+        jittered = [
+            tuple(
+                key * resolution
+                for key, resolution in zip(V2_PRECISION.key(point), V2_PRECISION.resolutions)
+            )
+            for point in front
+        ]
+        self.assertEqual(
+            [V2_PRECISION.key(p) for p in front],
+            [V2_PRECISION.key(p) for p in jittered],
+        )
+        self.assertNotEqual(front, jittered)
+
+        plain_rows, plain_meta = pooled_quality_indicators([front], V2_PRECISION)
+        jitter_rows, jitter_meta = pooled_quality_indicators([jittered], V2_PRECISION)
+        self.assertEqual(
+            plain_meta["reference_front_size"], jitter_meta["reference_front_size"]
+        )
+        self.assertEqual(plain_meta["ideal_key"], jitter_meta["ideal_key"])
+        self.assertEqual(plain_meta["nadir_key"], jitter_meta["nadir_key"])
+        self.assertAlmostEqual(
+            plain_rows[0]["hypervolume"], jitter_rows[0]["hypervolume"], places=12
+        )
+        self.assertAlmostEqual(plain_rows[0]["igd"], jitter_rows[0]["igd"], places=12)
+
+
 class PrecisionWiringTest(unittest.TestCase):
     def test_precision_follows_the_model_version(self):
         self.assertIs(precision_for(_make_instance(model_version="v2",

@@ -17,6 +17,7 @@ from pathlib import Path
 if __package__ is None or __package__ == "":
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from scripts.reproduce.objective_precision import EXACT_PRECISION, V2_PRECISION
 from scripts.reproduce.run_benchmark import (
     _non_dominated,
     _write_csv,
@@ -216,7 +217,19 @@ def merge_model_ablation_shards(
             fronts_by_run[str(run_rows[index]["run_key"])]
             for index in indices
         ]
-        qualities, metadata = pooled_quality_indicators(fronts)
+        # The resolution is not optional here: pooling must use the same
+        # comparison coordinates the runs were searched under, never the
+        # exact-float default.
+        versions = {
+            (run_rows[index].get("model_version") or "legacy") for index in indices
+        }
+        if len(versions) != 1:
+            raise ValueError(
+                f"cannot pool quality indicators across model versions "
+                f"{sorted(versions)} for {case_id}/instance={instance_seed}"
+            )
+        precision = V2_PRECISION if versions == {"v2"} else EXACT_PRECISION
+        qualities, metadata = pooled_quality_indicators(fronts, precision)
         ideal = metadata["ideal"]
         nadir = metadata["nadir"]
         for index, quality in zip(indices, qualities):
@@ -232,10 +245,17 @@ def merge_model_ablation_shards(
                     "pooled_nadir_F1": nadir[0],
                     "pooled_nadir_F2": nadir[1],
                     "pooled_nadir_F3": nadir[2],
+                    "pooled_quality_precision": metadata["precision"]["label"],
+                    "pooled_effective_dimensions": metadata["effective_dimensions"],
+                    "pooled_key_span_F1": metadata["key_spans"][0],
+                    "pooled_key_span_F2": metadata["key_spans"][1],
+                    "pooled_key_span_F3": metadata["key_spans"][2],
                 }
             )
         pooled_points = [point for front in fronts for point in front]
-        for point_id, point in enumerate(_non_dominated(pooled_points), start=1):
+        for point_id, point in enumerate(
+            _non_dominated(pooled_points, precision), start=1
+        ):
             reference_rows.append(
                 {
                     "case_id": case_id,

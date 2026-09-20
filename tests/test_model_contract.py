@@ -18,6 +18,7 @@ from scripts.reproduce.capacity_recovery import (
     CapacityExperimentInstance,
     CapacityIndividual,
     EvaluationConfig,
+    FullExecutionProfile,
     RecoveryStage,
     VehicleProfile,
     _build_vehicle_graph,
@@ -38,8 +39,15 @@ TRUCK_WITH_AMPLE_QUOTA = VehicleProfile(
     pcu_per_vehicle=1.0,
 )
 
-PASS_THROUGH_STAGES = [
-    RecoveryStage(0.0, 1.0, 1.0, "full", 1.0),
+# A genuine progressive curve, so fixtures built from this helper represent a
+# real Full environment rather than a pass-through stub that is binary by the
+# definition in capacity_recovery.is_binary_recovery_curve.
+FIXTURE_FULL_STAGES = [
+    RecoveryStage(0.0, 0.30, 0.0, "blocked", 0.0),
+    RecoveryStage(0.30, 0.60, 0.30, "temporary", 0.30),
+    RecoveryStage(0.60, 0.80, 0.60, "one_lane", 0.60),
+    RecoveryStage(0.80, 1.0, 0.80, "basic", 0.80),
+    RecoveryStage(1.0, 1.01, 1.0, "full", 1.0),
 ]
 
 
@@ -103,17 +111,23 @@ def _make_instance(
         damaged_edges=damaged_edges,
         repair_crews=repair_crews,
     )
-    return CapacityExperimentInstance(
+    instance = CapacityExperimentInstance(
         base=base,
         vehicles=list(vehicles) if vehicles is not None else [TRUCK_WITH_AMPLE_QUOTA],
         recovery_stages=(
-            list(recovery_stages) if recovery_stages is not None else list(PASS_THROUGH_STAGES)
+            list(recovery_stages)
+            if recovery_stages is not None
+            else list(FIXTURE_FULL_STAGES)
         ),
         capacity_scale=capacity_scale,
         crew_transfer_time_scale=crew_transfer_time_scale,
         crew_min_access_progress=crew_min_access_progress,
         evaluation=EvaluationConfig.for_version(model_version),
     )
+    # Fixtures declare their Full baseline so variants can be validated
+    # against it, exactly as the real scenario builders do.
+    instance.full_profile = FullExecutionProfile.from_instance(instance, "fixture_full")
+    return instance
 
 
 def _decision(

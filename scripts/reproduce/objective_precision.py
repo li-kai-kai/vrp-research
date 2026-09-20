@@ -115,6 +115,56 @@ def precision_for(instance: Any) -> ObjectivePrecision:
     return V2_PRECISION if version == "v2" else EXACT_PRECISION
 
 
+def key_front(points: Sequence[Sequence[float]], precision: ObjectivePrecision) -> list[tuple]:
+    """Non-dominated comparison keys over `points`, de-duplicated.
+
+    Two points with the same key are one point: the survivor is chosen by the
+    lowest raw tuple so the result does not depend on input order. This is the
+    single place that decides which comparison keys a front is made of, so the
+    reference front, the distance coordinates and the reported front cannot
+    disagree about it.
+    """
+    by_key: dict[tuple, Sequence[float]] = {}
+    for point in sorted(points):
+        by_key.setdefault(precision.key(point), point)
+    keys = list(by_key)
+    non_dominated = [
+        key
+        for key in keys
+        if not any(precision.dominates(other, key) for other in keys if other != key)
+    ]
+    return sorted(non_dominated)
+
+
+def narrow_coordinates(
+    keys: Sequence[Sequence[float]],
+    ideal_key: Sequence[float],
+    nadir_key: Sequence[float],
+) -> list[tuple[float, float, float]]:
+    """Map comparison keys into [0, 1] per dimension.
+
+    Distances are measured in the comparison coordinates, not in raw values, so
+    a dimension that is constant at the resolution maps to one constant and
+    contributes nothing. Its raw tail is never integrated.
+    """
+    spans = [nadir_key[idx] - ideal_key[idx] for idx in range(3)]
+    return [
+        tuple(
+            (key[idx] - ideal_key[idx]) / spans[idx] if spans[idx] > 0 else 0.0
+            for idx in range(3)
+        )
+        for key in keys
+    ]
+
+
+def key_bounds(
+    keys: Sequence[Sequence[float]],
+) -> tuple[tuple[float, ...], tuple[float, ...]]:
+    ideal = tuple(min(key[idx] for key in keys) for idx in range(3))
+    nadir = tuple(max(key[idx] for key in keys) for idx in range(3))
+    return ideal, nadir
+
+
 def effective_span(
     ideal: float,
     nadir: float,

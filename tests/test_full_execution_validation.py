@@ -8,8 +8,11 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from scripts.reproduce.benchmark_algorithms import BenchmarkBudget
+from dataclasses import replace
+
 from scripts.reproduce.capacity_recovery import (
     BINARY_RECOVERY_STAGES,
+    VehicleProfile,
     full_execution_problems,
     is_full_execution_environment,
     model_factor_variant,
@@ -180,6 +183,165 @@ class ExecutionSnapshotTest(unittest.TestCase):
             with self.assertRaises(SolutionIOError) as caught:
                 store.load_execution_instance(physical)
             self.assertIn("integrity check", str(caught.exception))
+
+
+class FullProfileConsistencyTest(unittest.TestCase):
+    """The declared Full curve and thresholds are a baseline, not a label."""
+
+    def test_binary_curve_is_rejected_even_with_the_flag_on(self):
+        full = _source()
+        invalid = replace(full, recovery_stages=list(BINARY_RECOVERY_STAGES))
+        self.assertTrue(invalid.progressive_recovery)
+        problems = full_execution_problems(invalid)
+        self.assertTrue(any("binary" in problem for problem in problems), problems)
+
+    def test_thresholds_must_match_the_declared_profile(self):
+        full = _source()
+        invalid = replace(
+            full,
+            vehicles=[replace(v, min_recovery_progress=0.30) for v in full.vehicles],
+        )
+        self.assertTrue(invalid.heterogeneous_vehicle_thresholds)
+        problems = full_execution_problems(invalid)
+        self.assertTrue(any("threshold" in problem for problem in problems), problems)
+
+    def test_profile_comparison_does_not_require_matching_vehicle_types(self):
+        """A scenario is free to carry a different set of vehicle types."""
+        full = _source()
+        other = replace(
+            full,
+            vehicles=[
+                VehicleProfile(
+                    vehicle_type=99,
+                    capacity_ton=1.0,
+                    count=1,
+                    occupied_od_pcu_h=0.0,
+                    min_recovery_progress=0.42,
+                    pcu_per_vehicle=1.0,
+                )
+            ],
+        )
+        # Type 99 is absent from the declared profile, so it cannot be compared
+        # and must not be reported as a mismatch on its own.
+        problems = [
+            problem
+            for problem in full_execution_problems(other)
+            if "threshold" in problem
+        ]
+        self.assertEqual(problems, [])
+
+    def test_reenabling_progressive_restores_the_declared_curve(self):
+        """Re-labelling a reduced instance must not keep reduced data."""
+        full = _source()
+        reduced = model_factor_variant(
+            full,
+            progressive_recovery=False,
+            heterogeneous_vehicle_thresholds=True,
+            edge_capacity_constraint=True,
+        )
+        self.assertEqual(
+            [s.capacity_ratio for s in reduced.recovery_stages], [0.0, 1.0]
+        )
+
+        restored = model_factor_variant(
+            reduced,
+            progressive_recovery=True,
+            heterogeneous_vehicle_thresholds=True,
+            edge_capacity_constraint=True,
+        )
+        self.assertEqual(
+            [s.capacity_ratio for s in restored.recovery_stages],
+            [s.capacity_ratio for s in full.recovery_stages],
+        )
+        self.assertEqual(full_execution_problems(restored), [])
+        self.assertEqual(
+            len(restored.recovery_stages), len(full.recovery_stages)
+        )
+
+    def test_reenabling_heterogeneous_restores_the_declared_thresholds(self):
+        full = _source()
+        declared = {t: v for t, v in full.full_profile.vehicle_thresholds}
+
+        reduced = model_factor_variant(
+            full,
+            progressive_recovery=True,
+            heterogeneous_vehicle_thresholds=False,
+            edge_capacity_constraint=True,
+        )
+        self.assertTrue(
+            all(v.min_recovery_progress == 0.30 for v in reduced.vehicles)
+        )
+
+        restored = model_factor_variant(
+            reduced,
+            progressive_recovery=True,
+            heterogeneous_vehicle_thresholds=True,
+            edge_capacity_constraint=True,
+        )
+        for vehicle in restored.vehicles:
+            self.assertEqual(
+                vehicle.min_recovery_progress, declared[vehicle.vehicle_type]
+            )
+        self.assertEqual(full_execution_problems(restored), [])
+
+    def test_binary_source_without_a_profile_cannot_be_relabelled(self):
+        raw = _source()
+        raw.full_profile = None
+        raw.recovery_stages = list(BINARY_RECOVERY_STAGES)
+        with self.assertRaises(ValueError) as caught:
+            model_factor_variant(
+                raw,
+                progressive_recovery=True,
+                heterogeneous_vehicle_thresholds=True,
+                edge_capacity_constraint=True,
+            )
+        self.assertIn("binary recovery curve", str(caught.exception))
+
+    def test_in_memory_invalid_config_is_rejected_across_save_and_load(self):
+        """Built in memory, saved, then loaded: the store must not bless it."""
+        with TemporaryDirectory() as directory:
+            store = RunStore(Path(directory))
+            full = _source()
+            # Self-contradictory in memory: the flag says progressive, the data
+            # is binary. The saved file hashes consistently either way.
+            invalid = replace(
+                full,
+                recovery_stages=list(BINARY_RECOVERY_STAGES),
+                full_profile=None,
+            )
+            physical = physical_instance_hash(invalid)
+            store.save_execution_instance(invalid)
+
+            payload = json.loads(
+                store.execution_instance_path(physical).read_text(encoding="utf-8")
+            )
+            self.assertFalse(payload["is_full_execution"])
+            self.assertTrue(
+                any("binary" in problem for problem in payload["full_execution_problems"])
+            )
+            with self.assertRaises(SolutionIOError) as caught:
+                store.load_execution_instance(physical)
+            self.assertIn("binary", str(caught.exception))
+
+    def test_profile_round_trips_through_the_snapshot(self):
+        with TemporaryDirectory() as directory:
+            store = RunStore(Path(directory))
+            instance = _source()
+            fingerprint = store.save_instance(instance)
+            rebuilt = store.load_instance(fingerprint)
+            self.assertIsNotNone(rebuilt.full_profile)
+            self.assertEqual(
+                rebuilt.full_profile.fingerprint(),
+                instance.full_profile.fingerprint(),
+            )
+            # And the restored profile still validates a variant correctly.
+            restored = model_factor_variant(
+                rebuilt,
+                progressive_recovery=True,
+                heterogeneous_vehicle_thresholds=True,
+                edge_capacity_constraint=True,
+            )
+            self.assertEqual(full_execution_problems(restored), [])
 
 
 class AblationExecutionEnvironmentTest(unittest.TestCase):

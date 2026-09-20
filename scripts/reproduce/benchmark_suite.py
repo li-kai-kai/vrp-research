@@ -7,6 +7,7 @@ from scripts.reproduce.capacity_recovery import (
     DEFAULT_VEHICLES,
     CapacityExperimentInstance,
     EvaluationConfig,
+    FullExecutionProfile,
     build_wenchuan_instance,
 )
 from scripts.reproduce.instance_generator import generate_random_instance
@@ -88,6 +89,11 @@ def build_benchmark_instance(
         instance.base.name = f"{spec.case_id}_seed{instance_seed}"
         instance.capacity_scale = spec.capacity_scale
         instance.evaluation = evaluation
+        # The declared Full profile describes the model, not the case id or the
+        # capacity calibration, so it is refreshed only to stay traceable.
+        instance.full_profile = FullExecutionProfile.from_instance(
+            instance, "wenchuan_full"
+        )
         return instance
 
     base = generate_random_instance(
@@ -116,10 +122,12 @@ def build_benchmark_instance(
         replace(vehicle, count=max(1, round(vehicle.count * fleet_scale)))
         for vehicle in DEFAULT_VEHICLES
     ]
-    return CapacityExperimentInstance(
+    instance = CapacityExperimentInstance(
         base=base,
         vehicles=vehicles,
         recovery_stages=list(DEFAULT_RECOVERY_STAGES),
         capacity_scale=spec.capacity_scale,
         evaluation=evaluation,
     )
+    instance.full_profile = FullExecutionProfile.from_instance(instance, "synthetic_full")
+    return instance

@@ -39,6 +39,7 @@ from scripts.reproduce.capacity_recovery import (
     CapacityExperimentInstance,
     CapacityIndividual,
     EvaluationConfig,
+    FullExecutionProfile,
     RecoveryStage,
     VehicleProfile,
     full_execution_problems,
@@ -208,6 +209,11 @@ def serialize_instance(instance: CapacityExperimentInstance) -> dict[str, Any]:
             ),
             "edge_capacity_constraint": bool(instance.edge_capacity_constraint),
             "evaluation": instance.evaluation.as_dict(),
+            "full_profile": (
+                instance.full_profile.as_dict()
+                if instance.full_profile is not None
+                else None
+            ),
             "vehicles": [
                 {
                     "vehicle_type": int(vehicle.vehicle_type),
@@ -342,10 +348,31 @@ def deserialize_instance(payload: dict[str, Any]) -> CapacityExperimentInstance:
     if not recovery_stages:
         raise SolutionIOError("instance snapshot contains no recovery stages")
 
+    stored_profile = model.get("full_profile")
+    full_profile = None
+    if stored_profile is not None:
+        full_profile = FullExecutionProfile(
+            label=str(stored_profile["label"]),
+            recovery_stages=tuple(
+                RecoveryStage(
+                    lower=float(row[0]),
+                    upper=float(row[1]),
+                    capacity_ratio=float(row[2]),
+                    label="",
+                    speed_ratio=float(row[3]),
+                )
+                for row in stored_profile["recovery_stages"]
+            ),
+            vehicle_thresholds=tuple(
+                (int(row[0]), float(row[1])) for row in stored_profile["vehicle_thresholds"]
+            ),
+        )
+
     return CapacityExperimentInstance(
         base=base,
         vehicles=vehicles,
         recovery_stages=recovery_stages,
+        full_profile=full_profile,
         capacity_scale=float(model["capacity_scale"]),
         repair_time_weight=float(model["repair_time_weight"]),
         crew_transfer_time_scale=float(model["crew_transfer_time_scale"]),
@@ -467,6 +494,11 @@ def model_fingerprint(instance: CapacityExperimentInstance) -> str:
     payload = {
         "physical_instance_hash": physical_instance_hash(instance),
         "objective_precision": precision.as_dict(),
+        "full_execution_profile": (
+            instance.full_profile.fingerprint()
+            if instance.full_profile is not None
+            else None
+        ),
         "objective_precision_fingerprint": precision.fingerprint(),
         "progressive_recovery": bool(instance.progressive_recovery),
         "heterogeneous_vehicle_thresholds": bool(

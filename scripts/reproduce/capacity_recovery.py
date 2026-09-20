@@ -179,6 +179,10 @@ class CapacityExperimentInstance:
     heterogeneous_vehicle_thresholds: bool = True
     edge_capacity_constraint: bool = True
     evaluation: EvaluationConfig = field(default_factory=EvaluationConfig)
+    # The scenario's declared Full recovery curve and thresholds, recorded by
+    # the builders so a variant can be checked against, and restored from,
+    # something other than its own possibly-reduced data.
+    full_profile: FullExecutionProfile | None = None
 
 
 @dataclass
@@ -345,7 +349,73 @@ BINARY_RECOVERY_STAGES = [
 UNIFORM_VEHICLE_RECOVERY_THRESHOLD = 0.30
 
 
-def full_execution_problems(instance: CapacityExperimentInstance) -> list[str]:
+@dataclass(frozen=True)
+class FullExecutionProfile:
+    """A scenario's declared Full recovery curve and vehicle thresholds.
+
+    The booleans on an instance say which factors are *supposed* to be in
+    force; they cannot say whether the data underneath actually implements
+    them. A binary stage table under ``progressive_recovery=True``, or a
+    uniform threshold under ``heterogeneous_vehicle_thresholds=True``, is
+    self-contradictory and still hashes consistently.
+
+    This profile is the independent, traceable baseline those flags are
+    checked against. It is recorded by the scenario builders, travels with
+    every variant of the scenario, and is what ``model_factor_variant``
+    restores from when a factor is switched back on.
+    """
+
+    label: str
+    recovery_stages: tuple[RecoveryStage, ...]
+    vehicle_thresholds: tuple[tuple[int, float], ...]
+
+    @classmethod
+    def from_instance(
+        cls,
+        instance: CapacityExperimentInstance,
+        label: str,
+    ) -> FullExecutionProfile:
+        return cls(
+            label=label,
+            recovery_stages=tuple(instance.recovery_stages),
+            vehicle_thresholds=tuple(
+                (int(vehicle.vehicle_type), float(vehicle.min_recovery_progress))
+                for vehicle in instance.vehicles
+            ),
+        )
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "label": self.label,
+            "recovery_stages": [
+                [float(s.lower), float(s.upper), float(s.capacity_ratio), float(s.speed_ratio)]
+                for s in self.recovery_stages
+            ],
+            "vehicle_thresholds": [[int(t), float(v)] for t, v in self.vehicle_thresholds],
+        }
+
+    def fingerprint(self) -> str:
+        payload = json.dumps(self.as_dict(), sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+
+def is_binary_recovery_curve(stages: Sequence[RecoveryStage]) -> bool:
+    """True when the curve only distinguishes "blocked" from "fully open".
+
+    Any intermediate partial-recovery state makes it non-binary. A single
+    always-open stage is binary by this definition: it has no recovery
+    dynamics to be progressive about.
+    """
+    if len(stages) > 2:
+        return False
+    ratios = {round(stage.capacity_ratio, 12) for stage in stages}
+    return ratios <= {0.0, 1.0}
+
+
+def full_execution_problems(
+    instance: CapacityExperimentInstance,
+    profile: FullExecutionProfile | None = None,
+) -> list[str]:
     """Reasons this instance is not the agreed Full execution environment.
 
     ``physical_instance_hash`` deliberately excludes the planning-model
@@ -390,11 +460,57 @@ def full_execution_problems(instance: CapacityExperimentInstance) -> list[str]:
         problems.append("the instance carries no vehicle profiles")
     if not instance.recovery_stages:
         problems.append("the instance carries no recovery stages")
+
+    # The flags above describe intent; these describe whether the data under
+    # them can actually implement it.
+    if instance.progressive_recovery and instance.recovery_stages:
+        if is_binary_recovery_curve(instance.recovery_stages):
+            problems.append(
+                "progressive_recovery is enabled but the recovery curve is binary "
+                "(only blocked and fully open states); the flag does not make a "
+                "non-progressive curve progressive"
+            )
+
+    declared = profile if profile is not None else instance.full_profile
+    if declared is not None:
+        actual_stages = tuple(
+            (float(s.lower), float(s.upper), float(s.capacity_ratio), float(s.speed_ratio))
+            for s in instance.recovery_stages
+        )
+        if actual_stages != tuple(
+            (float(s.lower), float(s.upper), float(s.capacity_ratio), float(s.speed_ratio))
+            for s in declared.recovery_stages
+        ):
+            problems.append(
+                f"recovery stages do not match the declared Full profile "
+                f"{declared.label!r}"
+            )
+        actual_thresholds = tuple(
+            (int(vehicle.vehicle_type), float(vehicle.min_recovery_progress))
+            for vehicle in instance.vehicles
+        )
+        # Only vehicle types present in both are comparable; a scenario is free
+        # to differ in which vehicle types it carries.
+        declared_thresholds = dict(declared.vehicle_thresholds)
+        mismatched = [
+            vehicle_type
+            for vehicle_type, threshold in actual_thresholds
+            if vehicle_type in declared_thresholds
+            and abs(declared_thresholds[vehicle_type] - threshold) > 1e-12
+        ]
+        if mismatched:
+            problems.append(
+                f"vehicle thresholds for type(s) {sorted(mismatched)} do not match "
+                f"the declared Full profile {declared.label!r}"
+            )
     return problems
 
 
-def is_full_execution_environment(instance: CapacityExperimentInstance) -> bool:
-    return not full_execution_problems(instance)
+def is_full_execution_environment(
+    instance: CapacityExperimentInstance,
+    profile: FullExecutionProfile | None = None,
+) -> bool:
+    return not full_execution_problems(instance, profile)
 
 
 DEFAULT_VEHICLES = [
@@ -450,17 +566,39 @@ def model_factor_variant(
     """
     if not 0.0 <= uniform_vehicle_threshold <= 1.0:
         raise ValueError("uniform_vehicle_threshold must be in [0, 1]")
-    vehicles = list(instance.vehicles)
-    if not heterogeneous_vehicle_thresholds:
-        vehicles = [
-            replace(vehicle, min_recovery_progress=uniform_vehicle_threshold)
-            for vehicle in vehicles
-        ]
-    stages = (
-        list(instance.recovery_stages)
-        if progressive_recovery
-        else list(BINARY_RECOVERY_STAGES)
+
+    # Switching a factor back on must restore the scenario's declared Full
+    # data, not simply re-label whatever the source instance happens to carry.
+    # Otherwise a reduced instance re-labelled as Full would silently keep its
+    # reduced curve and thresholds.
+    profile = instance.full_profile
+    if progressive_recovery:
+        if profile is not None:
+            stages = list(profile.recovery_stages)
+        elif is_binary_recovery_curve(instance.recovery_stages):
+            raise ValueError(
+                "cannot build a progressive variant: the source instance "
+                "carries a binary recovery curve and declares no Full profile "
+                "to restore one from"
+            )
+        else:
+            stages = list(instance.recovery_stages)
+    else:
+        stages = list(BINARY_RECOVERY_STAGES)
+
+    declared_thresholds = (
+        dict(profile.vehicle_thresholds) if profile is not None else {}
     )
+    vehicles = []
+    for vehicle in instance.vehicles:
+        if heterogeneous_vehicle_thresholds:
+            threshold = declared_thresholds.get(
+                vehicle.vehicle_type,
+                vehicle.min_recovery_progress,
+            )
+        else:
+            threshold = uniform_vehicle_threshold
+        vehicles.append(replace(vehicle, min_recovery_progress=threshold))
     return CapacityExperimentInstance(
         base=instance.base,
         vehicles=vehicles,
@@ -475,6 +613,7 @@ def model_factor_variant(
         # Version and evaluation configuration are inherited unchanged; the
         # variant only flips the requested model factor.
         evaluation=instance.evaluation,
+        full_profile=instance.full_profile,
     )
 
 
@@ -495,12 +634,14 @@ def build_simulation_instance(
     for _, _, data in base.graph.edges(data=True):
         data.setdefault("free_time", data.get("weight", 1.0))
         data.setdefault("capacity", 1500.0)
-    return CapacityExperimentInstance(
+    instance = CapacityExperimentInstance(
         base=base,
         vehicles=DEFAULT_VEHICLES,
         recovery_stages=DEFAULT_RECOVERY_STAGES,
         evaluation=EvaluationConfig.for_version(model_version),
     )
+    instance.full_profile = FullExecutionProfile.from_instance(instance, "synthetic_full")
+    return instance
 
 
 def build_wenchuan_instance(
@@ -591,12 +732,14 @@ def build_wenchuan_instance(
         vehicle_capacity=100.0,
         vehicle_count=10,
     )
-    return CapacityExperimentInstance(
+    instance = CapacityExperimentInstance(
         base=base,
         vehicles=DEFAULT_VEHICLES,
         recovery_stages=DEFAULT_RECOVERY_STAGES,
         evaluation=EvaluationConfig.for_version(model_version),
     )
+    instance.full_profile = FullExecutionProfile.from_instance(instance, "wenchuan_full")
+    return instance
 
 
 def solve_capacity_instance(
@@ -1623,24 +1766,59 @@ def _assign_crowding(
         for individual in front:
             individual.crowding = math.inf
         return
+    exact = precision.is_exact
     for obj_idx in range(3):
-        front.sort(key=lambda item: (item.objectives or (math.inf, math.inf, math.inf))[obj_idx])
-        min_value = (front[0].objectives or (0, 0, 0))[obj_idx]
-        max_value = (front[-1].objectives or (0, 0, 0))[obj_idx]
-        span = max_value - min_value
-        resolution = precision.resolutions[obj_idx]
-        if span <= resolution:
-            # legacy keeps its historical endpoint handling for an exactly
-            # constant dimension; v2 treats a sub-resolution spread as constant.
-            if not precision.is_exact:
+        if exact:
+            # Historical rule, preserved: sort on the raw value and keep the
+            # original endpoint handling for a constant dimension.
+            front.sort(
+                key=lambda item: (
+                    item.objectives or (math.inf, math.inf, math.inf)
+                )[obj_idx]
+            )
+        else:
+            # v2 sorts on the comparison coordinate, with the decision
+            # signature breaking ties, so a raw float tail can never decide
+            # which point becomes an endpoint.
+            front.sort(
+                key=lambda item: (
+                    precision.key(item.objectives or (math.inf, math.inf, math.inf))[obj_idx],
+                    _decision_signature(item),
+                )
+            )
+        min_coordinate = _crowding_coordinate(front[0], obj_idx, precision)
+        max_coordinate = _crowding_coordinate(front[-1], obj_idx, precision)
+        span = max_coordinate - min_coordinate
+        if span <= 0:
+            # The dimension is constant in the comparison coordinates: it is
+            # not a source of diversity, so it contributes nothing and its
+            # points are not endpoints.
+            if not exact:
                 continue
         front[0].crowding = math.inf
         front[-1].crowding = math.inf
         scale = max(span, 1e-9)
         for idx in range(1, len(front) - 1):
-            previous_value = (front[idx - 1].objectives or (0, 0, 0))[obj_idx]
-            next_value = (front[idx + 1].objectives or (0, 0, 0))[obj_idx]
+            previous_value = _crowding_coordinate(front[idx - 1], obj_idx, precision)
+            next_value = _crowding_coordinate(front[idx + 1], obj_idx, precision)
             front[idx].crowding += (next_value - previous_value) / scale
+
+
+def _crowding_coordinate(
+    individual: CapacityIndividual,
+    obj_idx: int,
+    precision: ObjectivePrecision,
+) -> float:
+    """The value crowding distances are measured in.
+
+    Exact precision measures raw objectives; every other precision measures the
+    quantized comparison coordinate, so raw jitter that does not change a key
+    cannot change a distance.
+    """
+    objectives = individual.objectives or (math.inf, math.inf, math.inf)
+    if precision.is_exact:
+        return float(objectives[obj_idx])
+    return float(precision.key(objectives)[obj_idx])
 
 
 def _decision_signature(individual: CapacityIndividual) -> tuple[Any, ...]:

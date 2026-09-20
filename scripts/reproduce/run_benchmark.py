@@ -41,8 +41,10 @@ from scripts.reproduce.objective_precision import (
     EXACT_PRECISION,
     V2_PRECISION,
     ObjectivePrecision,
-    degenerate_dimensions,
     effective_span,
+    key_bounds,
+    key_front,
+    narrow_coordinates,
 )
 from scripts.reproduce.solution_io import (
     RunStore,
@@ -405,16 +407,20 @@ def _non_dominated(
     points: Iterable[tuple[float, float, float]],
     precision: ObjectivePrecision = EXACT_PRECISION,
 ) -> list[tuple[float, float, float]]:
-    unique = sorted(set(points))
-    return [
-        point
-        for idx, point in enumerate(unique)
-        if not any(
-            precision.dominates(other, point)
-            for other_idx, other in enumerate(unique)
-            if idx != other_idx
-        )
-    ]
+    """One representative raw point per surviving comparison key.
+
+    De-duplication is by comparison key, not by raw tuple: two points that are
+    the same point at the pinned resolution must yield one entry, and the
+    survivor is the lowest raw tuple so input order cannot change the result.
+    """
+    candidates = list(points)
+    surviving = set(key_front(candidates, precision))
+    chosen: dict[tuple, tuple[float, float, float]] = {}
+    for point in sorted(candidates):
+        key = precision.key(point)
+        if key in surviving:
+            chosen.setdefault(key, point)
+    return [chosen[key] for key in sorted(chosen)]
 
 
 def _bounds(
@@ -514,34 +520,49 @@ def pooled_quality_indicators(
     all_points = [point for front in fronts for point in front]
     if not all_points:
         raise ValueError("at least one objective point is required")
-    reference_front = _non_dominated(all_points, precision)
-    # Use the full observed range, not only the non-dominated points, so every
-    # compared run uses exactly the same normalization and reference front.
-    ideal, nadir = _bounds(all_points)
-    degenerate = degenerate_dimensions(ideal, nadir, precision)
-    normalized_reference = [
-        _normalize(point, ideal, nadir, precision)
-        for point in reference_front
-    ]
+
+    # Everything below happens in comparison coordinates: the integer grid the
+    # resolution defines. Raw objectives are only ever read, never rewritten.
+    all_keys = [precision.key(point) for point in all_points]
+    reference_keys = key_front(all_points, precision)
+    # Use the full observed key range, not only the non-dominated points, so
+    # every compared run uses exactly the same normalization.
+    ideal_key, nadir_key = key_bounds(all_keys)
+    key_spans = tuple(nadir_key[idx] - ideal_key[idx] for idx in range(3))
+    degenerate = [idx for idx in range(3) if key_spans[idx] <= 0]
+    normalized_reference = narrow_coordinates(reference_keys, ideal_key, nadir_key)
+
     quality_rows = []
     for front in fronts:
-        normalized = [_normalize(point, ideal, nadir, precision) for point in front]
+        coordinates = narrow_coordinates(
+            [precision.key(point) for point in front],
+            ideal_key,
+            nadir_key,
+        )
         quality_rows.append(
             {
-                "hypervolume": hypervolume_3d(normalized, (1.1, 1.1, 1.1)),
+                "hypervolume": hypervolume_3d(coordinates, (1.1, 1.1, 1.1)),
                 "igd": inverted_generational_distance(
-                    normalized,
+                    coordinates,
                     normalized_reference,
                 ),
             }
         )
+
+    # Raw bounds are reported for auditing; they are not what distances are
+    # measured in.
+    raw_ideal, raw_nadir = _bounds(all_points)
     metadata: dict[str, object] = {
-        "reference_front_size": len(reference_front),
-        "ideal": ideal,
-        "nadir": nadir,
-        "raw_ranges": tuple(nadir[idx] - ideal[idx] for idx in range(3)),
+        "reference_front_size": len(reference_keys),
+        "ideal": raw_ideal,
+        "nadir": raw_nadir,
+        "raw_ranges": tuple(raw_nadir[idx] - raw_ideal[idx] for idx in range(3)),
+        "ideal_key": ideal_key,
+        "nadir_key": nadir_key,
+        "key_spans": key_spans,
         "degenerate_dimensions": degenerate,
         "effective_dimensions": 3 - len(degenerate),
+        "coordinate_space": "quantized comparison keys",
         "precision": precision.as_dict(),
         "precision_fingerprint": precision.fingerprint(),
         "reference_point_normalized": (1.1, 1.1, 1.1),
