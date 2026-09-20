@@ -71,6 +71,11 @@ SOURCE_FILES = (
     "scripts/reproduce/instance_generator.py",
     "scripts/reproduce/model.py",
     "scripts/reproduce/solution_io.py",
+    "scripts/reproduce/objective_precision.py",
+    # A dependency change can move the last bits of every objective, so the
+    # lock and the project declaration are part of the source fingerprint.
+    "pyproject.toml",
+    "uv.lock",
 )
 
 
@@ -93,7 +98,27 @@ def main() -> None:
     store = RunStore(output_dir)
     budget_payload = asdict(budget)
     source_fp = source_fingerprint(REPO_ROOT, SOURCE_FILES)
+    # Both checks run before any snapshot write: a rejected run must not have
+    # already overwritten a stored instance or execution environment.
     store.check_source_consistency(source_fp)
+    store.enforce_contract(
+        entry_point="run_benchmark",
+        fixed={
+            "suite": args.suite,
+            "model_version": args.model_version,
+            "evaluation": evaluation.as_dict(),
+            "evaluation_fingerprint": evaluation.fingerprint(),
+            "budget": budget_payload,
+            "source_fingerprint": source_fp,
+        },
+        varying={
+            "algorithms": list(args.algorithms),
+            "cases": [spec.case_id for spec in specs],
+            "instance_seeds": list(instance_seeds),
+            "solver_seed_start": args.solver_seed_start,
+            "solver_repeats": solver_repeats,
+        },
+    )
 
     records: list[dict[str, object]] = []
     instance_rows: list[dict[str, object]] = []
@@ -208,17 +233,26 @@ def main() -> None:
                         flush=True,
                     )
 
-    reference_faces = _attach_pooled_quality(records)
-    for record in records:
+    # Summaries, the manifest and replay must cover exactly the same runs.
+    # Deriving the run set from the directory rather than from this invocation
+    # is what stops a resumed or extended experiment from hiding records that
+    # replay would still read.
+    directory_records = store.load_runs_for_experiment()
+    reference_faces = _attach_pooled_quality(directory_records)
+    for record in directory_records:
         # Rewrite each run once with its pooled quality indicators so a resumed
         # run does not need the whole directory to be re-scored.
         store.save_run(record)
 
     _write_csv(output_dir / "instances.csv", _unique_rows(instance_rows))
-    write_store_indexes(store, records, reference_front_by_case=reference_faces)
+    write_store_indexes(
+        store,
+        directory_records,
+        reference_front_by_case=reference_faces,
+    )
     _write_csv(
         output_dir / "aggregate_by_size.csv",
-        _aggregate_rows([run_summary_row(record) for record in records]),
+        _aggregate_rows([run_summary_row(record) for record in directory_records]),
     )
     _write_manifest(
         output_dir / "experiment_manifest.json",
@@ -230,11 +264,13 @@ def main() -> None:
         evaluation=evaluation,
         source_fp=source_fp,
         planned_runs=total,
-        completed_runs=len(records),
+        completed_runs=len(directory_records),
         skipped_runs=skipped,
+        runs_this_invocation=len(records),
     )
     print(
-        f"Done. {len(records)} run records ({skipped} resumed) in {output_dir}"
+        f"Done. {len(records)} run records this invocation ({skipped} resumed); "
+        f"{len(directory_records)} in {output_dir}"
     )
 
 
@@ -566,6 +602,7 @@ def _write_manifest(
     planned_runs: int,
     completed_runs: int,
     skipped_runs: int,
+    runs_this_invocation: int,
 ) -> None:
     manifest = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -574,7 +611,8 @@ def _write_manifest(
         "evaluation_fingerprint": evaluation.fingerprint(),
         "source_fingerprint": source_fp,
         "planned_runs": planned_runs,
-        "completed_runs": completed_runs,
+        "runs_in_directory": completed_runs,
+        "runs_this_invocation": runs_this_invocation,
         "resumed_runs": skipped_runs,
         "git_sha": _git_sha(),
         "git_dirty": _git_dirty(),

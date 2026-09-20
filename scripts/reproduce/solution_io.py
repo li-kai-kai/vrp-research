@@ -50,6 +50,21 @@ INSTANCE_FORMAT = "capacity_recovery_instance"
 INSTANCE_FORMAT_VERSION = 1
 RUN_FORMAT = "capacity_recovery_run"
 RUN_FORMAT_VERSION = 1
+CONTRACT_FORMAT = "capacity_recovery_experiment_contract"
+CONTRACT_FORMAT_VERSION = 1
+
+# Dimensions a stored experiment may legitimately grow along. A run key never
+# colliding is not the same as a directory never mixing experiments, so the
+# fixed conditions are declared once and enforced, while these stay open.
+VARYING_DIMENSIONS = (
+    "algorithms",
+    "model_ids",
+    "cases",
+    "instance_seeds",
+    "solver_seed_start",
+    "solver_repeats",
+    "solver_repeat_start",
+)
 
 # Display-only fields that may legitimately be infinite. They are written as
 # null so the file stays valid standard JSON.
@@ -762,6 +777,93 @@ class RunStore:
     def runs_dir(self) -> Path:
         return self.root / "runs"
 
+    @property
+    def contract_path(self) -> Path:
+        return self.root / "experiment_contract.json"
+
+    # -- directory-level experiment contract -------------------------------
+
+    def enforce_contract(
+        self,
+        *,
+        entry_point: str,
+        fixed: dict[str, Any],
+        varying: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Declare this directory's experiment, or verify it against the file.
+
+        Must run before any instance or execution snapshot is written: a
+        rejected run must not have already overwritten something. The fixed
+        conditions (model version, evaluation profile, budget, source
+        fingerprint) may never change inside one directory; the declared
+        varying dimensions may be extended as the experiment grows.
+        """
+        declared_fixed = {**fixed, "entry_point": entry_point}
+        existing = self._read_contract()
+        if existing is None:
+            contract = {
+                "format": CONTRACT_FORMAT,
+                "format_version": CONTRACT_FORMAT_VERSION,
+                "created_at_utc": datetime.now(timezone.utc).isoformat(),
+                "fixed": declared_fixed,
+                "varying": _normalized_varying(varying),
+                "revisions": [code_environment()],
+            }
+            write_json_atomic(self.contract_path, contract)
+            return contract
+
+        if existing.get("format") != CONTRACT_FORMAT:
+            raise SolutionIOError(
+                f"{self.contract_path} has format {existing.get('format')!r}, "
+                f"expected {CONTRACT_FORMAT!r}"
+            )
+        if existing.get("format_version") != CONTRACT_FORMAT_VERSION:
+            raise SolutionIOError(
+                f"{self.contract_path} has unsupported format version "
+                f"{existing.get('format_version')!r}"
+            )
+
+        stored_fixed = existing.get("fixed") or {}
+        conflicts = [
+            key
+            for key in sorted(set(stored_fixed) | set(declared_fixed))
+            if stored_fixed.get(key) != declared_fixed.get(key)
+        ]
+        if conflicts:
+            details = "; ".join(
+                f"{key}: stored {stored_fixed.get(key)!r} != requested "
+                f"{declared_fixed.get(key)!r}"
+                for key in conflicts
+            )
+            raise SolutionIOError(
+                f"{self.root} already holds an experiment with different fixed "
+                f"conditions ({details}). Run keys would not collide, but the "
+                "directory would silently mix experiments; write this run to a "
+                "new output directory instead."
+            )
+
+        merged = _merge_varying(existing.get("varying") or {}, varying)
+        if merged != (existing.get("varying") or {}):
+            existing["varying"] = merged
+            revisions = existing.setdefault("revisions", [])
+            revisions.append(code_environment())
+            write_json_atomic(self.contract_path, existing)
+        return existing
+
+    def _read_contract(self) -> dict[str, Any] | None:
+        if not self.contract_path.is_file():
+            return None
+        return _read_json(self.contract_path)
+
+    def load_runs_for_experiment(self) -> list[dict[str, Any]]:
+        """The full run set of this directory, as summaries and replay see it.
+
+        Index files and replay must cover exactly the same runs; deriving both
+        from the directory rather than from the current invocation is what
+        keeps them consistent.
+        """
+        return self.load_all_runs()
+
     def instance_path(self, model_fingerprint_value: str) -> Path:
         return self.instances_dir / f"{model_fingerprint_value}.json"
 
@@ -949,6 +1051,28 @@ def _read_json(path: Path) -> dict[str, Any]:
         return json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as error:
         raise SolutionIOError(f"{path} is not valid JSON: {error}") from error
+
+
+def _normalized_varying(varying: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: sorted(set(value)) if isinstance(value, (list, tuple, set)) else value
+        for key, value in sorted(varying.items())
+    }
+
+
+def _merge_varying(
+    stored: dict[str, Any],
+    requested: dict[str, Any],
+) -> dict[str, Any]:
+    """Extend the declared variation; never silently shrink it."""
+    merged = dict(stored)
+    for key, value in _normalized_varying(requested).items():
+        previous = merged.get(key)
+        if isinstance(value, list) and isinstance(previous, list):
+            merged[key] = sorted(set(previous) | set(value))
+        else:
+            merged[key] = value
+    return {key: merged[key] for key in sorted(merged)}
 
 
 def finite_or_none(value: Any) -> Any:

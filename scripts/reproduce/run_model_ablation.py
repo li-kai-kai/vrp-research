@@ -43,6 +43,10 @@ from scripts.reproduce.run_benchmark import (
     _write_csv,
     pooled_quality_indicators,
 )
+from scripts.reproduce.objective_precision import (
+    EXACT_PRECISION,
+    V2_PRECISION,
+)
 from scripts.reproduce.solution_io import (
     RunStore,
     build_run_record,
@@ -217,6 +221,31 @@ def run_model_ablation(
         Path(__file__).resolve().parents[2], ABLATION_SOURCE_FILES
     )
     store.check_source_consistency(source_fp)
+    # The paired design fixes the solver for every planning group, so the
+    # algorithm is a fixed condition here, not a free variation: mixing two
+    # solvers in one directory would break the paired comparison.
+    store.enforce_contract(
+        entry_point="run_model_ablation",
+        fixed={
+            "suite": suite,
+            "model_version": model_version,
+            "algorithm": algorithm,
+            "evaluation": evaluation.as_dict(),
+            "evaluation_fingerprint": evaluation.fingerprint(),
+            "budget": budget_payload,
+            "source_fingerprint": source_fp,
+        },
+        varying={
+            "model_ids": [factors.model_id for factors in selected_factors],
+            "cases": [spec.case_id for spec in specs],
+            "instance_seeds": sorted(
+                {seed for seeds in instance_seeds_by_case.values() for seed in seeds}
+            ),
+            "solver_seed_start": solver_seed_start,
+            "solver_repeats": selected_solver_repeats,
+            "solver_repeat_start": solver_repeat_start,
+        },
+    )
 
     records: list[AblationRecord] = []
     instance_rows: list[dict[str, object]] = []
@@ -359,14 +388,15 @@ def run_model_ablation(
                         )
                     )
 
-    reference_rows = _attach_pooled_quality(records)
-    for entry in records:
-        store.save_run(entry.record)
-
-    # The analysis expects one flat row per run with F1/F2/F3, the quality
-    # indicators and the model factor columns.
-    ablation_rows = [_ablation_row(entry) for entry in records]
-    pareto_rows = _pareto_rows(records)
+    # Summaries, the manifest and replay must cover exactly the same runs.
+    directory_records = store.load_runs_for_experiment()
+    reference_rows = _attach_pooled_quality(directory_records)
+    for record in directory_records:
+        store.save_run(record)
+    # The analysis is over the whole directory, not just this invocation: a
+    # sharded or resumed experiment must be analysed as one design.
+    ablation_rows = [_ablation_row(record) for record in directory_records]
+    pareto_rows = _pareto_rows(directory_records)
     analysis = _formal_analysis(
         ablation_rows,
         selected_factors=selected_factors,
@@ -388,12 +418,12 @@ def run_model_ablation(
         _write_not_applicable(output_dir, analysis["reason"])
     write_store_indexes(
         store,
-        [entry.record for entry in records],
-        reference_front_by_case=_reference_front_sizes(records),
+        directory_records,
+        reference_front_by_case=_reference_front_sizes(directory_records),
     )
     _write_csv(
         output_dir / "aggregate_by_size.csv",
-        _aggregate([run_summary_row(entry.record) for entry in records]),
+        _aggregate([run_summary_row(record) for record in directory_records]),
     )
     _write_manifest(
         output_dir / "experiment_manifest.json",
@@ -413,8 +443,9 @@ def run_model_ablation(
         analysis=analysis,
         source_fp=source_fp,
         planned_runs=total,
-        completed_runs=len(records),
+        completed_runs=len(directory_records),
         skipped_runs=skipped,
+        runs_this_invocation=len(records),
     )
     print(f"Done. Model ablation outputs written to {output_dir}")
     return ablation_rows
@@ -498,23 +529,30 @@ def _write_not_applicable(output_dir: Path, reason: str | None) -> None:
         _write_csv(output_dir / name, header)
 
 
-def _ablation_row(entry: AblationRecord) -> dict[str, object]:
-    record = entry.record
+def _ablation_row(record: dict) -> dict[str, object]:
     objectives = record.get("objectives") or [None, None, None]
     metrics = record.get("metrics") or {}
     row: dict[str, object] = {
         "run_key": record["run_key"],
-        "case_id": entry.spec.case_id,
-        "source": entry.spec.source,
-        "size_group": entry.spec.size_group,
-        "num_nodes": entry.spec.num_nodes,
-        "instance_seed": entry.instance_seed,
-        "solver_seed": entry.solver_seed,
+        "case_id": record["case_id"],
+        "source": record.get("source"),
+        "size_group": record.get("size_group"),
+        "num_nodes": record.get("num_nodes"),
+        "instance_seed": record["instance_seed"],
+        "solver_seed": record["solver_seed"],
         "algorithm": record["algorithm"],
         "model_version": (record.get("evaluation") or {}).get("model_version"),
         "physical_instance_hash": record["physical_instance_hash"],
         "model_fingerprint": record["model_fingerprint"],
-        **entry.factors.row(),
+        **{
+            key: record.get(key)
+            for key in (
+                "model_id",
+                "progressive_recovery",
+                "heterogeneous_vehicle_thresholds",
+                "edge_capacity_constraint",
+            )
+        },
         "max_evaluations": record.get("max_evaluations")
         or (record.get("budget") or {}).get("max_evaluations"),
         "evaluations": record.get("evaluations"),
@@ -549,20 +587,27 @@ _MECHANISM_METRICS = (
 )
 
 
-def _pareto_rows(records: list[AblationRecord]) -> list[dict[str, object]]:
+def _pareto_rows(records: list[dict]) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
-    for entry in records:
-        record = entry.record
+    for record in records:
         for solution in record.get("pareto_front") or []:
             objectives = solution["objectives"]
             metrics = solution.get("metrics") or {}
             rows.append(
                 {
                     "run_key": record["run_key"],
-                    "case_id": entry.spec.case_id,
-                    "instance_seed": entry.instance_seed,
-                    "solver_seed": entry.solver_seed,
-                    **entry.factors.row(),
+                    "case_id": record["case_id"],
+                    "instance_seed": record["instance_seed"],
+                    "solver_seed": record["solver_seed"],
+                    **{
+                        key: record.get(key)
+                        for key in (
+                            "model_id",
+                            "progressive_recovery",
+                            "heterogeneous_vehicle_thresholds",
+                            "edge_capacity_constraint",
+                        )
+                    },
                     "point_id": solution["solution_id"],
                     "decision_hash": solution["decision_hash"],
                     "F1": objectives[0],
@@ -577,28 +622,44 @@ def _pareto_rows(records: list[AblationRecord]) -> list[dict[str, object]]:
     return rows
 
 
-def _attach_pooled_quality(records: list[AblationRecord]) -> list[dict[str, object]]:
-    """Pool all selected factor levels and repeats within each instance."""
+def _attach_pooled_quality(records: list[dict]) -> list[dict[str, object]]:
+    """Pool all selected factor levels and repeats within each instance.
+
+    Pooling only happens inside one model version, so the objective resolution
+    is unambiguous; a directory that mixed versions never gets this far.
+    """
     groups: dict[tuple[str, int], list[int]] = defaultdict(list)
-    for index, entry in enumerate(records):
-        groups[(entry.spec.case_id, entry.instance_seed)].append(index)
+    for index, record in enumerate(records):
+        groups[(str(record["case_id"]), int(record["instance_seed"]))].append(index)
 
     reference_rows: list[dict[str, object]] = []
     for (case_id, instance_seed), indices in groups.items():
         fronts = [
             [
                 tuple(solution["objectives"])
-                for solution in (records[index].record.get("pareto_front") or [])
+                for solution in (records[index].get("pareto_front") or [])
             ]
             for index in indices
         ]
-        quality_rows, metadata = pooled_quality_indicators(fronts)
+        versions = {
+            (records[index].get("evaluation") or {}).get("model_version")
+            for index in indices
+        }
+        if len(versions) != 1:
+            raise ValueError(
+                f"cannot pool quality indicators across model versions "
+                f"{sorted(versions)} for {case_id}/instance={instance_seed}"
+            )
+        precision = V2_PRECISION if versions == {"v2"} else EXACT_PRECISION
+        quality_rows, metadata = pooled_quality_indicators(fronts, precision)
         ideal = metadata["ideal"]
         nadir = metadata["nadir"]
         for index, quality in zip(indices, quality_rows):
-            records[index].record.update(quality)
-            records[index].record.update(
+            records[index].update(quality)
+            records[index].update(
                 {
+                    "quality_precision": metadata["precision"]["label"],
+                    "quality_effective_dimensions": metadata["effective_dimensions"],
                     "reference_front_size": metadata["reference_front_size"],
                     "pooled_ideal_F1": ideal[0],
                     "pooled_ideal_F2": ideal[1],
@@ -609,7 +670,7 @@ def _attach_pooled_quality(records: list[AblationRecord]) -> list[dict[str, obje
                 }
             )
         pooled_points = [point for front in fronts for point in front]
-        for point_id, point in enumerate(_non_dominated(pooled_points), start=1):
+        for point_id, point in enumerate(_non_dominated(pooled_points, precision), start=1):
             reference_rows.append(
                 {
                     "case_id": case_id,
@@ -624,13 +685,14 @@ def _attach_pooled_quality(records: list[AblationRecord]) -> list[dict[str, obje
 
 
 def _reference_front_sizes(
-    records: list[AblationRecord],
+    records: list[dict],
 ) -> dict[tuple[str, int], dict[str, object]]:
     return {
-        (entry.spec.case_id, entry.instance_seed): {
-            "size": entry.record.get("reference_front_size")
+        (str(record["case_id"]), int(record["instance_seed"])): {
+            "size": record.get("reference_front_size"),
+            "effective_dimensions": record.get("quality_effective_dimensions"),
         }
-        for entry in records
+        for record in records
     }
 
 
@@ -767,6 +829,7 @@ def _write_manifest(
     planned_runs: int,
     completed_runs: int,
     skipped_runs: int,
+    runs_this_invocation: int,
 ) -> None:
     evaluation = EvaluationConfig.for_version(model_version)
     manifest = {
@@ -789,7 +852,8 @@ def _write_manifest(
         "evaluation_fingerprint": evaluation.fingerprint(),
         "budget": asdict(budget),
         "planned_runs": planned_runs,
-        "completed_runs": completed_runs,
+        "runs_in_directory": completed_runs,
+        "runs_this_invocation": runs_this_invocation,
         "resumed_runs": skipped_runs,
         "planned_max_objective_evaluations": planned_runs * budget.max_evaluations,
         "model_factor_order": [
