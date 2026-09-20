@@ -979,6 +979,29 @@ def main() -> None:
     print(f"Wrote HT natural-corridor audit to {audit}")
 
 
+REPRESENTATIVE_RULE = (
+    "lowest overlay_seed within each stratum; ties broken by overlay_type lexical order"
+)
+
+
+def choose_stratum_representative(
+    candidates: Sequence[dict[str, Any]],
+) -> dict[str, Any]:
+    """The one overlay that represents a stratum in the search stage.
+
+    Both keys are explicit. Ordering on the seed alone would leave the choice
+    between two overlay types sharing the lowest seed to depend on the order
+    ``summary_rows`` happened to be built in, which is not a rule a reader can
+    reproduce. Selecting on the measured effect would be worse still: it would
+    turn the replayed figures into a best case rather than a representative
+    one.
+    """
+    return min(
+        candidates,
+        key=lambda row: (int(row["overlay_seed"]), str(row["overlay_type"])),
+    )
+
+
 def _run_search(instance, summary_rows, args) -> list[dict[str, Any]]:
     """One representative per stratum, chosen by a rule fixed in advance.
 
@@ -996,11 +1019,7 @@ def _run_search(instance, summary_rows, args) -> list[dict[str, Any]]:
         candidates = by_stratum.get(stratum, [])
         if not candidates:
             continue
-        # The LOWEST overlay seed in the stratum, fixed by rule before any
-        # search runs. Picking the overlay with the most objective changes
-        # would select on the very quantity being measured and turn the replay
-        # figures into a best case rather than a representative one.
-        chosen = min(candidates, key=lambda r: int(r["overlay_seed"]))
+        chosen = choose_stratum_representative(candidates)
         builder = {name: fn for name, _desc, fn in OVERLAYS}[chosen["overlay_type"]]
         overlay = builder(instance, int(chosen["overlay_seed"]))
         rows.extend(
@@ -1134,10 +1153,7 @@ def _manifest(
             "pop_size": args.pop_size,
             "solver_seeds": list(args.solver_seeds),
             "planning_models": ["Full", "No-HT"],
-            "representative_rule": (
-                "lowest overlay_seed within each stratum, fixed by rule rather "
-                "than selected on the measured effect"
-            ),
+            "representative_rule": REPRESENTATIVE_RULE,
             "representativeness": (
                 "one diagnostic representative per stratum; the replay figures "
                 "are not a population average over overlays"

@@ -11,6 +11,7 @@ the shared one rather than a private copy.
 from __future__ import annotations
 
 import csv
+import itertools
 import json
 import unittest
 from pathlib import Path
@@ -24,6 +25,8 @@ from scripts.reproduce.capacity_recovery import (
 )
 from scripts.reproduce.ht_natural_corridor import (
     OVERLAYS,
+    REPRESENTATIVE_RULE,
+    choose_stratum_representative,
     combined_overlay,
     corridor_ranking,
     damage_overlay,
@@ -567,6 +570,65 @@ class CorridorClassifierTest(unittest.TestCase):
                 )
         self.assertEqual(scenario_stratum(0), "inactive")
         self.assertEqual(scenario_stratum(5), "strong-natural-active")
+
+
+class RepresentativeSelectionTest(unittest.TestCase):
+    """The stratum representative must not depend on iteration order.
+
+    Both sort keys are explicit so a reader can reproduce the choice from the
+    rule alone, rather than from the order ``summary_rows`` happened to be
+    built in.
+    """
+
+    @staticmethod
+    def _candidate(overlay_type: str, seed: int) -> dict:
+        return {
+            "overlay_type": overlay_type,
+            "overlay_seed": seed,
+            "scenario_stratum": "strong-natural-active",
+        }
+
+    def test_ties_are_broken_by_overlay_type_not_by_input_order(self):
+        candidates = [
+            self._candidate("SR-B", 1),
+            self._candidate("SR-A", 1),
+            self._candidate("SR-C", 2),
+        ]
+        chosen = choose_stratum_representative(candidates)
+        self.assertEqual(chosen["overlay_type"], "SR-A")
+        self.assertEqual(chosen["overlay_seed"], 1)
+
+    def test_the_choice_is_invariant_to_input_permutations(self):
+        candidates = [
+            self._candidate("SR-B", 1),
+            self._candidate("SR-A", 1),
+            self._candidate("SR-C", 2),
+            self._candidate("SR-A", 2),
+        ]
+        baseline = choose_stratum_representative(candidates)
+        for permutation in itertools.permutations(candidates):
+            with self.subTest(order=[(c["overlay_type"], c["overlay_seed"]) for c in permutation]):
+                chosen = choose_stratum_representative(list(permutation))
+                self.assertEqual(
+                    (chosen["overlay_type"], chosen["overlay_seed"]),
+                    (baseline["overlay_type"], baseline["overlay_seed"]),
+                )
+
+    def test_the_lowest_seed_wins_before_the_type_tie_break(self):
+        """A lexically earlier type with a higher seed must not win."""
+        candidates = [
+            self._candidate("SR-A", 9),
+            self._candidate("SR-C", 2),
+        ]
+        chosen = choose_stratum_representative(candidates)
+        self.assertEqual((chosen["overlay_type"], chosen["overlay_seed"]), ("SR-C", 2))
+
+    def test_the_rule_string_matches_the_implemented_ordering(self):
+        candidates = [self._candidate("SR-C", 4), self._candidate("SR-B", 4)]
+        self.assertEqual(
+            choose_stratum_representative(candidates)["overlay_type"], "SR-B"
+        )
+        self.assertIn("lexical order", REPRESENTATIVE_RULE)
 
 
 class ReproducibilityTest(unittest.TestCase):

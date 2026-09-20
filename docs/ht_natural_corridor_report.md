@@ -19,7 +19,7 @@
 | `od_dependency_fraction` 可 > 1 | 分母误用 `len(demands)` | 改为 `total_od_pairs`（105）。现区间 **0.000–0.438** |
 | 车型最短路自行使用 raw `free_time` | 未计恢复阶段的 `speed_ratio` 与车型 `speed_factor`，把部分恢复的道路按全速计价 | 改用评测器自身的 `_build_vehicle_graph` / `_shortest_paths_for_vehicle`；并把拆分拆成 `vehicle_path_split` 与 `vehicle_travel_time_split` 两列 |
 | 宣称"HT off 是放宽所以 F2 必然下降" | 把可行域包含关系当成目标单调性 | **撤回**：只保留可行域超集的陈述；符号与幅度改为经验发现 |
-| 搜索代表按目标变化数最多的 overlay 选 | 在被测量的量上选择 | 改为按**预先固定的最低 overlay seed** 取代表，并在 manifest 标注"diagnostic representative，非总体均值" |
+| 搜索代表按目标变化数最多的 overlay 选 | 在被测量的量上选择 | 改为预先固定的两级规则 **`lowest overlay_seed`，同 seed 时按 `overlay_type` 字典序**；选择不依赖 `summary_rows` 的构建顺序，manifest 同步标注"diagnostic representative，非总体均值" |
 
 第 3 项修正使 SPT 的 `threshold_sensitive_od_periods` 从 59 降到 **3**——
 raw `free_time` 把部分恢复道路的绕行"优惠"成了更短时间，制造了模型并不存在的行程时间分裂。
@@ -60,8 +60,9 @@ raw `free_time` 把部分恢复道路的绕行"优惠"成了更短时间，制�
 `od_shortest_path_dependency_count` 的区分见 `scripts/reproduce/ht_natural_corridor.py` 的文档字符串：
 前者是"最短路经过"（用 `d(s,u)+t+d(v,d)==d(s,d)` 精确判定，无需打破并列），
 后者是"删除后严格变差"，分类使用后者。
-`od_dependency_fraction` 的分母是 **`od_pairs_total`**（155 个有序 supplier-demand 对中扣除 s==d 后为 105），
-因此恒在 [0, 1] 内。
+`od_dependency_fraction` 的分母为 **3 × 35 = 105** 个有序 supplier-demand 对
+（WEN38 为 3 个 supplier、35 个 demand，两者不重叠，故 `od_pairs_total = 105`），
+因此该指标恒落在 [0, 1]。
 
 ## 2. 动态 exposure 与四级分类
 
@@ -164,8 +165,12 @@ raw `free_time` 把部分恢复道路的绕行"优惠"成了更短时间，制�
 
 在没有 inactive 分层的情况下，对两个存在的分层各取一个代表 overlay 跑
 `nsga2`（200 次评价、种群 16、配对 solver seeds 70001/70002）。
-**代表由预先固定的规则选出：取该分层中 overlay seed 最小者**——
-按"目标变化最多"选会在被测量的量上挑选，把结果变成最优情形。
+**代表由预先固定的规则选出**：
+`representative_rule = lowest overlay_seed within each stratum; ties broken by overlay_type lexical order`
+（分层内取 overlay seed 最小者；同 seed 时按 overlay_type 字典序打破并列，两级排序键都是显式的，
+因此选择结果不依赖 `summary_rows` 的构建顺序）。
+按"目标变化最多"选会在被测量的量上挑选，把结果变成最优情形，已弃用。
+本轮两条规则选出的代表相同：strong-natural-active → `SR-A seed 1`，natural-active → `SR-C seed 6`。
 
 | 代表（分层） | 规划模型 | 决策数 | 目标改变 | 均值 \|ΔF2\| | 最大 \|ΔF2\| |
 |---|---|---:|---:|---:|---:|
