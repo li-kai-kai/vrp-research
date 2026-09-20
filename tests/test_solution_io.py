@@ -302,6 +302,66 @@ class SolutionIOTest(unittest.TestCase):
         with self.assertRaises(SolutionIOError):
             decision_from_json(payload, instance)
 
+    def test_identifier_types_are_never_coerced(self):
+        """3.0 and true are not 3: the encoding uses integers."""
+        instance = _instance()
+        valid = decision_to_json(_record_source_decision(instance))
+
+        cases = {
+            "float team": {"team_assignment": [1.5] + valid["team_assignment"][1:]},
+            "bool team": {"team_assignment": [True] + valid["team_assignment"][1:]},
+            "bool in repair": {"repair_order": [True] + valid["repair_order"][1:]},
+            "float repair": {"repair_order": [0.0] + valid["repair_order"][1:]},
+            "string team": {"team_assignment": ["0"] + valid["team_assignment"][1:]},
+            "float in dispatch": {
+                "dispatch_priority": [
+                    [float(valid["dispatch_priority"][0][0]), valid["dispatch_priority"][0][1]]
+                ]
+                + valid["dispatch_priority"][1:]
+            },
+            "bool in dispatch": {
+                "dispatch_priority": [
+                    [True, valid["dispatch_priority"][0][1]]
+                ]
+                + valid["dispatch_priority"][1:]
+            },
+        }
+        for label, override in cases.items():
+            payload = {**valid, **override}
+            with self.assertRaises(SolutionIOError, msg=label) as caught:
+                decision_from_json(payload, instance)
+            self.assertIn(
+                ("boolean" if "bool" in label else "float" if "float" in label else "int"),
+                str(caught.exception).lower(),
+                label,
+            )
+
+        # The untouched decision still loads.
+        self.assertEqual(
+            decision_to_json(decision_from_json(valid, instance)),
+            valid,
+        )
+
+    def test_dispatch_priority_must_be_the_complete_product(self):
+        instance = _instance()
+        valid = decision_to_json(_record_source_decision(instance))
+        suppliers = instance.base.suppliers
+        demands = instance.base.demands
+        expected_pairs = len(suppliers) * len(demands)
+        self.assertEqual(len(valid["dispatch_priority"]), expected_pairs)
+
+        # Dropping, repeating or truncating pairs all change which allocations
+        # the decoder can make, so none of them may pass silently.
+        for label, pairs in (
+            ("missing", valid["dispatch_priority"][:-1]),
+            ("empty", []),
+            ("duplicated", [valid["dispatch_priority"][0]] * expected_pairs),
+            ("unknown demand", [[suppliers[0], 10_000_000]] + valid["dispatch_priority"][1:]),
+        ):
+            payload = {**valid, "dispatch_priority": pairs}
+            with self.assertRaises(SolutionIOError, msg=label):
+                decision_from_json(payload, instance)
+
     def test_infinite_display_fields_are_written_as_null(self):
         instance = _instance()
         with TemporaryDirectory() as directory:

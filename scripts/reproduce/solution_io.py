@@ -514,6 +514,30 @@ def decision_hash(individual: CapacityIndividual) -> str:
     )[:16]
 
 
+def _strict_id(value: Any, field: str) -> int:
+    """Read an integer identifier without converting anything.
+
+    The encoding uses integer identifiers, and JSON distinguishes 3 from 3.0
+    and from true. Coercing them would silently accept a decision that the
+    search could never have produced, so a wrong type is an error here.
+    """
+    if isinstance(value, bool):
+        raise SolutionIOError(
+            f"{field} contains a boolean ({value!r}); identifiers must be integers"
+        )
+    if isinstance(value, float):
+        raise SolutionIOError(
+            f"{field} contains the float {value!r}; identifiers must be JSON "
+            "integers, not numbers that happen to have an integer value"
+        )
+    if not isinstance(value, int):
+        raise SolutionIOError(
+            f"{field} contains {value!r} of type {type(value).__name__}; "
+            "identifiers must be integers"
+        )
+    return value
+
+
 def decision_from_json(
     payload: Any,
     instance: CapacityExperimentInstance,
@@ -522,6 +546,11 @@ def decision_from_json(
 
     A corrupt or mismatched decision raises instead of silently being repaired,
     because a repaired decision would no longer be the decision that was run.
+
+    Encoding convention for the degenerate case: an instance with no supplier
+    or no demand point has an empty supplier x demand product, and its
+    dispatch_priority must then be an empty list. That is the only situation in
+    which an empty dispatch_priority is accepted.
     """
     if not isinstance(payload, dict):
         raise SolutionIOError("decision must be a JSON object")
@@ -538,8 +567,8 @@ def decision_from_json(
 
     known_damage_ids = set(base.damaged_edges)
     seen: set[int] = set()
-    for value in repair_order:
-        damage_id = int(value)
+    for index, value in enumerate(repair_order):
+        damage_id = _strict_id(value, f"repair_order[{index}]")
         if damage_id not in known_damage_ids:
             raise SolutionIOError(
                 f"repair_order references unknown damage id {damage_id}"
@@ -552,20 +581,26 @@ def decision_from_json(
         raise SolutionIOError(f"repair_order omits damage ids {missing}")
 
     crews = base.repair_crews
-    for team_id in team_assignment:
-        if not 0 <= int(team_id) < crews:
+    for index, value in enumerate(team_assignment):
+        team_id = _strict_id(value, f"team_assignment[{index}]")
+        if not 0 <= team_id < crews:
             raise SolutionIOError(
                 f"team_assignment id {team_id} is outside [0, {crews})"
             )
 
+    # dispatch_priority is the complete supplier x demand product: every pair
+    # exactly once. Missing, repeated or extra pairs would all silently change
+    # which allocations the decoder can make.
     known_suppliers = set(base.suppliers)
     known_demands = set(base.demands)
-    for pair in dispatch_priority:
+    pairs: list[tuple[int, int]] = []
+    for index, pair in enumerate(dispatch_priority):
         if not isinstance(pair, list) or len(pair) != 2:
             raise SolutionIOError(
-                f"dispatch_priority entries must be [supplier, demand], got {pair!r}"
+                f"dispatch_priority[{index}] must be [supplier, demand], got {pair!r}"
             )
-        supplier, demand = int(pair[0]), int(pair[1])
+        supplier = _strict_id(pair[0], f"dispatch_priority[{index}][0]")
+        demand = _strict_id(pair[1], f"dispatch_priority[{index}][1]")
         if supplier not in known_suppliers:
             raise SolutionIOError(
                 f"dispatch_priority references unknown supplier {supplier}"
@@ -574,13 +609,27 @@ def decision_from_json(
             raise SolutionIOError(
                 f"dispatch_priority references unknown demand {demand}"
             )
+        pairs.append((supplier, demand))
+
+    expected = {(supplier, demand) for supplier in known_suppliers for demand in known_demands}
+    if len(pairs) != len(set(pairs)):
+        repeated = sorted({pair for pair in pairs if pairs.count(pair) > 1})
+        raise SolutionIOError(
+            f"dispatch_priority repeats the pair(s) {repeated}; every "
+            "supplier-demand pair must appear exactly once"
+        )
+    if set(pairs) != expected:
+        missing = sorted(expected - set(pairs))
+        raise SolutionIOError(
+            "dispatch_priority is not the complete supplier x demand product; "
+            f"missing {missing[:10]}{' ...' if len(missing) > 10 else ''} "
+            f"(expected {len(expected)} pairs, got {len(pairs)})"
+        )
 
     return CapacityIndividual(
-        repair_order=[int(value) for value in repair_order],
-        team_assignment=[int(value) for value in team_assignment],
-        dispatch_priority=[
-            (int(pair[0]), int(pair[1])) for pair in dispatch_priority
-        ],
+        repair_order=[_strict_id(value, "repair_order") for value in repair_order],
+        team_assignment=[_strict_id(value, "team_assignment") for value in team_assignment],
+        dispatch_priority=pairs,
     )
 
 
@@ -1172,7 +1221,9 @@ SUMMARY_COLUMNS = (
     "proposals",
     "cache_hits",
     "local_search_evaluations",
-    "distinct_evaluated",
+    "actual_evaluations",
+    "unique_decisions",
+    "evaluation_snapshots",
     "operator_swap_two_repairs",
     "operator_insert_repair",
     "operator_rebalance_team",
@@ -1369,7 +1420,9 @@ def run_summary_row(record: dict[str, Any]) -> dict[str, Any]:
         "proposals": diagnostics.get("proposals"),
         "cache_hits": diagnostics.get("cache_hits"),
         "local_search_evaluations": diagnostics.get("local_search_evaluations"),
-        "distinct_evaluated": diagnostics.get("distinct_evaluated"),
+        "actual_evaluations": diagnostics.get("actual_evaluations"),
+        "unique_decisions": diagnostics.get("unique_decisions"),
+        "evaluation_snapshots": diagnostics.get("evaluation_snapshots"),
     }
     # Operator contributions are written as flat columns so the search
     # diagnostics are auditable from the summary CSV alone.

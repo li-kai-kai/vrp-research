@@ -23,6 +23,7 @@ from scripts.reproduce.capacity_recovery import (
     _select_next_generation,
     _swap_two_dispatches,
     _swap_two_repairs,
+    _decision_signature,
     _tournament,
     _weighted_score,
     evaluate_capacity_solution,
@@ -92,7 +93,10 @@ class _Evaluator:
         self.cache_hits = 0
         self.local_search_evaluations = 0
         self.operator_proposals: dict[str, int] = {}
+        # One snapshot per real evaluation. The same decision evaluated twice
+        # appears twice, so this list is not a set of distinct decisions.
         self.evaluated: list[CapacityIndividual] = []
+        self._unique_decisions: set[tuple] = set()
 
     @property
     def remaining(self) -> int:
@@ -125,6 +129,7 @@ class _Evaluator:
         # Snapshot the decision: later mutation of the caller's object must not
         # rewrite what was evaluated.
         self.evaluated.append(individual.clone())
+        self._unique_decisions.add(_decision_signature(individual))
         return True
 
     def population(self, population: list[CapacityIndividual]) -> list[CapacityIndividual]:
@@ -135,17 +140,31 @@ class _Evaluator:
             evaluated.append(individual)
         return evaluated
 
+    @property
+    def unique_decisions(self) -> int:
+        """How many *different* decisions were evaluated.
+
+        Never the same number as the evaluation count: a decision reached twice
+        is evaluated twice but is one decision.
+        """
+        return len(self._unique_decisions)
+
     def archive_candidates(self) -> list[CapacityIndividual]:
-        """All distinct decisions actually evaluated, in evaluation order."""
+        """One snapshot per evaluation, in evaluation order.
+
+        May contain the same decision more than once; the archive de-duplicates.
+        """
         return list(self.evaluated)
 
     def diagnostics(self) -> dict[str, float]:
         payload = {
             "proposals": float(self.proposals),
-            "evaluations": float(self.count),
+            # Real objective computations, excluding cache hits.
+            "actual_evaluations": float(self.count),
+            "evaluation_snapshots": float(len(self.evaluated)),
+            "unique_decisions": float(self.unique_decisions),
             "cache_hits": float(self.cache_hits),
             "local_search_evaluations": float(self.local_search_evaluations),
-            "distinct_evaluated": float(len(self.evaluated)),
         }
         for name, count in self.operator_proposals.items():
             payload[f"operator.{name}"] = float(count)

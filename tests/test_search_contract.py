@@ -189,6 +189,26 @@ class EvaluatorAccountingTest(unittest.TestCase):
         # Every decision that was really evaluated is archived.
         self.assertEqual(len(evaluator.archive_candidates()), 3)
 
+    def test_unique_decisions_is_not_the_evaluation_count(self):
+        """Evaluating one decision twice is two calls but one decision."""
+        instance = _tiny_instance()
+        evaluator = _Evaluator(instance, limit=10)
+        same = _decision(instance, [0, 1, 2], [0, 0, 0], [(0, 1), (0, 2)])
+        for _ in range(3):
+            evaluator.evaluate(same.clone())
+
+        diagnostics = evaluator.diagnostics()
+        self.assertEqual(diagnostics["actual_evaluations"], 3.0)
+        self.assertEqual(diagnostics["evaluation_snapshots"], 3.0)
+        self.assertEqual(diagnostics["unique_decisions"], 1.0)
+        self.assertEqual(evaluator.unique_decisions, 1)
+
+        # A genuinely different decision raises the distinct count.
+        other = _decision(instance, [2, 1, 0], [0, 0, 0], [(0, 1), (0, 2)])
+        evaluator.evaluate(other)
+        self.assertEqual(evaluator.diagnostics()["unique_decisions"], 2.0)
+        self.assertEqual(evaluator.diagnostics()["evaluation_snapshots"], 4.0)
+
 
 class BudgetAndTerminationTest(unittest.TestCase):
     def test_budget_is_never_exceeded(self):
