@@ -112,7 +112,7 @@ HV/IGD 使用每个实例 pooled 参考前沿与参考点 `(1.1, 1.1, 1.1)`；�
 四组共享同一 `physical_instance_hash`（已验证唯一），使用相同的预算、配给政策、时间轴与配对 solver seed。
 
 下图（`outputs/claude_v2/pilot_diagnostics.png`）左为算子贡献，右为固定决策下各机制对目标的影响。
-按仓库惯例所有 `*.png` 被 Git 忽略，图中数值可由 §2 的 `plot_pilot_diagnostics.py` 命令从真实 CSV 与运行记录重新生成：
+该图已随本报告一并纳入版本控制；图中数值可由 §2 的 `plot_pilot_diagnostics.py` 命令从真实 CSV 与运行记录重新生成：
 
 ![v2 小预算诊断](../outputs/claude_v2/pilot_diagnostics.png)
 
@@ -158,7 +158,8 @@ Full 组自身的规划目标与执行回放**逐位一致**（最大绝对差 0
 
 ## 6. 产物路径与校验
 
-根目录 `outputs/claude_v2/`（Git 忽略）。
+根目录 `outputs/claude_v2/`。**该目录已纳入版本控制**，克隆仓库后无需重算即可核对本报告的全部数值；
+`outputs/` 下的其他目录仍被忽略。
 
 | 产物 | 路径 |
 |---|---|
@@ -174,8 +175,8 @@ Full 组自身的规划目标与执行回放**逐位一致**（最大绝对差 0
 代码指纹；`runs/<run_key>.json` 自带 `record_sha256` 完整性校验，`instances/` 与 `executions/` 各带 `snapshot_sha256`。
 `runs.csv`、`solutions.jsonl`、`pareto_points.csv`、`convergence.csv` 均可由运行文件再生。
 
-**注意**：产物目录被 Git 忽略，克隆仓库后须按第 2 节命令重建。本报告中的数值在重建后应可复现到本文精度，
-但 manifest 中的 `git_sha` 会指向重建时的提交。
+上表路径均相对仓库根目录，且已纳入版本控制。manifest 中的 `git_sha`/`git_dirty` 记录的是**产生该结果时**的代码状态，
+不会随之后的提交改变，因此可以直接判断产物与哪一版代码对应。
 
 ## 7. 仍未解决的问题
 

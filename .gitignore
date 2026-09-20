@@ -12,7 +12,17 @@ wheels/
 .venv
 
 # Experiment outputs
-outputs/
+#
+# Regenerable artifacts stay out of version control. The one exception is
+# outputs/claude_v2/, the result set behind docs/pilot_v2_report.md: its run
+# records, replay tables and diagnostic figure are kept so the reported
+# numbers can be checked without re-running anything. Everything else under
+# outputs/ is rebuilt by the commands in scripts/README.md.
+#
+# Note the wildcard: "outputs/" would exclude the directory itself, and a
+# file inside an excluded directory cannot be re-included.
+outputs/*
+!outputs/claude_v2/
 figures/
 *.png
 *.jpg
@@ -20,3 +30,7 @@ figures/
 *.svg
 *.pdf
 !references/*.pdf
+
+# Must come after the extension rules above, which would otherwise exclude
+# the diagnostic figure.
+!outputs/claude_v2/pilot_diagnostics.png

@@ -41,6 +41,6 @@ uv run python scripts/reproduce/run_model_ablation.py --suite smoke --max-evalua
 | `tests/` | 共享实例、容量模型、动态机制、算法对照、模型消融及 legacy 回归测试 |
 | `docs/` | 当前研究说明、实验状态、维护记录；`background/` 为背景，`archive/` 为历史 |
 | `references/` | 原始参考文献 |
-| `outputs/` | 本地实验产物与历史压缩归档，不纳入 Git |
+| `outputs/` | 实验产物；除 `outputs/claude_v2/`（v2 诊断的可审计结果集）外均不纳入 Git |
 
 原始文献：Li, S., & Teo, K. L. (2019). *Post-disaster multi-period road network repair: work scheduling and relief logistics optimization*. Annals of Operations Research, 283, 1345–1385. DOI: `10.1007/s10479-018-3037-2`。
