@@ -158,9 +158,15 @@ v2 在接收到**非零**上述设置时**显式报错**，不静默忽略。后
 
 | 指纹 | 覆盖内容 |
 |---|---|
-| `physical_instance_hash` | 共同物理场景快照（节点、边、旅行时间、容量、受损道路与维修时长、供需、维修队、车型、恢复阶段、eta、horizon）。同一基础场景的四个规划模型共享 |
-| `model_fingerprint` | 规划/评价假设、车型阈值变体、版本与评价配置、**目标比较精度**、**场景声明的 Full 档案指纹** |
+| `physical_instance_hash` | **共享物理场景**：网络（节点与属性、无向边、free_time/weight）、道路物理属性（每期基础容量、受损标记与维修时长）、供需与各点数量、维修队数、车型的**载重 / 数量 / occupied_od_pcu_h / PCU / speed_factor**，以及 `capacity_scale`、`repair_time_weight`、eta 与 horizon。**同一基础场景的四个规划模型共享它。** |
+| `model_fingerprint` | 在上面的物理哈希之外，再加**规划与评价假设**：`progressive_recovery` / `heterogeneous_vehicle_thresholds` / `edge_capacity_constraint` 三个开关、**实际恢复阶段曲线**、**各车型通行阈值**、`EvaluationConfig`，以及**目标比较精度**与**场景声明的 `FullExecutionProfile` 指纹**。 |
 | `decision_hash` | 三段完整决策 |
-| `run_key` | 实例 + 模型 + 算法 + solver seed + 预算 + 代码版本 |
+| `run_key` | 实例 + 模型 + 算法 + solver seed + 预算 + 源码指纹 |
+
+**必须区分的两件事**：用于规划消融的**恢复阶段曲线、车型通行阈值与评价语义不属于"不同物理场景"**。
+它们被有意排除在 `physical_instance_hash` 之外，由 `FullExecutionProfile` 与 `model_fingerprint` 记录——
+正是这一点让 Full / No-PR / No-HT / No-EC 四个规划模型共享同一个物理场景，从而可以做配对比较。
+反过来说，**只有 `physical_instance_hash` 相同并不足以判断执行环境一致**：
+必须同时核对 `model_fingerprint`，这也正是 `--execution-model full` 会重新校验曲线与阈值的原因。
 
 序列化规则：标准 JSON；目标与模型参数必须**有限**，不得写 `NaN`/`Infinity`；允许无限的展示字段（如拥挤距离）写 `null` 并说明。无向边排序、节点标识类型及浮点序列化规则固定，保证指纹可重建。

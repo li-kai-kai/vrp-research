@@ -50,7 +50,15 @@ uv run python scripts/reproduce/stage_visualization.py --scenario wenchuan --mec
 如果只想快速验证容量恢复原型，可以给 `capacity_recovery.py` 设置 `--pop-size 8 --generations 3 --alns-iterations 3`。
 效率目标中的维修作业工时权重可通过 `--repair-time-weight` 调整，默认值为 0.05；启用转场后，该权重作用于现场维修工时与转场时间之和，转场时间本身由 `--crew-transfer-time-scale` 控制。
 容量恢复实验会保存 `pareto_front_runs.csv`（每次运行的非支配 archive）、`pareto_front.csv`（跨运行合并后仍然非支配的全局近似前沿）、`pareto_solutions.json`（完整染色体决策）、`experiment_manifest.json`（全部运行参数）和 `pareto_front.png`（三目标前沿图）。前沿来自跨代外部 archive，而不再局限于最终种群中的单一代表解。
-模型消融入口固定使用 benchmark 的 `nsga2_alns` 求解器；同一实例与求解种子下的八个组合共享评价预算，并按实例汇总所有组合和重复形成 pooled reference front。输出包括 `model_ablation.csv`、`pareto_points.csv`、`pooled_reference_front.csv` 和 `experiment_manifest.json`。
+模型消融入口**支持通过 `--algorithm` 指定求解器**（可选 `spt`/`vnd`/`nsga2`/`nsga2_ls`/`nsga2_alns`）；
+同一实例与求解种子下的各组合共享评价预算，并按实例汇总所有组合和重复形成 pooled reference front。
+输出包括 `model_ablation.csv`、`pareto_points.csv`、`pooled_reference_front.csv` 和 `experiment_manifest.json`。
+
+> **不要混淆"入口支持某算法"与"正式实验固定某算法"**：
+> - 入口支持任意受支持算法，用于诊断；
+> - 四模型诊断当前使用 **`nsga2`**，目的是隔离模型效应、不与尚未验证的混合方法捆绑；
+> - **完整正式 `2^3` factorial 的既定统计设计定义在 `nsga2_alns` 上**，
+>   并且要求全部八组合齐备；子集或换算法时 `factor_effects*.csv` 只写 `not_applicable` 与原因，不输出显著性。
 
 ## 评价版本与运行产物
 
@@ -59,8 +67,17 @@ uv run python scripts/reproduce/stage_visualization.py --scenario wenchuan --mec
 作为自适应选择的对照。`run_model_ablation.py --model-ids` 可选择八组合的任意子集，此时只输出描述性与回放汇总，
 `factor_effects*.csv` 等表写入 `not_applicable` 与原因，不计算主效应或交互显著性。
 
-两个入口都支持 `--resume`：只跳过实例、代码、模型、算法、预算**完全一致**且完整的已完成运行。
-若目录中已有**其他代码版本**产生的运行记录，入口会直接报错并要求换新目录，不会静默混用。
+两个入口都支持 `--resume`：只跳过条件**完全一致**且完整的已完成运行。这里的"不一致就换目录"**不限于代码版本**——
+目录级 `experiment_contract.json` 固定以下全部条件，任一项变化都必须使用新目录，否则入口直接报错：
+
+- `model_version` 与完整评价档案（`evaluation` / `evaluation_fingerprint`）
+- 预算（`max_evaluations` / `pop_size` 等全部 `BenchmarkBudget` 字段）
+- 源码指纹（含 `pyproject.toml` 与 `uv.lock`）
+- 入口类型与 `suite`
+- 消融入口还把 `algorithm` 视为固定条件（混用两个求解器会破坏配对设计）
+
+**可声明扩展的维度**（允许在同一目录内追加）：算法、模型组、案例、实例种子、solver 起始种子与重复数。
+汇总、manifest 与回放都从**目录运行集合**再生，因此追加后三者始终一致。
 
 运行目录结构（`solution_io.py` 统一维护）：
 
@@ -70,7 +87,7 @@ uv run python scripts/reproduce/stage_visualization.py --scenario wenchuan --mec
   instances/<model_fp>.json    每个规划模型变体的完整实例快照
   executions/<physical_hash>.json  四规划组共享的 Full 执行环境
   runs/<run_key>.json          完整运行单元：决策、目标、指标、收敛、预算、诊断计数、完整性校验
-  runs.csv                     每次运行的汇总（含评价数、预算、终止原因、算子贡献）
+  runs.csv                     每次运行的汇总（含评价数、预算、终止原因、算子调用次数与搜索诊断）
   solutions.jsonl              每个非支配决策一行，含完整三段决策
   pareto_points.csv
   convergence.csv
@@ -80,15 +97,21 @@ uv run python scripts/reproduce/stage_visualization.py --scenario wenchuan --mec
 
 ```bash
 uv run python scripts/reproduce/replay_solutions.py \
-  --input-root outputs/claude_v2/pilot_algorithm --execution-model saved \
-  --output-dir outputs/claude_v2/pilot_algorithm_roundtrip
+  --input-root outputs/local_v2_pilot/pilot_algorithm --execution-model saved \
+  --output-dir outputs/local_v2_pilot/pilot_algorithm_roundtrip
 uv run python scripts/reproduce/replay_solutions.py \
-  --input-root outputs/claude_v2/pilot_planning --execution-model full \
-  --output-dir outputs/claude_v2/pilot_common_execution
+  --input-root outputs/local_v2_pilot/pilot_planning --execution-model full \
+  --output-dir outputs/local_v2_pilot/pilot_common_execution
 ```
 
 `saved` 必须逐位复现原目标（默认容差 `abs_tol=1e-8, rel_tol=1e-8`），不一致即非零退出；
 `full` 在共同执行环境中重放规划决策，差值写入 `replay_results.csv`（原始有符号差，三目标均为最小化）。
+`--execution-model full` 会校验执行环境确实是约定的 v2 Full（评价档案、PR/HT/EC 曲线与阈值），
+拒绝把 legacy 或降级模型的快照当作 Full 回放。
+
+> **示例中的输出目录用 `outputs/local_v2_pilot/`**。**已发布的审计结果位于 `outputs/claude_v2_reviewfix2/`**
+> （另有 `outputs/claude_v2/`、`outputs/claude_v2_reviewfix/` 作为修复历史），它们是版本控制中的证据，
+> 普通复现请使用新的本地输出目录，不要覆盖审计目录。
 v2 语义与单位见[模型 v2 合同](../docs/model_v2_contract.md)，已执行诊断见[v2 小预算诊断报告](../docs/pilot_v2_report.md)。
 
 ```bash
@@ -97,14 +120,22 @@ uv run python scripts/reproduce/run_benchmark.py \
   --instance-seeds 101 102 --solver-repeats 3 --solver-seed-start 50000 \
   --algorithms nsga2 nsga2_ls nsga2_alns \
   --max-evaluations 500 --pop-size 32 \
-  --output-dir outputs/claude_v2/pilot_algorithm
+  --output-dir outputs/local_v2_pilot/pilot_algorithm
 uv run python scripts/reproduce/plot_pilot_diagnostics.py
 ```
 
-正式消融使用 `publication` 配置。合成案例以“实例种子”为统计单位，先平均同一实例上的配对 solver 重复；汶川案例是固定网络，只运行一个实例副本并以 solver 重复为统计单位，避免把同一网络改名后当作独立实例。建议按“案例 × 实例种子”分片，每个分片保留完整 30 次 solver 重复，例如：
+> ⚠ **正式 publication 暂不运行。** 先完成机制适用条件（PR/HT/EC binding boundary）诊断并锁定场景与参数，
+> 再启动正式批次 —— 在机制是否参与决策尚未确定之前扩大统计规模，只会得到无法解释的效应表。
+
+正式消融使用 `publication` 配置。**必须显式传 `--model-version v2`**：入口默认是 `legacy`，省略会静默产出
+另一套语义的结果。合成案例以“实例种子”为统计单位，先平均同一实例上的配对 solver 重复；汶川案例是固定网络，
+只运行一个实例副本并以 solver 重复为统计单位，避免把同一网络改名后当作独立实例。
+建议按“案例 × 实例种子”分片，每个分片保留完整 30 次 solver 重复，例如：
 
 ```bash
-uv run python scripts/reproduce/run_model_ablation.py --suite publication --cases S025 --instance-seeds 1 --solver-repeats 30 --output-dir outputs/model_ablation_publication_shards/S025_i01
+uv run python scripts/reproduce/run_model_ablation.py --suite publication --model-version v2 \
+  --cases S025 --instance-seeds 1 --solver-repeats 30 \
+  --output-dir outputs/model_ablation_publication_shards/S025_i01
 uv run python scripts/reproduce/model_ablation_analysis.py --input-root outputs/model_ablation_publication_shards --output-dir outputs/model_ablation_publication
 ```
 
@@ -123,4 +154,4 @@ uv run python scripts/reproduce/model_ablation_analysis.py --input-root outputs/
 
 渐进恢复状态的默认含义为：`blocked`（进度 0–30%，容量和速度为 0）、`temporary`（30–60%，临时便道，容量/速度恢复到 30%）、`one_lane`（60–80%，单车道通行，恢复到 60%）、`basic`（80–100%，基本恢复，恢复到 80%）和 `full`（100%，完全恢复）。车型仍需同时满足自身进度阈值 30%、50%、70% 和 80% 才能通行。
 
-正式算法 benchmark 使用 `--suite publication`。汶川应单独指定 `--cases WEN38 --instance-seeds 1`，否则该入口会遍历默认实例种子而重复同一固定网络；合成案例按默认多实例运行。SPT 仅一次构造评价，其余搜索受 `max-evaluations` 上限约束。benchmark 汇总与绘图先平均实例内 solver 重复，图中误差条为实例间标准差；固定汶川实例的零误差条不表示求解器没有随机波动，应另查看各 solver 运行。
+正式算法 benchmark 使用 `--suite publication`，同样**必须显式传 `--model-version v2`**。汶川应单独指定 `--cases WEN38 --instance-seeds 1`，否则该入口会遍历默认实例种子而重复同一固定网络；合成案例按默认多实例运行。SPT 仅一次构造评价，其余搜索受 `max-evaluations` 上限约束。benchmark 汇总与绘图先平均实例内 solver 重复，图中误差条为实例间标准差；固定汶川实例的零误差条不表示求解器没有随机波动，应另查看各 solver 运行。

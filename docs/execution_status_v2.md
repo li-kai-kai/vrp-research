@@ -1,10 +1,14 @@
 # v2 执行状态表
 
 状态只允许四种取值：**待执行**、**执行中**、**通过**、**阻塞**。
-最后更新：2026-09-20。
+最后更新：2026-09-20（文档一致性清理轮）。当前基准 HEAD：`7c7a6ab`。
 
-基准 HEAD：`1a1a5d5dd47d000556b107984ca5fa112f86bad0`（与本任务书基准一致，无差异）。
-基线测试：`uv run python -m unittest discover -s tests -v` → **21 个测试，21 通过，0 失败，0 错误**（其中 `tests/legacy/` 2 个被 discover 发现，单独运行亦通过）。
+**当前状态**：全量测试 `uv run python -m unittest discover -s tests -v` → **130 个，130 通过，0 失败，0 错误**。
+**当前结论依据目录**：`outputs/claude_v2_reviewfix2/`。`outputs/claude_v2/`（首轮）与
+`outputs/claude_v2_reviewfix/`（第一轮修正后）**仅作为修复历史与前后对照**，不再作为当前结果。
+
+下文各阶段条目中标注的测试数字是**该阶段当时**的实际值，保留为历史记录，不等于当前总数。
+基线（`1a1a5d5`）测试为 **21 个，21 通过**，其中 `tests/legacy/` 2 个被 discover 发现，单独运行亦通过。
 
 ## 阶段状态
 
@@ -12,11 +16,12 @@
 |---|---|---|---|
 | P0 | 基线核验与范围冻结 | 通过 | 本节；[模型合同](model_v2_contract.md)；`outputs/claude_v2/baseline_legacy/` |
 | P1 | 公平配给、时间轴与守恒 | 通过 | `tests/test_model_contract.py` M01–M11（12 个用例）；`EvaluationConfig`；见下 |
-| P2 | 完整决策保存、恢复和同模型回放 | 通过 | `scripts/reproduce/solution_io.py`、`replay_solutions.py`；`tests/test_solution_io.py`（9 个用例） |
-| P3 | 搜索档案、预算与评分修正 | 通过 | `benchmark_algorithms.py`；`tests/test_search_contract.py`（13 个用例） |
+| P2 | 完整决策保存、恢复和同模型回放 | 通过 | `scripts/reproduce/solution_io.py`、`replay_solutions.py`；`tests/test_solution_io.py`（当前 13 个用例） |
+| P3 | 搜索档案、预算与评分修正 | 通过 | `benchmark_algorithms.py`；`tests/test_search_contract.py`（当前 14 个用例） |
 | P4 | 不同规划模型统一执行回放 | 通过 | `run_model_ablation.py` 子集入口、`replay_solutions.py --execution-model full`；`tests/test_common_execution.py`（8 个用例） |
-| R1–R5 | 复审修正（精度、目录约定、Full 校验、报告、加载） | 通过 | 见下；[v2 小预算诊断报告](pilot_v2_report.md) §10 |
-| P5 | 小预算诊断与交付 | 通过（已按 R1–R5 重跑） | `outputs/claude_v2/`；[v2 小预算诊断报告](pilot_v2_report.md) |
+| R1–R5 | 复审修正第一轮（精度、目录约定、Full 校验、报告、加载） | 通过 | 见下；[v2 小预算诊断报告](pilot_v2_report.md) §10 |
+| 复审第二轮 | 坐标空间与 Full 曲线校验 | 通过 | 见下；[v2 小预算诊断报告](pilot_v2_report.md) §11 |
+| P5 | 小预算诊断与交付 | 通过（已按两轮复审修正重跑） | **`outputs/claude_v2_reviewfix2/`**；[v2 小预算诊断报告](pilot_v2_report.md) |
 | P6 | 正式实验方案与运行 | 待执行（本轮不启动） | — |
 | P7 | 专用大邻域与动态扩展 | 待执行（本轮不实现） | — |
 
@@ -58,29 +63,33 @@ uv run python scripts/reproduce/run_benchmark.py \
 合同测试中发现的既有实现特征（非本轮修改，已固化为回归断言）：
 车辆额度按**趟次**计，一次分配无论载重都消耗一整趟，因此单车型 60 吨、1 辆时只能服务一个需求点。
 
-## P5 执行记录
+## P5 执行记录（当前状态，取自 `outputs/claude_v2_reviewfix2/`）
 
-最终测试：`uv run python -m unittest discover -s tests -v` → **63 个，63 通过，0 失败，0 错误**。
+当前全量测试：`uv run python -m unittest discover -s tests -v` → **130 个，130 通过，0 失败，0 错误**。
 执行的诊断命令、评价预算核对、算法与模型诊断结果、产物路径与限制全部见
 [v2 小预算诊断报告](pilot_v2_report.md)。
 
 关键诊断结论（限于 S025 与 `capacity_scale=0.05`，不外推）：
 
-- 同模型回放 467 个决策，最大绝对/相对误差均为 0.0。
-- 统一 Full 执行回放 152 个决策，0 失败；Full 组自身规划目标与执行回放逐位一致。
-- 该标定下**异质阈值与边容量不改变任何目标**，绑定资源是车队趟次预算；这是需要下一轮定位的标定问题。
+- 最新算法同模型回放（`--execution-model saved`）：**86 个决策，0 失败**，最大绝对误差 0.0。
+- 最新规划模型统一 Full 回放：**37 个决策，0 失败**；其中 9 个的规划模型即执行模型、28 个为降级规划模型。
+- Full 同模型恒等检查**无误差**（规划指纹等于执行指纹时逐位复现）。
+- 在当前 S025 标定下，**HT/EC 在固定 SPT 决策及本轮保存前沿中没有观察到系统性目标影响**；
+  本轮证据**不足以判断二者一般无效**。HT 与 EC 是否重要取决于前沿中有哪些决策，这属于标定问题。
+- 车队趟次比道路容量更紧**只能作为待验证解释**，不是结论：本轮未做资源放宽对照。
 - 四模型子集未输出任何主效应或交互显著性结果。
 
 ## R1–R5 复审修正
 
-首轮 P0–P5 交付后审读提出的五项问题**全部复现属实**并已修复，回归用例 110 个全通过。
-结论依据已改为 `outputs/claude_v2_reviewfix/`；修正前产物保留在 `outputs/claude_v2/` 作对照。
+首轮 P0–P5 交付后审读提出的五项问题**全部复现属实**并已修复。
+该轮完成时回归用例为 110 个（当时值）；当前总数为 130 个。
+本轮结论依据当时为 `outputs/claude_v2_reviewfix/`，现已被第二轮取代。
 
-| 项 | 问题 | 修复 | 回归 |
+| 项 | 问题 | 修复 | 回归（当前用例数） |
 |---|---|---|---|
-| R1 | 目标以原始浮点比较，1e-13 噪声决定代表方案（18/18 运行） | 固定服务分辨率 + 量化比较键，贯通支配/档案/去重/拥挤距离/代表/质量指标；进入 model_fingerprint | `test_objective_precision.py` 17 例 |
+| R1 | 目标以原始浮点比较，1e-13 噪声决定代表方案（18/18 运行） | 固定服务分辨率 + 量化比较键，贯通支配/档案/去重/拥挤距离/代表/质量指标；进入 model_fingerprint | `test_objective_precision.py` 22 例 |
 | R2 | run key 不碰撞 ≠ 目录不混用 | 目录级 `experiment_contract.json` 写入前校验；汇总与回放共用目录运行集合 | `test_experiment_contract.py` 9 例 |
-| R3 | `--execution-model full` 只查物理哈希 | 强制校验 v2/PR/HT/EC 并重新计算而非信任标签；同哈希不可换模型；同模型必须逐位复现 | `test_full_execution_validation.py` 11 例 |
+| R3 | `--execution-model full` 只查物理哈希 | 强制校验 v2/PR/HT/EC 并重新计算而非信任标签；同哈希不可换模型；同模型必须逐位复现 | `test_full_execution_validation.py` 当前 19 例 |
 | R4 | "HT 完全无效" 与组均值当逐方案最大变化 | 新增 `summarize_replay.py`：运行内先归纳、三类结果分开汇报、给出非零数与最大差出处 | `test_replay_summary.py` 5 例 |
 | R5 | `int()` 静默截断；`distinct_evaluated` 名不副实 | 严格类型与完整排列校验；拆出 `actual_evaluations`/`evaluation_snapshots`/`unique_decisions` | `test_solution_io.py`/`test_search_contract.py` |
 
@@ -98,10 +107,11 @@ uv run python scripts/reproduce/run_benchmark.py \
 | B | `PR=True` + 二元阶段表、`HT=True` + 统一阈值都能通过 Full 校验且哈希自洽 | 场景声明可追溯的 `FullExecutionProfile`，逐项比对曲线与阈值；二元曲线结构性拒绝 | `test_full_execution_validation.py` 新增 8 例 + 复审包 2 例 |
 | B | 从降级实例直接重新打开开关会继续携带降级数据 | `model_factor_variant` 从声明档案恢复；无档案可恢复时显式报错 | 同上 |
 
-结论依据改为 `outputs/claude_v2_reviewfix2/`；`outputs/claude_v2/` 与 `outputs/claude_v2_reviewfix/` 保留为对照。
-最终测试 130 个全通过。
+本轮起结论依据为 `outputs/claude_v2_reviewfix2/`；`outputs/claude_v2/` 与 `outputs/claude_v2_reviewfix/` 保留为对照。
+当前全量测试 **130 个全通过**。第二轮的两项修复（量化坐标、Full 曲线校验）已纳入上方阶段表的
+「复审第二轮」一行，属于**当前验收状态**。
 
 ## 保护的用户已有改动
 
-工作树中未提交文件：`vrp_research_claude_execution_plan.md`（本任务书本身）。
-未执行 `git reset --hard`、未清理用户产物、未强制推送、未合并到 `main`。
+工作树中未跟踪文件：`vrp_research_claude_execution_plan.md`、`claude_post_p5_fix_plan.md`（任务书本身）。
+未执行 `git reset --hard`、未清理用户产物、未强制推送。
