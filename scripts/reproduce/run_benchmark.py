@@ -37,6 +37,33 @@ from scripts.reproduce.capacity_recovery import (
     EvaluationConfig,
     _dominates,
 )
+from scripts.reproduce.solution_io import (
+    RunStore,
+    build_run_record,
+    decision_hash as solution_decision_hash,
+    make_run_key,
+    model_fingerprint,
+    physical_instance_hash,
+    run_summary_row,
+    source_fingerprint,
+    source_hashes,
+    write_store_indexes,
+)
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+# Files whose contents determine a run's numerical behaviour; hashed into the
+# run key so a code change cannot silently reuse an older record.
+SOURCE_FILES = (
+    "scripts/reproduce/run_benchmark.py",
+    "scripts/reproduce/benchmark_suite.py",
+    "scripts/reproduce/benchmark_algorithms.py",
+    "scripts/reproduce/capacity_recovery.py",
+    "scripts/reproduce/instance_generator.py",
+    "scripts/reproduce/model.py",
+    "scripts/reproduce/solution_io.py",
+)
 
 
 def main() -> None:
@@ -55,9 +82,13 @@ def main() -> None:
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     evaluation = EvaluationConfig.for_version(args.model_version)
+    store = RunStore(output_dir)
+    budget_payload = asdict(budget)
+    source_fp = source_fingerprint(REPO_ROOT, SOURCE_FILES)
 
-    records: list[tuple[BenchmarkSpec, int, int, AlgorithmRun]] = []
+    records: list[dict[str, object]] = []
     instance_rows: list[dict[str, object]] = []
+    skipped = 0
     total = sum(
         1 if algorithm not in STOCHASTIC_ALGORITHMS else solver_repeats
         for _spec in specs
@@ -72,6 +103,11 @@ def main() -> None:
                 instance_seed=instance_seed,
                 model_version=args.model_version,
             )
+            instance_file = store.save_instance(instance)
+            physical_hash = physical_instance_hash(instance)
+            # A benchmark run plans and executes under the same model, so the
+            # shared execution environment is the instance itself.
+            store.save_execution_instance(instance)
             nominal_fleet_capacity = sum(
                 vehicle.capacity_ton * vehicle.count for vehicle in instance.vehicles
             )
@@ -80,6 +116,7 @@ def main() -> None:
                     **spec.row(),
                     "instance_seed": instance_seed,
                     "instance": instance.base.name,
+                    "physical_instance_hash": physical_hash,
                     "edges": instance.base.graph.number_of_edges(),
                     "damaged_edges": len(instance.base.damaged_edges),
                     "suppliers": len(instance.base.suppliers),
@@ -97,6 +134,24 @@ def main() -> None:
                 for repeat in range(repeats):
                     run_idx += 1
                     solver_seed = args.solver_seed_start + instance_seed * 10_000 + repeat
+                    run_key = make_run_key(
+                        case_id=spec.case_id,
+                        instance_seed=instance_seed,
+                        algorithm=algorithm,
+                        solver_seed=solver_seed,
+                        solver_repeat=repeat,
+                        budget=budget_payload,
+                        model_fingerprint_value=model_fingerprint(instance),
+                        source_fingerprint=source_fp,
+                    )
+                    if args.resume and store.has_complete_run(run_key):
+                        records.append(store.load_run(run_key))
+                        skipped += 1
+                        print(
+                            f"[{run_idx}/{total}] {run_key} already complete, skipped",
+                            flush=True,
+                        )
+                        continue
                     print(
                         f"[{run_idx}/{total}] {spec.case_id}/instance={instance_seed} "
                         f"algorithm={algorithm}/solver={solver_seed}",
@@ -108,22 +163,54 @@ def main() -> None:
                         budget,
                         seed=solver_seed,
                     )
-                    records.append((spec, instance_seed, solver_seed, result))
+                    record = build_run_record(
+                        run_key=run_key,
+                        case_id=spec.case_id,
+                        suite=args.suite,
+                        source=spec.source,
+                        size_group=spec.size_group,
+                        num_nodes=spec.num_nodes,
+                        instance_seed=instance_seed,
+                        solver_seed=solver_seed,
+                        solver_repeat=repeat,
+                        algorithm=algorithm,
+                        instance=instance,
+                        front=result.front,
+                        representative=result.representative,
+                        evaluations=result.evaluations,
+                        runtime_seconds=result.runtime_seconds,
+                        convergence=result.convergence,
+                        budget=budget_payload,
+                        termination_reason=result.termination_reason,
+                        source_fingerprint_value=source_fp,
+                        extra={
+                            "diagnostics": result.diagnostics,
+                            "instance_file": instance_file,
+                        },
+                    )
+                    store.save_run(record)
+                    records.append(record)
                     objectives = result.representative.objectives or (math.inf,) * 3
                     print(
                         f"  front={len(result.front)} evals={result.evaluations} "
                         f"unmet={objectives[0]:.4f} min_sat={-objectives[2]:.4f} "
-                        f"runtime={result.runtime_seconds:.3f}s",
+                        f"runtime={result.runtime_seconds:.3f}s "
+                        f"stop={result.termination_reason}",
                         flush=True,
                     )
 
-    run_rows, pareto_rows, convergence_rows = _result_rows(records)
-    _attach_quality_indicators(records, run_rows)
+    reference_faces = _attach_pooled_quality(records)
+    for record in records:
+        # Rewrite each run once with its pooled quality indicators so a resumed
+        # run does not need the whole directory to be re-scored.
+        store.save_run(record)
+
     _write_csv(output_dir / "instances.csv", _unique_rows(instance_rows))
-    _write_csv(output_dir / "runs.csv", run_rows)
-    _write_csv(output_dir / "pareto_points.csv", pareto_rows)
-    _write_csv(output_dir / "convergence.csv", convergence_rows)
-    _write_csv(output_dir / "aggregate_by_size.csv", _aggregate_rows(run_rows))
+    write_store_indexes(store, records, reference_front_by_case=reference_faces)
+    _write_csv(
+        output_dir / "aggregate_by_size.csv",
+        _aggregate_rows([run_summary_row(record) for record in records]),
+    )
     _write_manifest(
         output_dir / "experiment_manifest.json",
         args=args,
@@ -132,8 +219,14 @@ def main() -> None:
         solver_repeats=solver_repeats,
         budget=budget,
         evaluation=evaluation,
+        source_fp=source_fp,
+        planned_runs=total,
+        completed_runs=len(records),
+        skipped_runs=skipped,
     )
-    print(f"Done. Benchmark outputs written to {output_dir}")
+    print(
+        f"Done. {len(records)} run records ({skipped} resumed) in {output_dir}"
+    )
 
 
 def _parse_args() -> argparse.Namespace:
@@ -162,6 +255,14 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--mutation-probability", type=float, default=0.20)
     parser.add_argument("--alns-probability", type=float, default=0.35)
     parser.add_argument("--alns-iterations", type=int, default=4)
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help=(
+            "Skip runs whose complete record already exists with exactly "
+            "matching instance, model, algorithm, budget and source fingerprint."
+        ),
+    )
     parser.add_argument("--output-dir", default="outputs/benchmark")
     args = parser.parse_args()
     if args.solver_repeats is not None and args.solver_repeats < 1:
@@ -205,95 +306,32 @@ def _default_solver_repeats(suite: str) -> int:
     return {"smoke": 1, "benchmark": 10, "publication": 30}[suite]
 
 
-def _result_rows(
-    records: list[tuple[BenchmarkSpec, int, int, AlgorithmRun]],
-) -> tuple[list[dict[str, object]], list[dict[str, object]], list[dict[str, object]]]:
-    run_rows: list[dict[str, object]] = []
-    pareto_rows: list[dict[str, object]] = []
-    convergence_rows: list[dict[str, object]] = []
-    for spec, instance_seed, solver_seed, result in records:
-        representative = result.representative
-        objectives = representative.objectives or (math.inf,) * 3
-        metrics = representative.metrics or {}
-        key = _run_key(spec.case_id, instance_seed, result.algorithm, solver_seed)
-        run_rows.append(
-            {
-                "run_key": key,
-                "case_id": spec.case_id,
-                "source": spec.source,
-                "size_group": spec.size_group,
-                "num_nodes": spec.num_nodes,
-                "instance_seed": instance_seed,
-                "solver_seed": solver_seed,
-                "algorithm": result.algorithm,
-                "evaluations": result.evaluations,
-                "runtime_seconds": result.runtime_seconds,
-                "pareto_size": len(result.front),
-                "unmet_area": objectives[0],
-                "time_cost": objectives[1],
-                "neg_min_satisfaction": objectives[2],
-                "final_total_satisfaction": metrics.get("final_total_satisfaction", 0.0),
-                "final_min_satisfaction": metrics.get("final_min_satisfaction", 0.0),
-                "average_reachable_ratio": metrics.get("average_reachable_ratio", 0.0),
-                "final_repaired_ratio": metrics.get("final_repaired_ratio", 0.0),
-            }
-        )
-        for point_idx, individual in enumerate(result.front, start=1):
-            point_objectives = individual.objectives or (math.inf,) * 3
-            point_metrics = individual.metrics or {}
-            pareto_rows.append(
-                {
-                    "run_key": key,
-                    "case_id": spec.case_id,
-                    "size_group": spec.size_group,
-                    "instance_seed": instance_seed,
-                    "solver_seed": solver_seed,
-                    "algorithm": result.algorithm,
-                    "point_id": point_idx,
-                    "decision_hash": _decision_hash(individual),
-                    "unmet_area": point_objectives[0],
-                    "time_cost": point_objectives[1],
-                    "neg_min_satisfaction": point_objectives[2],
-                    "final_total_satisfaction": point_metrics.get("final_total_satisfaction", 0.0),
-                    "final_min_satisfaction": point_metrics.get("final_min_satisfaction", 0.0),
-                }
-            )
-        for row in result.convergence:
-            convergence_rows.append(
-                {
-                    "run_key": key,
-                    "case_id": spec.case_id,
-                    "size_group": spec.size_group,
-                    "instance_seed": instance_seed,
-                    "solver_seed": solver_seed,
-                    "algorithm": result.algorithm,
-                    **row,
-                }
-            )
-    return run_rows, pareto_rows, convergence_rows
+def _attach_pooled_quality(
+    records: list[dict[str, object]],
+) -> dict[tuple[str, int], dict[str, object]]:
+    """Score every run against one pooled front per benchmark instance.
 
+    Pooling across algorithms and repeats keeps a single normalization and a
+    single reference front, so no run is scored against a reference it chose.
+    """
+    groups: dict[tuple[str, int], list[int]] = defaultdict(list)
+    for index, record in enumerate(records):
+        groups[(str(record["case_id"]), int(record["instance_seed"]))].append(index)
 
-def _attach_quality_indicators(
-    records: list[tuple[BenchmarkSpec, int, int, AlgorithmRun]],
-    run_rows: list[dict[str, object]],
-) -> None:
-    groups: dict[tuple[str, int], list[tuple[int, AlgorithmRun]]] = defaultdict(list)
-    for idx, (spec, instance_seed, _solver_seed, result) in enumerate(records):
-        groups[(spec.case_id, instance_seed)].append((idx, result))
-
-    for grouped in groups.values():
+    reference_faces: dict[tuple[str, int], dict[str, object]] = {}
+    for key, indices in groups.items():
         fronts = [
             [
-                individual.objectives
-                for individual in result.front
-                if individual.objectives is not None
+                tuple(solution["objectives"])
+                for solution in (records[index].get("pareto_front") or [])
             ]
-            for _row_idx, result in grouped
+            for index in indices
         ]
         quality_rows, metadata = pooled_quality_indicators(fronts)
-        for (row_idx, _result), quality in zip(grouped, quality_rows):
-            run_rows[row_idx].update(quality)
-            run_rows[row_idx]["reference_front_size"] = metadata["reference_front_size"]
+        for index, quality in zip(indices, quality_rows):
+            records[index].update(quality)
+        reference_faces[key] = {"size": metadata["reference_front_size"]}
+    return reference_faces
 
 
 def _non_dominated(points: Iterable[tuple[float, float, float]]) -> list[tuple[float, float, float]]:
@@ -421,10 +459,13 @@ def _aggregate_rows(run_rows: list[dict[str, object]]) -> list[dict[str, object]
         "igd",
         "runtime_seconds",
         "evaluations",
-        "unmet_area",
-        "time_cost",
+        "pareto_size",
+        "F1",
+        "F2",
+        "F3",
         "final_total_satisfaction",
         "final_min_satisfaction",
+        "zero_service_ratio",
     )
     output: list[dict[str, object]] = []
     for (size_group, algorithm), rows in sorted(groups.items()):
@@ -435,7 +476,13 @@ def _aggregate_rows(run_rows: list[dict[str, object]]) -> list[dict[str, object]
             "instances": len({(row["case_id"], row["instance_seed"]) for row in rows}),
         }
         for metric in metrics:
-            values = [float(row[metric]) for row in rows]
+            values = [
+                float(row[metric])
+                for row in rows
+                if row.get(metric) is not None
+            ]
+            if not values:
+                continue
             aggregate[f"{metric}_mean"] = statistics.fmean(values)
             aggregate[f"{metric}_sd"] = statistics.stdev(values) if len(values) > 1 else 0.0
             aggregate[f"{metric}_median"] = statistics.median(values)
@@ -452,11 +499,20 @@ def _write_manifest(
     solver_repeats: int,
     budget: BenchmarkBudget,
     evaluation: EvaluationConfig,
+    source_fp: str,
+    planned_runs: int,
+    completed_runs: int,
+    skipped_runs: int,
 ) -> None:
     manifest = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "model_version": evaluation.model_version,
         "evaluation": evaluation.as_dict(),
         "evaluation_fingerprint": evaluation.fingerprint(),
+        "source_fingerprint": source_fp,
+        "planned_runs": planned_runs,
+        "completed_runs": completed_runs,
+        "resumed_runs": skipped_runs,
         "git_sha": _git_sha(),
         "git_dirty": _git_dirty(),
         "source_files_sha256": _source_hashes(),
@@ -506,35 +562,11 @@ def _git_dirty() -> bool | None:
 
 
 def _source_hashes() -> dict[str, str]:
-    root = Path(__file__).resolve().parents[2]
-    paths = (
-        Path("scripts/reproduce/run_benchmark.py"),
-        Path("scripts/reproduce/benchmark_suite.py"),
-        Path("scripts/reproduce/benchmark_algorithms.py"),
-        Path("scripts/reproduce/instance_generator.py"),
-        Path("scripts/reproduce/capacity_recovery.py"),
-    )
-    hashes: dict[str, str] = {}
-    for relative_path in paths:
-        path = root / relative_path
-        if path.is_file():
-            hashes[str(relative_path)] = hashlib.sha256(path.read_bytes()).hexdigest()
-    return hashes
-
-
-def _run_key(case_id: str, instance_seed: int, algorithm: str, solver_seed: int) -> str:
-    return f"{case_id}:i{instance_seed}:{algorithm}:s{solver_seed}"
+    return source_hashes(REPO_ROOT, SOURCE_FILES)
 
 
 def _decision_hash(individual: CapacityIndividual) -> str:
-    payload = repr(
-        (
-            tuple(individual.repair_order),
-            tuple(individual.team_assignment),
-            tuple(individual.dispatch_priority),
-        )
-    ).encode("utf-8")
-    return hashlib.sha256(payload).hexdigest()[:16]
+    return solution_decision_hash(individual)
 
 
 def _unique_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:

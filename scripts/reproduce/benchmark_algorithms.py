@@ -30,8 +30,19 @@ from scripts.reproduce.capacity_recovery import (
 )
 
 
-ALGORITHMS = ("spt", "vnd", "nsga2", "nsga2_alns")
-STOCHASTIC_ALGORITHMS = frozenset({"vnd", "nsga2", "nsga2_alns"})
+ALGORITHMS = ("spt", "vnd", "nsga2", "nsga2_ls", "nsga2_alns")
+STOCHASTIC_ALGORITHMS = frozenset({"vnd", "nsga2", "nsga2_ls", "nsga2_alns"})
+
+# Search groups that wrap NSGA-II with local improvement.
+LOCAL_SEARCH_ALGORITHMS = frozenset({"nsga2_ls", "nsga2_alns"})
+
+# A generation that evaluates nothing new cannot make progress. Give up after a
+# few of them instead of spinning on cached clones, and record why.
+MAX_STALLED_GENERATIONS = 3
+
+STOP_BUDGET_EXHAUSTED = "budget_exhausted"
+STOP_NO_PROGRESS = "no_progress"
+STOP_SINGLE_PASS = "single_pass"
 
 
 @dataclass(frozen=True)
@@ -52,20 +63,50 @@ class AlgorithmRun:
     runtime_seconds: float
     evaluations: int
     convergence: list[dict[str, float]] = field(default_factory=list)
+    # Why the search stopped: "budget_exhausted", "no_progress", "single_pass".
+    # Never claim a budget was used that was not.
+    termination_reason: str = "budget_exhausted"
+    # Search diagnostics counted separately from real evaluator calls.
+    diagnostics: dict[str, float] = field(default_factory=dict)
 
 
 class _Evaluator:
+    """Single accounting point for every real objective evaluation.
+
+    Every candidate that is actually evaluated is snapshotted here, including
+    local-search trials and rejected candidates, so the returned front can be
+    built from all evaluated candidates rather than only the one individual a
+    local search happened to return.
+    """
+
     def __init__(self, instance: CapacityExperimentInstance, limit: int):
         self.instance = instance
         self.limit = limit
         self.count = 0
+        self.proposals = 0
+        self.cache_hits = 0
+        self.local_search_evaluations = 0
+        self.operator_proposals: dict[str, int] = {}
+        self.evaluated: list[CapacityIndividual] = []
 
     @property
     def remaining(self) -> int:
         return max(0, self.limit - self.count)
 
-    def evaluate(self, individual: CapacityIndividual) -> bool:
+    def evaluate(
+        self,
+        individual: CapacityIndividual,
+        *,
+        operator: str | None = None,
+        local_search: bool = False,
+    ) -> bool:
+        self.proposals += 1
+        if operator is not None:
+            self.operator_proposals[operator] = self.operator_proposals.get(operator, 0) + 1
         if individual.objectives is not None:
+            # A cached objective is reused, not re-evaluated, and is never
+            # reported as a fresh budgeted evaluation.
+            self.cache_hits += 1
             return True
         if self.count >= self.limit:
             return False
@@ -74,6 +115,11 @@ class _Evaluator:
             individual,
         )
         self.count += 1
+        if local_search:
+            self.local_search_evaluations += 1
+        # Snapshot the decision: later mutation of the caller's object must not
+        # rewrite what was evaluated.
+        self.evaluated.append(individual.clone())
         return True
 
     def population(self, population: list[CapacityIndividual]) -> list[CapacityIndividual]:
@@ -83,6 +129,19 @@ class _Evaluator:
                 break
             evaluated.append(individual)
         return evaluated
+
+    def archive_candidates(self) -> list[CapacityIndividual]:
+        """All distinct decisions actually evaluated, in evaluation order."""
+        return list(self.evaluated)
+
+    def diagnostics(self) -> dict[str, float]:
+        return {
+            "proposals": float(self.proposals),
+            "evaluations": float(self.count),
+            "cache_hits": float(self.cache_hits),
+            "local_search_evaluations": float(self.local_search_evaluations),
+            "distinct_evaluated": float(len(self.evaluated)),
+        }
 
 
 def solve_benchmark_algorithm(
@@ -104,15 +163,20 @@ def solve_benchmark_algorithm(
     rng = random.Random(seed)
     if algorithm == "spt":
         front, convergence = _solve_spt(instance, evaluator)
+        termination_reason = STOP_SINGLE_PASS
     elif algorithm == "vnd":
-        front, convergence = _solve_vnd(instance, evaluator, rng)
+        front, convergence, termination_reason = _solve_vnd(instance, evaluator, rng)
     else:
-        front, convergence = _solve_nsga(
+        # nsga2_ls uses the same operators, acceptance and call probability as
+        # nsga2_alns but selects them uniformly instead of adapting weights, so
+        # adaptive selection can be separated from local search itself.
+        front, convergence, termination_reason = _solve_nsga(
             instance,
             evaluator,
             budget,
             rng,
-            use_alns=algorithm == "nsga2_alns",
+            use_local_search=algorithm in LOCAL_SEARCH_ALGORITHMS,
+            adaptive=algorithm == "nsga2_alns",
         )
     _assign_crowding(front)
     representative = min(front, key=_representative_key)
@@ -123,6 +187,8 @@ def solve_benchmark_algorithm(
         runtime_seconds=time.perf_counter() - start,
         evaluations=evaluator.count,
         convergence=convergence,
+        termination_reason=termination_reason,
+        diagnostics=evaluator.diagnostics(),
     )
 
 
@@ -175,22 +241,23 @@ def _solve_vnd(
     instance: CapacityExperimentInstance,
     evaluator: _Evaluator,
     rng: random.Random,
-) -> tuple[list[CapacityIndividual], list[dict[str, float]]]:
+) -> tuple[list[CapacityIndividual], list[dict[str, float]], str]:
     current = _greedy_individual(instance)
     evaluator.evaluate(current)
-    archive = [current.clone()]
     convergence = [_convergence_row(evaluator.count, current)]
     operators = _local_operators()
     operator_idx = 0
     failures = 0
+    termination_reason = STOP_BUDGET_EXHAUSTED
     while evaluator.remaining > 0:
         candidate = current.clone()
         operators[operator_idx](instance, candidate, rng)
         candidate.objectives = None
         candidate.metrics = None
-        evaluator.evaluate(candidate)
-        archive = _update_pareto_archive(archive, [candidate])
-        if _accept_improvement(candidate, current):
+        if not evaluator.evaluate(candidate, operator=operators[operator_idx].__name__):
+            termination_reason = STOP_BUDGET_EXHAUSTED
+            break
+        if _accept_improvement(instance, candidate, current):
             current = candidate
             operator_idx = 0
             failures = 0
@@ -201,10 +268,15 @@ def _solve_vnd(
                 # A small restart prevents VND from being trapped by the SPT seed.
                 current = _create_individual(instance, rng)
                 evaluator.evaluate(current)
-                archive = _update_pareto_archive(archive, [current])
                 failures = 0
-        convergence.append(_convergence_row(evaluator.count, min(archive, key=_representative_key)))
-    return archive, convergence
+        convergence.append(
+            _convergence_row(
+                evaluator.count,
+                min(evaluator.archive_candidates(), key=_representative_key),
+            )
+        )
+    front = _archived_front(instance, evaluator)
+    return front, convergence, termination_reason
 
 
 def _solve_nsga(
@@ -213,14 +285,29 @@ def _solve_nsga(
     budget: BenchmarkBudget,
     rng: random.Random,
     *,
-    use_alns: bool,
-) -> tuple[list[CapacityIndividual], list[dict[str, float]]]:
+    use_local_search: bool,
+    adaptive: bool,
+) -> tuple[list[CapacityIndividual], list[dict[str, float]], str]:
     initial_size = min(budget.pop_size, evaluator.remaining)
     population = [_create_individual(instance, rng) for _ in range(initial_size)]
     population = evaluator.population(population)
-    archive = _update_pareto_archive([], population)
-    convergence = [_convergence_row(evaluator.count, min(archive, key=_representative_key))]
-    alns = _AdaptiveOperators(_local_operators())
+    convergence = [
+        _convergence_row(
+            evaluator.count,
+            min(evaluator.archive_candidates(), key=_representative_key),
+        )
+    ]
+    selector = _AdaptiveOperators(_local_operators(), adaptive=adaptive)
+    # Local search is skipped entirely when it is switched off, so no operator
+    # randomness is consumed and the evaluation sequence matches plain NSGA-II.
+    local_search_enabled = (
+        use_local_search
+        and budget.alns_iterations > 0
+        and budget.alns_probability > 0.0
+    )
+    termination_reason = STOP_BUDGET_EXHAUSTED
+    stalled = 0
+    previous_count = evaluator.count
 
     while evaluator.remaining > 0 and len(population) >= 2:
         _assign_rank_and_crowding(population)
@@ -236,12 +323,12 @@ def _solve_nsga(
                 _mutate(instance, child, budget.mutation_probability, rng)
                 if not evaluator.evaluate(child):
                     break
-                if use_alns and rng.random() < budget.alns_probability:
+                if local_search_enabled and rng.random() < budget.alns_probability:
                     child = _adaptive_improve(
                         instance,
                         child,
                         evaluator,
-                        alns,
+                        selector,
                         budget.alns_iterations,
                         rng,
                     )
@@ -250,15 +337,42 @@ def _solve_nsga(
                     break
         if not offspring:
             break
-        archive = _update_pareto_archive(archive, population + offspring)
         population = _select_next_generation(
             population + offspring,
             min(budget.pop_size, len(population) + len(offspring)),
         )
         convergence.append(
-            _convergence_row(evaluator.count, min(archive, key=_representative_key))
+            _convergence_row(
+                evaluator.count,
+                min(evaluator.archive_candidates(), key=_representative_key),
+            )
         )
-    return archive, convergence
+        # A combination such as crossover=0 with mutation=0 rebuilds only
+        # already-evaluated clones. Stop after a bounded number of such
+        # generations instead of looping until the budget is faked.
+        if evaluator.count == previous_count:
+            stalled += 1
+            if stalled >= MAX_STALLED_GENERATIONS:
+                termination_reason = STOP_NO_PROGRESS
+                break
+        else:
+            stalled = 0
+            previous_count = evaluator.count
+    if evaluator.remaining <= 0:
+        termination_reason = STOP_BUDGET_EXHAUSTED
+    front = _archived_front(instance, evaluator)
+    return front, convergence, termination_reason
+
+
+def _archived_front(
+    instance: CapacityExperimentInstance,
+    evaluator: _Evaluator,
+) -> list[CapacityIndividual]:
+    """Non-dominated front over every decision the run actually evaluated."""
+    front = _update_pareto_archive([], evaluator.archive_candidates())
+    if not front:
+        raise RuntimeError("evaluator produced no candidates to archive")
+    return front
 
 
 Operator = Callable[[CapacityExperimentInstance, CapacityIndividual, random.Random], None]
@@ -275,15 +389,27 @@ def _local_operators() -> list[Operator]:
 
 
 class _AdaptiveOperators:
-    def __init__(self, operators: list[Operator]):
+    """Operator chooser.
+
+    ``adaptive=True`` keeps rewarded weights; ``adaptive=False`` picks uniformly
+    and ignores rewards entirely, which is the nsga2_ls control.
+    """
+
+    def __init__(self, operators: list[Operator], *, adaptive: bool = True):
         self.operators = operators
+        self.adaptive = adaptive
         self.weights = [1.0] * len(operators)
 
     def choose(self, rng: random.Random) -> tuple[int, Operator]:
-        idx = rng.choices(range(len(self.operators)), weights=self.weights, k=1)[0]
+        if self.adaptive:
+            idx = rng.choices(range(len(self.operators)), weights=self.weights, k=1)[0]
+        else:
+            idx = rng.randrange(len(self.operators))
         return idx, self.operators[idx]
 
     def reward(self, idx: int, value: float, reaction: float = 0.20) -> None:
+        if not self.adaptive:
+            return
         self.weights[idx] = (1.0 - reaction) * self.weights[idx] + reaction * value
 
 
@@ -297,7 +423,7 @@ def _adaptive_improve(
 ) -> CapacityIndividual:
     current = initial.clone()
     best = current.clone()
-    temperature = max(abs(_weighted_score(current)) * 0.02, 1e-6)
+    temperature = max(abs(_score(instance, current)) * 0.02, 1e-6)
     for _ in range(iterations):
         if evaluator.remaining <= 0:
             break
@@ -306,14 +432,21 @@ def _adaptive_improve(
         operator(instance, candidate, rng)
         candidate.objectives = None
         candidate.metrics = None
-        evaluator.evaluate(candidate)
-        delta = _weighted_score(candidate) - _weighted_score(current)
-        accepted = _accept_improvement(candidate, current)
+        # Local-search trials count against the same budget and are archived
+        # like any other evaluated candidate.
+        if not evaluator.evaluate(
+            candidate,
+            operator=operator.__name__,
+            local_search=True,
+        ):
+            break
+        delta = _score(instance, candidate) - _score(instance, current)
+        accepted = _accept_improvement(instance, candidate, current)
         if not accepted and delta > 0:
             accepted = rng.random() < math.exp(-delta / max(temperature, 1e-9))
         if accepted:
             current = candidate
-            if _accept_improvement(candidate, best):
+            if _accept_improvement(instance, candidate, best):
                 best = candidate.clone()
                 adaptive.reward(idx, 5.0)
             else:
@@ -324,12 +457,55 @@ def _adaptive_improve(
     return best
 
 
-def _accept_improvement(candidate: CapacityIndividual, incumbent: CapacityIndividual) -> bool:
+def _accept_improvement(
+    instance: CapacityExperimentInstance,
+    candidate: CapacityIndividual,
+    incumbent: CapacityIndividual,
+) -> bool:
     if candidate.objectives is None or incumbent.objectives is None:
         return False
     return _dominates(candidate.objectives, incumbent.objectives) or (
-        _weighted_score(candidate) < _weighted_score(incumbent)
+        _score(instance, candidate) < _score(instance, incumbent)
     )
+
+
+def _score(instance: CapacityExperimentInstance, individual: CapacityIndividual) -> float:
+    """Scalar used only by scalar-dependent acceptance logic.
+
+    Outer NSGA-II still ranks by non-dominance and crowding distance.
+    """
+    if instance.evaluation.model_version == "v2":
+        return _normalized_score(instance, individual)
+    return _weighted_score(individual)
+
+
+def _normalized_score(
+    instance: CapacityExperimentInstance,
+    individual: CapacityIndividual,
+) -> float:
+    """Deterministic, instance-level normalized score.
+
+    The scale is fixed by physical magnitudes and known before the run starts.
+    It never uses the run's own ideal or nadir points, so a run cannot make its
+    own candidates look better by having explored badly. Record the raw
+    objectives alongside it: this scale may be loose.
+    """
+    objectives = individual.objectives
+    if objectives is None:
+        return math.inf
+    base = instance.base
+    periods = max(base.periods, 1)
+    fleet_size = sum(vehicle.count for vehicle in instance.vehicles)
+    horizon_minutes = float(base.horizon_minutes)
+    f1 = objectives[0] / periods
+    denominator = max(
+        horizon_minutes * fleet_size
+        + instance.repair_time_weight * base.repair_crews * horizon_minutes,
+        1.0,
+    )
+    f2 = objectives[1] / denominator
+    f3 = objectives[2] + 1.0
+    return (f1 + f2 + f3) / 3.0
 
 
 def _representative_key(individual: CapacityIndividual) -> tuple[float, float, float]:
