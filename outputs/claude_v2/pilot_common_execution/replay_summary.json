@@ -1,0 +1,9 @@
+{
+  "input_root": "outputs/claude_v2/pilot_planning",
+  "output_dir": "outputs/claude_v2/pilot_common_execution",
+  "execution_model": "full",
+  "solutions": 152,
+  "failures": 0,
+  "abs_tolerance": 1e-08,
+  "rel_tolerance": 1e-08
+}

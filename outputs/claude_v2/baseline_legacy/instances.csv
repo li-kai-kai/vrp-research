@@ -1,0 +1,2 @@
+case_id,size_group,num_nodes,gamma,damage_ratio,eta_hours,capacity_scale,supply_ratio,source,fleet_capacity_ratio,instance_seed,instance,physical_instance_hash,edges,damaged_edges,suppliers,demands,repair_crews,vehicles,nominal_fleet_capacity_per_period,realized_fleet_capacity_ratio
+S020,small,20,3,0.15,8,0.05,0.9,synthetic,0.14,101,S020_seed101,dc32d088865a735a71c3688fcdcdf651ac6cfd549ea21a4011388179513a9a9f,60,9,2,7,2,12,115.0,0.1359338061465721

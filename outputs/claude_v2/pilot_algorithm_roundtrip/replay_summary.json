@@ -1,0 +1,14 @@
+{
+  "input_root": "outputs/claude_v2/pilot_algorithm",
+  "output_dir": "outputs/claude_v2/pilot_algorithm_roundtrip",
+  "execution_model": "saved",
+  "solutions": 467,
+  "failures": 0,
+  "abs_tolerance": 1e-08,
+  "rel_tolerance": 1e-08,
+  "max_abs_error_F1": 0.0,
+  "max_abs_error_F2": 0.0,
+  "max_abs_error_F3": 0.0,
+  "max_rel_error_F1": 0.0,
+  "max_rel_error_F1_missing_rows": 0
+}

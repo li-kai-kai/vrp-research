@@ -175,8 +175,15 @@ Full 组自身的规划目标与执行回放**逐位一致**（最大绝对差 0
 代码指纹；`runs/<run_key>.json` 自带 `record_sha256` 完整性校验，`instances/` 与 `executions/` 各带 `snapshot_sha256`。
 `runs.csv`、`solutions.jsonl`、`pareto_points.csv`、`convergence.csv` 均可由运行文件再生。
 
-上表路径均相对仓库根目录，且已纳入版本控制。manifest 中的 `git_sha`/`git_dirty` 记录的是**产生该结果时**的代码状态，
-不会随之后的提交改变，因此可以直接判断产物与哪一版代码对应。
+上表路径均相对仓库根目录，且已纳入版本控制。
+
+**产物与代码的对应关系可直接验证**：运行记录里的 `source_fingerprint` 是产生该结果时源文件的哈希，
+`run_key` 也把它计入。因此用同一命令加 `--resume` 重跑，若**全部跳过**即证明当前代码与产生该结果的代码逐字节相同；
+若代码有实质变化，入口会直接报错要求换目录，不会静默混用。本轮已实测：`pilot_algorithm` 18/18、
+`pilot_planning` 8/8 全部跳过。
+
+manifest 中的 `git_sha` 指向产生结果的代码提交（本轮为 `8b7a0cdb`）；`git_dirty=true` 是因为写入产物时
+这些产物本身尚未提交，属于生成型产物的正常状态，不代表代码被临时修改。
 
 ## 7. 仍未解决的问题
 

@@ -1,0 +1,72 @@
+{
+  "created_at_utc": "2026-09-20T07:09:39.149609+00:00",
+  "model_version": "legacy",
+  "evaluation": {
+    "model_version": "legacy",
+    "fair_share_cap": true,
+    "dispatch_timing": "period_end_legacy",
+    "enforce_within_period_arrival": false,
+    "fleet_semantics": "exogenous_period_trip_budget"
+  },
+  "evaluation_fingerprint": "af901b60821c3687",
+  "source_fingerprint": "410ed603740f870a6de0c508ae5a424bd801f8b27c0c3a5a15f0e445983ee0d2",
+  "planned_runs": 2,
+  "completed_runs": 2,
+  "resumed_runs": 0,
+  "git_sha": "8b7a0cdbe9e5132ba1afc874f8658116f0d05db1",
+  "git_dirty": true,
+  "source_files_sha256": {
+    "scripts/reproduce/run_benchmark.py": "5094b0c7f19ea74397f197c1792f2f25d8976869ed8a713b4ece639271d52cf2",
+    "scripts/reproduce/benchmark_suite.py": "40667610f5b8ec43058e70fb84738796be286bc60d1b50ab17987437831c16ed",
+    "scripts/reproduce/benchmark_algorithms.py": "bfe70716797134671b94a1abad37b16f6bdc8bb4e3dc31e45bb318c952f37dd2",
+    "scripts/reproduce/capacity_recovery.py": "97bc2add937e5fe671333f87a9eaf7e5fc5725723f6be982d5e75237ca308823",
+    "scripts/reproduce/instance_generator.py": "f121ea469e6bc7f547abc1b241c0baa35792960e465bdca0ea90098307712021",
+    "scripts/reproduce/model.py": "ca01ca70a94751139e2e082c99e13d23b09bfcbf6088061e1a09dbdce43528e2",
+    "scripts/reproduce/solution_io.py": "13274d9b285a9757628110ec2d902aa3b23af22b731632553c89ca153e064a82"
+  },
+  "python": "3.12.11 (main, Sep  2 2025, 14:12:30) [Clang 20.1.4 ]",
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "suite": "smoke",
+  "cases": [
+    {
+      "case_id": "S020",
+      "size_group": "small",
+      "num_nodes": 20,
+      "gamma": 3,
+      "damage_ratio": 0.15,
+      "eta_hours": 8,
+      "capacity_scale": 0.05,
+      "supply_ratio": 0.9,
+      "source": "synthetic",
+      "fleet_capacity_ratio": 0.14
+    }
+  ],
+  "instance_seeds": [
+    101
+  ],
+  "solver_seed_start": 50000,
+  "solver_repeats_stochastic": 1,
+  "deterministic_repeats": 1,
+  "algorithms": [
+    "spt",
+    "nsga2"
+  ],
+  "budget": {
+    "max_evaluations": 12,
+    "pop_size": 4,
+    "crossover_probability": 0.9,
+    "mutation_probability": 0.2,
+    "alns_probability": 0.35,
+    "alns_iterations": 4
+  },
+  "objectives": [
+    "min_unmet_area",
+    "min_time_cost",
+    "min_neg_min_satisfaction"
+  ],
+  "representative_rule": "lexicographic min of (F3, F1, F2), applied before any replay and recorded per solution as representative_selected_before_replay",
+  "quality_indicators": {
+    "hypervolume": "exact normalized 3D HV; pooled reference point (1.1, 1.1, 1.1)",
+    "igd": "normalized Euclidean IGD to pooled non-dominated front per instance"
+  }
+}
