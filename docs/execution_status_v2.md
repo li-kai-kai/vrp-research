@@ -3,7 +3,7 @@
 状态只允许四种取值：**待执行**、**执行中**、**通过**、**阻塞**。
 最后更新：2026-09-20（文档一致性清理轮）。当前基准 HEAD：`7c7a6ab`。
 
-**当前状态**：全量测试 `uv run python -m unittest discover -s tests -v` → **161 个，161 通过，0 失败，0 错误**。
+**当前状态**：全量测试 `uv run python -m unittest discover -s tests -v` → **167 个，167 通过，0 失败，0 错误**。
 **当前结论依据目录**：`outputs/claude_v2_reviewfix2/`。`outputs/claude_v2/`（首轮）与
 `outputs/claude_v2_reviewfix/`（第一轮修正后）**仅作为修复历史与前后对照**，不再作为当前结果。
 
@@ -65,7 +65,7 @@ uv run python scripts/reproduce/run_benchmark.py \
 
 ## P5 执行记录（当前状态，取自 `outputs/claude_v2_reviewfix2/`）
 
-当前全量测试：`uv run python -m unittest discover -s tests -v` → **161 个，161 通过，0 失败，0 错误**。
+当前全量测试：`uv run python -m unittest discover -s tests -v` → **167 个，167 通过，0 失败，0 错误**。
 执行的诊断命令、评价预算核对、算法与模型诊断结果、产物路径与限制全部见
 [v2 小预算诊断报告](pilot_v2_report.md)。
 
@@ -84,7 +84,7 @@ uv run python scripts/reproduce/run_benchmark.py \
 ## R1–R5 复审修正
 
 首轮 P0–P5 交付后审读提出的五项问题**全部复现属实**并已修复。
-该轮完成时回归用例为 110 个（当时值）；当前总数为 161 个（含机制诊断 31 例）。
+该轮完成时回归用例为 110 个（当时值）；当前总数为 167 个（含机制诊断 37 例）。
 本轮结论依据当时为 `outputs/claude_v2_reviewfix/`，现已被第二轮取代。
 
 | 项 | 问题 | 修复 | 回归（当前用例数） |
@@ -110,7 +110,7 @@ uv run python scripts/reproduce/run_benchmark.py \
 | B | 从降级实例直接重新打开开关会继续携带降级数据 | `model_factor_variant` 从声明档案恢复；无档案可恢复时显式报错 | 同上 |
 
 本轮起结论依据为 `outputs/claude_v2_reviewfix2/`；`outputs/claude_v2/` 与 `outputs/claude_v2_reviewfix/` 保留为对照。
-第二轮结束时全量测试为 130 个全通过；当前为 161 个（新增机制诊断 31 例）。第二轮的两项修复
+第二轮结束时全量测试为 130 个全通过；当前为 167 个（新增机制诊断 37 例）。第二轮的两项修复
 （量化坐标、Full 曲线校验）已纳入上方阶段表的「复审第二轮」一行，属于**当前验收状态**。
 
 ## 机制适用条件诊断（当前状态）
@@ -142,7 +142,23 @@ uv run python scripts/reproduce/run_benchmark.py \
 git sha、源码哈希、python、平台、种子、网络策略与实测桥数）。
 结论与限制见[机制适用条件诊断报告](mechanism_applicability_report.md)。
 
-本轮新增回归 **31 例**（`tests/test_mechanism_applicability.py`）。
+本轮新增回归 **37 例**（`tests/test_mechanism_applicability.py`）。
+
+## 跨规模复核（S025 / S050 / M100）
+
+在三个规模、两个场景族、每规模四个实例种子各跑同一固定决策探针与资源网格（共 1120 个网格单元）。
+
+- **EC 下边缘 0.85 稳定**：三个规模上利用率 < 0.85 时 EC 从不改变目标（合并 0/776）。
+- **EC 上边缘 0.97 不是充分阈值**：合并 292/296（99%），M100 上有 4 个 ≥0.97 却不绑定的单元，
+  它们全部满足 `capacity_reroutes = 0`（利用率高但未迫使配送改变）。
+  改用 `capacity_reroutes > 0` 作为判据后合并 **296/296** 全部生效，但它仍不是定义（824 个无重路由单元中仍有 18 个改变目标）。
+- **exposure → dispatch → objective 链条出现反向破口**：objective → dispatch 在 360 对中无例外；
+  dispatch → objective 在 M100 上破 3 例（关闭 HT 后车型 2/3 通行性可互换，配送器对平局作出不同选择，
+  目标逐位相同）。因此 `*_allocations_changed` 是**保守筛选判据**（不漏报、会多报），不是定论判据。
+- M100 的 0.85–0.97 带只有 3 个单元，**采样过稀**，不足以判断边界是否随规模移动。
+
+证据表：`outputs/mechanism_probe_audit/scale_summary.csv`、`ec_band_summary.csv`、`manifest.json`。
+本轮**未修改**模型、搜索、回放、精度或 `FullExecutionProfile`。
 
 ## 保护的用户已有改动
 

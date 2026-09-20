@@ -1,15 +1,15 @@
 {
   "scope": "mechanism applicability (PR / HT / EC) diagnostic evidence; the diagnostic is read-only with respect to the model, the search, replay, numerical precision and FullExecutionProfile",
   "code": {
-    "git_sha": "52975aaa5665f2f136f80ba87e4897a0b93cf794",
+    "git_sha": "131fedb865ab2996a7336b18cbf433f66a2e74c1",
     "git_dirty": true,
     "python": "3.12.11 (main, Sep  2 2025, 14:12:30) [Clang 20.1.4 ]",
     "python_version": "3.12.11",
     "platform": "macOS-27.0-arm64-arm-64bit",
-    "created_at_utc": "2026-09-20T12:14:55.962378+00:00"
+    "created_at_utc": "2026-09-20T12:46:20.435022+00:00"
   },
   "source_hashes": {
-    "scripts/reproduce/mechanism_applicability.py": "fc943a4761aa58dd0663dec9a90e980634482eef5ced86da050861388f7e17be",
+    "scripts/reproduce/mechanism_applicability.py": "7f90ab192cfe7174035c50d74ba4c5364ee593e94bc3b2dfe6050a422563e1bc",
     "scripts/reproduce/benchmark_algorithms.py": "b5b686e955da0dbea46d78d0d94376af7aac791ec0dc56f3d9200c9b1743e034",
     "scripts/reproduce/benchmark_suite.py": "2477265e0943ae24100fbd4b093fbda5e12fc2e3f0ba38c3544d5886aba175e5",
     "scripts/reproduce/capacity_recovery.py": "5a016c1d7c0acab2e681b6d49c02a40e3d3e0d24c5d90b2b7cdf6b671a4fc817",
@@ -20,14 +20,72 @@
   "audit_builder": "scripts/reproduce/build_mechanism_audit.py",
   "provenance_note": "git_sha and git_dirty are captured when this file is written, so git_dirty is true whenever the evidence set itself is not yet committed. source_hashes is the authoritative pin: it is the content digest of the scripts that produced the probe outputs, and it is unaffected by commit timing.",
   "tables": {
-    "mechanism_summary.csv": 80,
+    "mechanism_summary.csv": 160,
     "topology_summary.csv": 4,
-    "resource_grid_summary.csv": 640,
-    "bottleneck_summary.csv": 8,
+    "scale_summary.csv": 6,
+    "ec_band_summary.csv": 24,
+    "resource_grid_summary.csv": 1120,
+    "bottleneck_summary.csv": 24,
     "zone_exposure.csv": 6,
     "zone_bottleneck.csv": 6,
     "zone_replay_summary.csv": 12
   },
+  "scale_cells": [
+    {
+      "case_id": "S025",
+      "probe_directory": "S025_random_random",
+      "scenario_family": "benchmark",
+      "size_group": "25 nodes"
+    },
+    {
+      "case_id": "S025",
+      "probe_directory": "S025_corridor",
+      "scenario_family": "corridor",
+      "size_group": "25 nodes"
+    },
+    {
+      "case_id": "S050",
+      "probe_directory": "S050_benchmark",
+      "scenario_family": "benchmark",
+      "size_group": "50 nodes"
+    },
+    {
+      "case_id": "S050",
+      "probe_directory": "S050_corridor",
+      "scenario_family": "corridor",
+      "size_group": "50 nodes"
+    },
+    {
+      "case_id": "M100",
+      "probe_directory": "M100_benchmark",
+      "scenario_family": "benchmark",
+      "size_group": "100 nodes"
+    },
+    {
+      "case_id": "M100",
+      "probe_directory": "M100_corridor",
+      "scenario_family": "corridor",
+      "size_group": "100 nodes"
+    }
+  ],
+  "ec_bands": [
+    {
+      "low": 0.0,
+      "high": 0.5
+    },
+    {
+      "low": 0.5,
+      "high": 0.85
+    },
+    {
+      "low": 0.85,
+      "high": 0.97
+    },
+    {
+      "low": 0.97,
+      "high": 1.01
+    }
+  ],
   "topology_cells": [
     {
       "cell": "fourcell_benchmark",

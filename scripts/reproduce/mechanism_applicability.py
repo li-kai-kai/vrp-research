@@ -661,8 +661,12 @@ def allocation_multiset(snapshot: PeriodSnapshot) -> list[tuple]:
 
 
 # Positions within an ``allocation_multiset`` tuple, shared by the comparison
-# so a field can never be silently compared against the wrong one.
+# so a field can never be silently compared against the wrong one. Every field
+# of the tuple has to appear here: a field left out can differ on its own while
+# every listed flag stays zero, leaving "something changed" unexplained.
 _ALLOCATION_FIELDS = (
+    ("supplier", 0),
+    ("demand", 1),
     ("route", 3),
     ("vehicle", 2),
     ("amount", 4),
@@ -683,11 +687,17 @@ def allocation_change_flags(
     look like a change in all of them.
     """
     flags = {
+        "allocation_supplier_changed": 0,
+        "allocation_demand_changed": 0,
         "allocation_route_changed": 0,
         "allocation_vehicle_changed": 0,
         "allocation_amount_changed": 0,
         "allocation_trips_changed": 0,
         "allocation_count_changed": 0,
+        # The load was carried the same way but re-paired across allocations --
+        # e.g. two loads swapping vehicle types. No single field's multiset
+        # moves, so without this the change would be counted and unexplained.
+        "allocation_pairing_changed": 0,
         "allocation_any_changed": 0,
     }
     for on, off in zip(on_snapshots, off_snapshots):
@@ -698,11 +708,15 @@ def allocation_change_flags(
         flags["allocation_any_changed"] += 1
         if len(on_set) != len(off_set):
             flags["allocation_count_changed"] += 1
+        named = 0
         for name, index in _ALLOCATION_FIELDS:
             if sorted(entry[index] for entry in on_set) != sorted(
                 entry[index] for entry in off_set
             ):
                 flags[f"allocation_{name}_changed"] += 1
+                named += 1
+        if named == 0:
+            flags["allocation_pairing_changed"] += 1
     return flags
 
 

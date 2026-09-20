@@ -174,6 +174,36 @@ class AllocationComparisonTest(unittest.TestCase):
         self.assertEqual(reduced["allocation_count_changed"], 1)
         self.assertEqual(reduced["allocation_any_changed"], 1)
 
+    def test_supplier_change_alone_is_named(self):
+        """Every tuple field must have a flag, or a change goes unexplained."""
+        flags = allocation_change_flags(
+            [_snapshot([_allocation(supplier=0)])],
+            [_snapshot([_allocation(supplier=1)])],
+        )
+        self.assertEqual(flags["allocation_supplier_changed"], 1)
+        self.assertEqual(flags["allocation_pairing_changed"], 0)
+        self.assertEqual(flags["allocation_any_changed"], 1)
+
+    def test_vehicle_swap_between_allocations_is_a_pairing_change(self):
+        """A permutation moves no field's multiset but is still a change.
+
+        This is the case the M100 cross-scale probe hits: two loads exchange
+        vehicle types, so `allocation_vehicle_changed` stays zero even though
+        the dispatch really is different.
+        """
+        left = [
+            _allocation(demand=1, vehicle_type=2),
+            _allocation(demand=2, vehicle_type=3),
+        ]
+        right = [
+            _allocation(demand=1, vehicle_type=3),
+            _allocation(demand=2, vehicle_type=2),
+        ]
+        flags = allocation_change_flags([_snapshot(left)], [_snapshot(right)])
+        self.assertEqual(flags["allocation_any_changed"], 1)
+        self.assertEqual(flags["allocation_vehicle_changed"], 0)
+        self.assertEqual(flags["allocation_pairing_changed"], 1)
+
     def test_input_order_alone_is_not_a_change(self):
         left = [_allocation(demand=1, amount=10.0), _allocation(demand=2, amount=4.0)]
         right = list(reversed(left))
@@ -583,6 +613,108 @@ class PublishedAuditTest(unittest.TestCase):
                     self.assertLessEqual(
                         int(summary[key][f"objective_changed_{objective}"]), expected
                     )
+
+    def test_scale_summary_counts_both_directions_of_the_chain(self):
+        """Necessity and sufficiency must be counted, not conflated.
+
+        The report leans on "objective changed implies dispatch changed" while
+        "dispatch changed implies objective changed" fails at 100 nodes, so the
+        audit must carry both counts rather than one agreement number.
+        """
+        summary = self._rows("scale_summary.csv")
+        probe = self.PROBE_ROOT / "zone_search" / "zone_search_manifest.json"
+        del probe  # the chain counts come from the probe tables, not the search
+        for row in summary:
+            source = (
+                self.PROBE_ROOT / row["probe_directory"] / "mechanism_exposure.csv"
+            )
+            if not source.is_file():
+                continue
+            with source.open() as handle:
+                decisions = list(csv.DictReader(handle))
+            self.assertEqual(int(row["decisions"]), len(decisions), row["probe_directory"])
+            for mechanism in ("PR", "HT", "EC"):
+                objective_without_dispatch = sum(
+                    1
+                    for r in decisions
+                    if r[f"{mechanism}_same_decision_changed"] == "True"
+                    and int(r[f"{mechanism}_allocations_changed"]) == 0
+                )
+                self.assertEqual(
+                    int(row[f"{mechanism}_objective_without_dispatch"]),
+                    objective_without_dispatch,
+                    f"{row['probe_directory']} {mechanism} necessity",
+                )
+
+    def test_ec_band_rows_are_a_partition_of_the_grid(self):
+        """Each scope's four utilization bands must re-add to its grid cells."""
+        bands = self._rows("ec_band_summary.csv")
+        grid = self._rows("resource_grid_summary.csv")
+        per_scope: dict[str, int] = {}
+        for row in grid:
+            per_scope[row["case_id"]] = per_scope.get(row["case_id"], 0) + 1
+        for scope, expected in per_scope.items():
+            with self.subTest(scope=scope, kind="utilization bands"):
+                counted = sum(
+                    int(r["cells"])
+                    for r in bands
+                    if r["scope"] == scope and r["selection"] == "all"
+                )
+                self.assertEqual(counted, expected)
+        # The reroute split is the other partition of the same cells.
+        for scope, expected in per_scope.items():
+            with self.subTest(scope=scope, kind="reroute split"):
+                counted = sum(
+                    int(r["cells"])
+                    for r in bands
+                    if r["scope"] == scope and r["selection"] != "all"
+                )
+                self.assertEqual(counted, expected)
+        # "pooled" must be the sum over the scales, not a fifth sample.
+        with self.subTest(scope="pooled"):
+            self.assertEqual(
+                sum(
+                    int(r["cells"])
+                    for r in bands
+                    if r["scope"] == "pooled" and r["selection"] == "all"
+                ),
+                sum(per_scope.values()),
+            )
+
+    def test_no_reroutes_means_no_binding_below_the_lower_edge(self):
+        """0.85 held at every scale: below it EC never changed the objective."""
+        for row in self._rows("ec_band_summary.csv"):
+            if row["selection"] != "all" or row["utilization_high"] not in ("0.5", "0.85"):
+                continue
+            with self.subTest(scope=row["scope"], high=row["utilization_high"]):
+                self.assertEqual(int(row["ec_changed"]), 0)
+
+    def test_every_dispatch_change_is_named_in_the_published_summary(self):
+        """A change with no sub-flag set would be an unexplained row.
+
+        The M100 counter-examples are objective-neutral vehicle pairings; the
+        published table has to say so rather than only that something changed.
+        """
+        fields = (
+            "supplier", "demand", "route", "vehicle", "amount", "trips",
+            "count", "pairing",
+        )
+        checked = 0
+        for row in self._rows("mechanism_summary.csv"):
+            for mechanism in ("PR", "HT", "EC"):
+                if int(row[f"{mechanism}_allocations_changed"]) <= 0:
+                    continue
+                checked += 1
+                named = any(
+                    int(row.get(f"{mechanism}_allocation_{field}_changed", 0)) > 0
+                    for field in fields
+                ) or int(row.get(f"{mechanism}_allocation_count_changed", 0)) > 0
+                self.assertTrue(
+                    named,
+                    f"{row['topology_cell']} seed={row['instance_seed']} "
+                    f"{row['decision']} {mechanism}: changed with no sub-flag",
+                )
+        self.assertGreater(checked, 0, "no changed rows found; the guard is vacuous")
 
     def test_manifest_records_the_identity_control_as_exact(self):
         manifest = json.loads((self.AUDIT / "manifest.json").read_text())

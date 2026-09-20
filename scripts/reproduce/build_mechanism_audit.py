@@ -18,7 +18,7 @@ import csv
 import statistics
 import sys
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any, Sequence
 
 if __package__ == "" or __package__ is None:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -47,7 +47,51 @@ TOPOLOGY_CELLS = (
 )
 
 # Scenario directories that carry the resource grid and the repair sweep.
-GRID_SCENARIOS = ("S025_random_random", "S025_corridor")
+GRID_SCENARIOS = ("S025_random_random", "S025_corridor", "S050_benchmark", "S050_corridor",
+                  "M100_benchmark", "M100_corridor")
+
+# The per-field dispatch-change flags, mirrored into the slim table so an
+# objective-neutral change can be told apart from an unexplained one.
+ALLOCATION_CHANGE_FIELDS = (
+    "supplier",
+    "demand",
+    "route",
+    "vehicle",
+    "amount",
+    "trips",
+    "count",
+    "pairing",
+    "any",
+)
+
+# The cross-scale replication: the same two scenario families run on ever
+# larger networks. Listed explicitly rather than discovered so that a missing
+# run shows up as a missing row instead of silently shrinking the evidence.
+SCALE_CELLS = (
+    # (case_id, probe directory, scenario family, size group)
+    ("S025", "S025_random_random", "benchmark", "25 nodes"),
+    ("S025", "S025_corridor", "corridor", "25 nodes"),
+    ("S050", "S050_benchmark", "benchmark", "50 nodes"),
+    ("S050", "S050_corridor", "corridor", "50 nodes"),
+    ("M100", "M100_benchmark", "benchmark", "100 nodes"),
+    ("M100", "M100_corridor", "corridor", "100 nodes"),
+)
+
+# Utilization bands for the EC anchor. The upper edge is exclusive except for
+# the last band, which absorbs a utilization of exactly 1.0.
+EC_BANDS = ((0.0, 0.5), (0.5, 0.85), (0.85, 0.97), (0.97, 1.01))
+
+# Cells carried row by row in mechanism_summary.csv: the S025 damage x role
+# comparison plus the larger scales of the cross-scale replication. The S025
+# benchmark and corridor probes appear once, under their topology-cell names,
+# even though the cross-scale list builds the same scenario -- listing both
+# would publish the same 20 decisions twice.
+SUMMARY_CELLS = TOPOLOGY_CELLS + (
+    ("S050_benchmark", "50 nodes, random damage, random roles"),
+    ("S050_corridor", "50 nodes, explicit corridor topology"),
+    ("M100_benchmark", "100 nodes, random damage, random roles"),
+    ("M100_corridor", "100 nodes, explicit corridor topology"),
+)
 
 REPLAY_PLANNING_MODELS = ("PR0_HT1_EC1", "PR1_HT0_EC1", "PR1_HT1_EC0")
 FULL_MODEL = "PR1_HT1_EC1"
@@ -56,6 +100,22 @@ FULL_MODEL = "PR1_HT1_EC1"
 def read_rows(path: Path) -> list[dict[str, str]]:
     with path.open() as handle:
         return list(csv.DictReader(handle))
+
+
+def fieldnames(rows: Sequence[dict[str, Any]]) -> list[str]:
+    """Every column any row carries, in first-seen order.
+
+    ``write_csv_atomic`` otherwise takes the header from the first row and
+    drops the rest, so a probe table written by an older build silently loses
+    the columns it did not have -- which is exactly how the dispatch sub-flags
+    went missing from the published summary.
+    """
+    names: list[str] = []
+    for row in rows:
+        for key in row:
+            if key not in names:
+                names.append(key)
+    return names
 
 
 def as_float(row: dict[str, str], key: str) -> float:
@@ -84,7 +144,7 @@ def mechanism_summary() -> list[dict[str, Any]]:
     "effective" flag would hide exactly the distinction the report rests on.
     """
     rows: list[dict[str, Any]] = []
-    for directory, description in TOPOLOGY_CELLS:
+    for directory, description in SUMMARY_CELLS:
         for row in read_rows(PROBE_ROOT / directory / "mechanism_exposure.csv"):
             entry: dict[str, Any] = {
                 "topology_cell": directory,
@@ -107,6 +167,14 @@ def mechanism_summary() -> list[dict[str, Any]]:
                 entry[f"{label}_same_decision_changed"] = as_bool(
                     row, f"{label}_same_decision_changed"
                 )
+                # What changed, not just that something did. The M100
+                # counter-examples are objective-neutral *vehicle pairings*,
+                # and without these flags a reader could not tell that from
+                # the untracked wide tables.
+                for field in ALLOCATION_CHANGE_FIELDS:
+                    key = f"{label}_allocation_{field}_changed"
+                    if key in row:
+                        entry[key] = as_int(row, key)
                 entry[f"{label}_delta_F1"] = as_float(row, f"{label}_same_decision_delta_F1")
                 entry[f"{label}_delta_F2"] = as_float(row, f"{label}_same_decision_delta_F2")
             entry["max_edge_utilization"] = as_float(row, "max_edge_utilization")
@@ -160,11 +228,17 @@ def resource_grid_summary() -> list[dict[str, Any]]:
         path = PROBE_ROOT / scenario / "resource_grid.csv"
         if not path.is_file():
             continue
+        # The directory name is the join key; case_id is what the band table
+        # pools by, so both are carried for the reader to check the pooling.
+        directory_to_case = {
+            probe_directory: case
+            for case, probe_directory, _family, _size in SCALE_CELLS
+        }
         for row in read_rows(path):
             rows.append(
                 {
                     "scenario": scenario,
-                    "case_id": row["case_id"],
+                    "case_id": directory_to_case.get(scenario, row["case_id"]),
                     "instance_seed": as_int(row, "instance_seed"),
                     "fleet_multiplier": as_float(row, "fleet_multiplier"),
                     "capacity_scale": as_float(row, "capacity_scale"),
@@ -237,6 +311,134 @@ def zone_exposure_summary() -> list[dict[str, Any]]:
         }
         for row in read_rows(path)
     ]
+
+
+def scale_summary() -> list[dict[str, Any]]:
+    """Cross-scale check of the exposure -> dispatch -> objective chain.
+
+    The chain has two directions and they are *not* symmetric, so both are
+    counted separately:
+
+    - ``objective_without_dispatch`` is a violation of necessity: the objective
+      moved while the dispatch encoding stayed identical, which would mean the
+      diagnostic is not looking at what the model acts on.
+    - ``dispatch_without_objective`` is a violation of sufficiency: the
+      dispatch encoding changed while every objective stayed bit-identical.
+      This is the one that appears at 100 nodes.
+    """
+    rows: list[dict[str, Any]] = []
+    for case_id, directory, family, size_group in SCALE_CELLS:
+        path = PROBE_ROOT / directory / "mechanism_exposure.csv"
+        if not path.is_file():
+            continue
+        source = read_rows(path)
+        entry: dict[str, Any] = {
+            "case_id": case_id,
+            "size_group": size_group,
+            "scenario_family": family,
+            "probe_directory": directory,
+            "decisions": len(source),
+            "instance_seeds": " ".join(
+                str(seed) for seed in sorted({as_int(r, "instance_seed") for r in source})
+            ),
+            "graph_bridge_count": as_int(source[0], "graph_bridge_count"),
+            "damaged_bridge_count": as_int(source[0], "damaged_bridge_count"),
+            "bridge_gated_demand_count": as_int(source[0], "bridge_gated_demand_count"),
+        }
+        for mechanism in ("PR", "HT", "EC"):
+            dispatch = [
+                r for r in source if as_int(r, f"{mechanism}_allocations_changed") > 0
+            ]
+            objective = [
+                r for r in source if as_bool(r, f"{mechanism}_same_decision_changed")
+            ]
+            entry[f"{mechanism}_dispatch_changed"] = len(dispatch)
+            entry[f"{mechanism}_objective_changed"] = len(objective)
+            entry[f"{mechanism}_objective_without_dispatch"] = sum(
+                1 for r in objective if as_int(r, f"{mechanism}_allocations_changed") == 0
+            )
+            entry[f"{mechanism}_dispatch_without_objective"] = sum(
+                1
+                for r in dispatch
+                if not as_bool(r, f"{mechanism}_same_decision_changed")
+            )
+        rows.append(entry)
+    return rows
+
+
+def ec_band_summary() -> list[dict[str, Any]]:
+    """EC binding against measured edge utilization, per scale and pooled.
+
+    Utilization is a *label*; the definition of binding stays "turning EC off
+    changed the objective". The bands only summarise where that definition
+    starts to bite, and are reported per scale so a moving boundary is visible
+    rather than averaged away.
+    """
+    rows: list[dict[str, Any]] = []
+    per_scale: dict[str, list[dict[str, str]]] = {}
+    for case_id, directory, _family, _size in SCALE_CELLS:
+        path = PROBE_ROOT / directory / "resource_grid.csv"
+        if not path.is_file():
+            continue
+        per_scale.setdefault(case_id, []).extend(read_rows(path))
+
+    for case_id, source in per_scale.items():
+        rows.extend(_bands(case_id, source))
+
+    pooled: list[dict[str, str]] = []
+    for source in per_scale.values():
+        pooled.extend(source)
+    if pooled:
+        rows.extend(_bands("pooled", pooled))
+    return rows
+
+
+def _bands(scope: str, source: Sequence[dict[str, str]]) -> list[dict[str, Any]]:
+    """Utilization bands, each also split by whether a reroute occurred.
+
+    Utilization is a label. Whether the capacity accounting actually *forced a
+    different allocation* is much closer to the definition, and the two are
+    reported together so a band that binds anyway can be told apart from one
+    that only looks tight. ``bands`` covers the four utilization bands;
+    ``reroutes>0`` and ``reroutes=0`` cover every cell pooled, because the
+    reroute split is the sharper of the two indicators.
+    """
+    rows: list[dict[str, Any]] = []
+    for low, high in EC_BANDS:
+        cells = [r for r in source if low <= as_float(r, "max_edge_utilization") < high]
+        rows.append(_band_row(scope, low, high, cells))
+    rows.append(_band_row(scope, None, None, list(source), reroute="positive"))
+    rows.append(_band_row(scope, None, None, list(source), reroute="zero"))
+    return rows
+
+
+def _band_row(
+    scope: str,
+    low: float | None,
+    high: float | None,
+    cells: Sequence[dict[str, str]],
+    reroute: str | None = None,
+) -> dict[str, Any]:
+    if reroute == "positive":
+        cells = [r for r in cells if as_int(r, "capacity_reroutes") > 0]
+    elif reroute == "zero":
+        cells = [r for r in cells if as_int(r, "capacity_reroutes") == 0]
+    changed = [r for r in cells if as_bool(r, "EC_same_decision_changed")]
+    return {
+        "scope": scope,
+        "utilization_low": low,
+        "utilization_high": high,
+        "selection": "all" if reroute is None else f"capacity_reroutes {'>0' if reroute == 'positive' else '=0'}",
+        "cells": len(cells),
+        "ec_changed": len(changed),
+        "ec_changed_share": (len(changed) / len(cells)) if cells else None,
+        "max_abs_delta_F1": (
+            max(abs(as_float(r, "EC_same_decision_delta_F1")) for r in cells) if cells else 0.0
+        ),
+        "max_abs_delta_F2": (
+            max(abs(as_float(r, "EC_same_decision_delta_F2")) for r in cells) if cells else 0.0
+        ),
+    }
 
 
 def zone_bottleneck_summary() -> list[dict[str, Any]]:
@@ -377,6 +579,16 @@ def build_manifest(
             "and it is unaffected by commit timing."
         ),
         "tables": {name: len(rows) for name, rows in tables.items()},
+        "scale_cells": [
+            {
+                "case_id": case_id,
+                "probe_directory": directory,
+                "scenario_family": family,
+                "size_group": size_group,
+            }
+            for case_id, directory, family, size_group in SCALE_CELLS
+        ],
+        "ec_bands": [{"low": low, "high": high} for low, high in EC_BANDS],
         "topology_cells": [
             {
                 "cell": row["topology_cell"],
@@ -416,6 +628,8 @@ def main() -> None:
     tables: dict[str, list[dict[str, Any]]] = {
         "mechanism_summary.csv": mechanism_summary(),
         "topology_summary.csv": topology_summary(),
+        "scale_summary.csv": scale_summary(),
+        "ec_band_summary.csv": ec_band_summary(),
         "resource_grid_summary.csv": resource_grid_summary(),
         "bottleneck_summary.csv": bottleneck_summary(),
         "zone_exposure.csv": zone_exposure_summary(),
@@ -427,7 +641,7 @@ def main() -> None:
         if not rows:
             print(f"WARNING: {name} is empty; its source probe output is missing")
             continue
-        write_csv_atomic(AUDIT_ROOT / name, rows, list(rows[0]))
+        write_csv_atomic(AUDIT_ROOT / name, rows, fieldnames(rows))
 
     # The stage 2/3 search settings live in the zone-search manifest; copying
     # it keeps the audit self-contained instead of pointing at an untracked
