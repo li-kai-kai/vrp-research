@@ -76,7 +76,10 @@ def main() -> None:
             "old_root": str(old_root),
             "new_root": str(new_root),
             "runs_compared": len(rows),
-            "post_hoc_representative_changed": sum(
+            "stored_representative_changed": sum(
+                1 for row in rows if row["stored_representative_changed"]
+            ),
+            "exact_rule_vs_v2_rule_on_old_front_changed": sum(
                 1 for row in rows if row["post_hoc_changed"]
             ),
             "researched_representative_changed": sum(
@@ -105,10 +108,21 @@ def _compare(old: dict[str, Any], new: dict[str, Any]) -> dict[str, Any]:
     post_hoc_representative = _select(old_front, V2_PRECISION)
     researched_representative = _select(new_front, V2_PRECISION)
 
+    # What each run actually reported, as stored. This is the clean
+    # run-to-run comparison; the rule comparisons below answer a different
+    # question (how much the resolution rule alone moves the choice).
+    stored_old = old.get("decision_hash")
+    stored_new = new.get("decision_hash")
+
     return {
         **{field: old.get(field) for field in IDENTITY_FIELDS},
         "old_run_key": old["run_key"],
         "new_run_key": new["run_key"],
+        "stored_representative_hash_old": stored_old,
+        "stored_representative_hash_new": stored_new,
+        "stored_representative_changed": stored_old != stored_new,
+        "stored_objectives_old": list(old.get("objectives") or []),
+        "stored_objectives_new": list(new.get("objectives") or []),
         "old_front_size": len(old_front),
         "new_front_size": len(new_front),
         "old_representative_hash": old_representative,

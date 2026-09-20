@@ -1,0 +1,11 @@
+{
+  "old_root": "outputs/claude_v2_reviewfix/pilot_algorithm",
+  "new_root": "outputs/claude_v2_reviewfix2/pilot_algorithm",
+  "runs_compared": 18,
+  "stored_representative_changed": 18,
+  "exact_rule_vs_v2_rule_on_old_front_changed": 15,
+  "researched_representative_changed": 18,
+  "front_size_shrank": 7,
+  "runs_only_in_old": [],
+  "runs_only_in_new": []
+}

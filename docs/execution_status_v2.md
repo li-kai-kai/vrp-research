@@ -86,6 +86,21 @@ uv run python scripts/reproduce/run_benchmark.py \
 
 修正带来的实质变化：代表方案 F1 均值 4.1244 → 3.7933，前沿点数 467 → 81（量化合并亚分辨率点）。
 
+## 复审修正第二轮（坐标空间与 Full 曲线）
+
+`65c1014` 复审指出两处未封闭：质量指标与拥挤距离仍在原始浮点坐标上度量；Full 谓词只查标签不查其下的数据。
+均已复现、修复并重跑。
+
+| 项 | 问题（已复现） | 修复 | 回归 |
+|---|---|---|---|
+| A | 同键两点得不同 HV（1.331 vs 0.847）、参考前沿重复计数、raw 抖动可改变拥挤距离 | 去重/参考前沿/归一化上下界/距离坐标/拥挤排序与端点全部改用整型量化键；原始值仍原样存档 | `test_objective_precision.py` 的 pooled 用例 + 复审包 5 例 |
+| A | `model_ablation_analysis.py` 未传精度，静默退回 EXACT | 显式推导精度，并拒绝跨版本池化 | 同上 |
+| B | `PR=True` + 二元阶段表、`HT=True` + 统一阈值都能通过 Full 校验且哈希自洽 | 场景声明可追溯的 `FullExecutionProfile`，逐项比对曲线与阈值；二元曲线结构性拒绝 | `test_full_execution_validation.py` 新增 8 例 + 复审包 2 例 |
+| B | 从降级实例直接重新打开开关会继续携带降级数据 | `model_factor_variant` 从声明档案恢复；无档案可恢复时显式报错 | 同上 |
+
+结论依据改为 `outputs/claude_v2_reviewfix2/`；`outputs/claude_v2/` 与 `outputs/claude_v2_reviewfix/` 保留为对照。
+最终测试 130 个全通过。
+
 ## 保护的用户已有改动
 
 工作树中未提交文件：`vrp_research_claude_execution_plan.md`（本任务书本身）。

@@ -1,0 +1,9 @@
+run_key,model_group,case_id,instance_seed,solutions,nonzero_solutions_F1,mean_delta_F1,median_delta_F1,max_abs_delta_F1,max_abs_delta_F1_solution,nonzero_solutions_F2,mean_delta_F2,median_delta_F2,max_abs_delta_F2,max_abs_delta_F2_solution,nonzero_solutions_F3,mean_delta_F3,median_delta_F3,max_abs_delta_F3,max_abs_delta_F3_solution
+S025:i101:nsga2:s1060000:r0:PR0_HT1_EC1:e75396dd6481,PR0_HT1_EC1,,101,4,0,0.0,0.0,0.0,p0001,2,-9.406939670499014,-6.271293113666161,25.085172454663734,p0002,0,0.0,0.0,0.0,p0001
+S025:i101:nsga2:s1060000:r0:PR1_HT0_EC1:eebdce01c867,PR1_HT0_EC1,,101,3,0,0.0,0.0,0.0,p0001,0,0.0,0.0,0.0,p0001,0,0.0,0.0,0.0,p0001
+S025:i101:nsga2:s1060000:r0:PR1_HT1_EC0:25f3900e8795,PR1_HT1_EC0,,101,3,0,0.0,0.0,0.0,p0001,0,0.0,0.0,0.0,p0001,0,0.0,0.0,0.0,p0001
+S025:i101:nsga2:s1060000:r0:PR1_HT1_EC1:5d2c1b44a903,PR1_HT1_EC1,,101,3,0,0.0,0.0,0.0,p0001,0,0.0,0.0,0.0,p0001,0,0.0,0.0,0.0,p0001
+S025:i101:nsga2:s1060001:r1:PR0_HT1_EC1:b244666b4820,PR0_HT1_EC1,,101,7,0,0.0,0.0,0.0,p0001,2,-3.583596064952092,0.0,12.542586227332322,p0006,0,0.0,0.0,0.0,p0001
+S025:i101:nsga2:s1060001:r1:PR1_HT0_EC1:b0a20e1314db,PR1_HT0_EC1,,101,5,0,0.0,0.0,0.0,p0001,0,0.0,0.0,0.0,p0001,0,0.0,0.0,0.0,p0001
+S025:i101:nsga2:s1060001:r1:PR1_HT1_EC0:483dc0750b46,PR1_HT1_EC0,,101,6,0,0.0,0.0,0.0,p0001,0,0.0,0.0,0.0,p0001,0,0.0,0.0,0.0,p0001
+S025:i101:nsga2:s1060001:r1:PR1_HT1_EC1:76d065918afc,PR1_HT1_EC1,,101,6,0,0.0,0.0,0.0,p0001,0,0.0,0.0,0.0,p0001,0,0.0,0.0,0.0,p0001

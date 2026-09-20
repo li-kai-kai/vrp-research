@@ -5,16 +5,21 @@
 
 模型语义见[模型 v2 合同](model_v2_contract.md)，阶段状态见[执行状态表](execution_status_v2.md)。
 
-> ## ⚠ 复审修正（R1–R5）与本文数值的重跑
+> ## ⚠ 两轮复审修正与本文数值的重跑
 >
-> 首轮 P0–P5 提交后审读发现五处问题，均已核实、修复并重跑。**本报告的全部数值已用修正后的代码在
-> `outputs/claude_v2_reviewfix/` 重新生成**；修正前的产物保留在 `outputs/claude_v2/` 作为对照，不再作为结论依据。
->
+> **第一轮（R1–R5）**：首轮 P0–P5 提交后审读发现五处问题，均已核实、修复并重跑。
 > 最重要的一项：v2 目标原以原始浮点值比较，导致**每一个已保存决策集的代表方案都由 1e-13 量级的舍入噪声选出**
-> （18/18 运行）。修正后代表方案的 F1 平均由 **4.1244 改善到 3.7933**（−8.0%）。
-> 这一变化来自**修正目标比较规则**，不是算法改进，也不是模型变化。
+> （18/18 运行）。修正后代表方案 F1 均值由 **4.1244 改善到 3.7933**（−8.0%）。
 >
-> 修正清单与每项的验证见 §10。**本节以下所有小节均为修正后的数值。**
+> **第二轮（坐标空间与 Full 曲线）**：`65c1014` 复审指出两处未封闭——质量指标与拥挤距离仍在原始浮点坐标上度量；
+> Full 谓词只查标签不查其下的数据。均已复现、修复并重跑。
+> 本轮代表方案在 18/18 运行中再次改变（搜索过程本身变了），但**质量水平基本未变**：
+> F1 均值 3.7933 → **3.7952**（+0.0005）。也就是说，距离坐标修正改变的是"选哪一个"，
+> 不是"能选到多好"——不得把它说成算法改进。
+>
+> 三轮产物并存：`outputs/claude_v2/`（首轮）、`outputs/claude_v2_reviewfix/`（第一轮修正后）、
+> `outputs/claude_v2_reviewfix2/`（**本文结论依据**）。修正清单见 §10 与 §11。
+> **本节以下所有小节均为第二轮修正后的数值。**
 
 ---
 
@@ -22,16 +27,18 @@
 
 | 项目 | 基线（`1a1a5d5`） | P0–P5 首次交付 | 复审修正后（最终） |
 |---|---:|---:|---:|
-| `uv run python -m unittest discover -s tests -v` | 21 个，21 通过 | 63 个，63 通过 | **110 个，110 通过，0 失败，0 错误** |
+| `uv run python -m unittest discover -s tests -v` | 21 个，21 通过 | 63 个，63 通过 | **130 个，130 通过，0 失败，0 错误** |
 | 其中 `tests/legacy/` | 2 个，通过（被 discover 发现） | 2 个，通过 | 2 个，通过（未改动） |
 
-> 首次交付时本报告写的是 63——那是当时的真实数量；之后又补了 R1–R5 的回归用例，现为 110。
+> 63 与 110 都是当时的真实数量；补完两轮复审的回归用例后现为 **130**。
+> 其中 `tests/test_review_consistency.py`（7 例）是复审方提供、在真实仓库内执行的回归测试。
 
 新增回归覆盖（按加入顺序）：`tests/test_model_contract.py`（M01–M11，12 例）、`tests/test_solution_io.py`（13 例）、
 `tests/test_search_contract.py`（14 例）、`tests/test_common_execution.py`（8 例）、
 `tests/test_objective_precision.py`（17 例）、`tests/test_experiment_contract.py`（9 例）、
-`tests/test_full_execution_validation.py`（11 例）、`tests/test_replay_summary.py`（5 例）。
-旧断言未被删除、放宽或改预期值。
+`tests/test_full_execution_validation.py`（19 例）、`tests/test_replay_summary.py`（5 例）、
+`tests/test_review_consistency.py`（7 例）。
+旧断言未被删除、放宽或改预期值；复审提供的测试在修复前后各跑过一次，修复前如实现所报告那样失败。
 
 ## 2. 执行的命令
 
@@ -43,7 +50,7 @@ uv run python scripts/reproduce/run_benchmark.py \
   --model-version v2 --solver-repeats 1 \
   --algorithms nsga2 nsga2_ls nsga2_alns \
   --max-evaluations 12 --pop-size 4 \
-  --output-dir outputs/claude_v2_reviewfix/smoke
+  --output-dir outputs/claude_v2_reviewfix2/smoke
 
 # P5-B 算法诊断
 uv run python scripts/reproduce/run_benchmark.py \
@@ -52,11 +59,11 @@ uv run python scripts/reproduce/run_benchmark.py \
   --solver-repeats 3 --solver-seed-start 50000 \
   --algorithms nsga2 nsga2_ls nsga2_alns \
   --max-evaluations 500 --pop-size 32 \
-  --output-dir outputs/claude_v2_reviewfix/pilot_algorithm
+  --output-dir outputs/claude_v2_reviewfix2/pilot_algorithm
 uv run python scripts/reproduce/replay_solutions.py \
-  --input-root outputs/claude_v2_reviewfix/pilot_algorithm \
+  --input-root outputs/claude_v2_reviewfix2/pilot_algorithm \
   --execution-model saved \
-  --output-dir outputs/claude_v2_reviewfix/pilot_algorithm_roundtrip
+  --output-dir outputs/claude_v2_reviewfix2/pilot_algorithm_roundtrip
 
 # P5-C 模型价值诊断
 uv run python scripts/reproduce/run_model_ablation.py \
@@ -65,11 +72,11 @@ uv run python scripts/reproduce/run_model_ablation.py \
   --model-ids PR1_HT1_EC1 PR0_HT1_EC1 PR1_HT0_EC1 PR1_HT1_EC0 \
   --instance-seeds 101 --solver-repeats 2 \
   --solver-seed-start 50000 --max-evaluations 200 --pop-size 16 \
-  --output-dir outputs/claude_v2_reviewfix/pilot_planning
+  --output-dir outputs/claude_v2_reviewfix2/pilot_planning
 uv run python scripts/reproduce/replay_solutions.py \
-  --input-root outputs/claude_v2_reviewfix/pilot_planning \
+  --input-root outputs/claude_v2_reviewfix2/pilot_planning \
   --execution-model full \
-  --output-dir outputs/claude_v2_reviewfix/pilot_common_execution
+  --output-dir outputs/claude_v2_reviewfix2/pilot_common_execution
 
 # 诊断图（只读上述真实 CSV 与运行记录）
 uv run python scripts/reproduce/plot_pilot_diagnostics.py
@@ -98,12 +105,13 @@ uv run python scripts/reproduce/plot_pilot_diagnostics.py
 
 | 算法 | 运行 | HV 均值 | HV 标准差 | IGD 均值 | 非支配点数均值 | 唯一决策均值 | 运行时长均值/s |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| `nsga2` | 6 | 1.0058 | 0.1093 | 0.1332 | 5.7 | 473 | 11.74 |
-| `nsga2_ls` | 6 | 0.8484 | 0.1715 | 0.2066 | 4.3 | 458 | 12.09 |
-| `nsga2_alns` | 6 | 0.9317 | 0.1438 | 0.1905 | 3.5 | 471 | 13.09 |
+| `nsga2` | 6 | 1.0577 | 0.1595 | 0.1509 | 5.3 | 469 | 9.77 |
+| `nsga2_ls` | 6 | 0.8179 | 0.1315 | 0.2850 | 5.2 | 469 | 9.89 |
+| `nsga2_alns` | 6 | 0.9037 | 0.1999 | 0.2068 | 3.8 | 469 | 10.67 |
 
-> 与首次交付的数值不同（当时为 1.0669 / 0.9633 / 1.0104）：目标比较精度修正后前沿本身变了。
-> **不能把两个版本的数值直接比较**，也不能据此说修正"改善"或"恶化"了算法——它改变的是点数与归一化。
+> 三轮数值互不相同（首轮 1.0669 / 0.9633 / 1.0104，一轮修正后 1.0058 / 0.8484 / 0.9317）：
+> 每次修正都改变了前沿本身或度量坐标。**三个版本之间不得直接比较**，
+> 也不得把任何一次修正说成对算法的改善或恶化——它们改变的是"哪些点算同一个点"和"距离在什么坐标上量"。
 > 修正前的旧质量指标不得继续沿用。
 
 HV/IGD 使用每个实例 pooled 参考前沿与参考点 `(1.1, 1.1, 1.1)`；区间仍重叠，且 n=6，
@@ -125,8 +133,19 @@ HV/IGD 使用每个实例 pooled 参考前沿与参考点 `(1.1, 1.1, 1.1)`；�
 **这些是算子被调用的频率，不是算子对解的改善贡献。** 频率差异只说明自适应权重确实改变了选择行为；
 本轮没有做"移除某算子后质量变化"的对照，因此不能推断任何算子更有用。
 
-**同模型回放一致性**：81 个已保存决策在 `--execution-model saved` 下全部重算一致，
-最大绝对误差 F1/F2/F3 均为 **0.0**，最大相对误差 F1 为 **0.0**（容差 1e-8）。
+**同模型回放一致性**：86 个已保存决策在 `--execution-model saved` 下全部重算一致（86/86 同模型检查），
+最大绝对误差 F1/F2/F3 均为 **0.0**（容差 1e-8）。
+
+**度量坐标与有效维度**（`runs.csv` 的 `quality_precision` / `quality_effective_dimensions`，
+以及 manifest 的 `pooled_quality`）：
+
+| 实例 | 比较精度 | F1 raw range | F2 raw range | F3 raw range | 键跨度 F1 / F2 / F3 | 有效维度 |
+|---|---|---:|---:|---:|---|---:|
+| S025 i101 | `v2_service_resolution` | 0.1941 | 523.59 | **0.0** | 19407657 / 523585809 / 0 | **2** |
+| S025 i102 | `v2_service_resolution` | 0.4171 | 685.04 | **0.0** | 41707370 / 685041515 / 0 | **2** |
+
+**F3 的原始跨度恰好为 0**：两组 pooled 前沿中每个非支配解的期末最低满足率完全相同。
+该维既不给拥挤距离贡献多样性，也不参与归一化——它被映射为同一个常数。
 
 ## 5. 模型价值诊断（四规划组，同一物理实例）
 
@@ -137,14 +156,14 @@ HV/IGD 使用每个实例 pooled 参考前沿与参考点 `(1.1, 1.1, 1.1)`；�
 2. **全部方案回放**（§5.2）：每一组保存的每个非支配决策在 Full 环境重放。
 3. **预先选定的代表方案**（§5.3）：每组回放前按 `(F3, F1, F2)` 字典序选出的**单个**决策。
 
-下图（`outputs/claude_v2_reviewfix/pilot_diagnostics.png`）左为算子贡献，右为固定决策下各机制对目标的影响。
+下图（`outputs/claude_v2_reviewfix2/pilot_diagnostics.png`）左为算子贡献，右为固定决策下各机制对目标的影响。
 图中数值可由 §2 的 `plot_pilot_diagnostics.py` 命令从真实 CSV 与运行记录重新生成：
 
-![v2 小预算诊断](../outputs/claude_v2_reviewfix/pilot_diagnostics.png)
+![v2 小预算诊断](../outputs/claude_v2_reviewfix2/pilot_diagnostics.png)
 
 ### 5.1 固定方案诊断（单个 SPT 决策）
 
-`outputs/claude_v2_reviewfix/pilot_planning/fixed_decision_mechanism_binding.csv`：
+`outputs/claude_v2_reviewfix2/pilot_planning/fixed_decision_mechanism_binding.csv`：
 
 | 模型 | F1 | F2（分钟） | 容量受阻吨位 | 最大边利用率 | 总配送吨 | 总趟次 |
 |---|---:|---:|---:|---:|---:|---:|
@@ -165,19 +184,19 @@ HV/IGD 使用每个实例 pooled 参考前沿与参考点 `(1.1, 1.1, 1.1)`；�
 
 ### 5.2 全部方案回放（每组每个已保存决策）
 
-四个规划组共 **42** 个已保存的非支配决策在 Full 环境（v2 + PR1 + HT1 + EC1）中重算，0 失败。
+四个规划组共 **37** 个已保存的非支配决策在 Full 环境（v2 + PR1 + HT1 + EC1）中重算，0 失败。
 下表按**运行内先归纳、运行间再平均**统计（每个运行一票），变化判定阈值为 §4.5 的分辨率。
-明细见 `outputs/claude_v2_reviewfix/pilot_common_execution/summary/replay_by_model_group.csv`：
+明细见 `outputs/claude_v2_reviewfix2/pilot_common_execution/summary/replay_by_model_group.csv`：
 
-| 规划组 | 运行 | 决策 | 有 F1 变化的运行 | 运行内均值 F1 | 最大 |ΔF1| 及其出处 | 有 F2 变化的运行 | 运行内均值 F2 | 最大 |ΔF2| 及其出处 |
+| 规划组 | 运行 | 决策 | 有 F1 变化的运行 | 运行内均值 ΔF1 | 最大 |ΔF1| | 有 F2 变化的运行 | 运行内均值 ΔF2 | 最大 |ΔF2|（出处） |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| PR1_HT1_EC1（Full） | 2 | 10 | 0 | +0.000000 | 0.000000 | 0 | +0.0 | 0.0 |
-| PR0_HT1_EC1（No-PR） | 2 | 12 | 0 | +0.000000 | 0.000000 | 1 | −0.1 | **25.085**（p0004） |
-| PR1_HT0_EC1（No-HT） | 2 | 10 | 0 | +0.000000 | 0.000000 | 0 | +0.0 | 0.0 |
-| PR1_HT1_EC0（No-EC） | 2 | 10 | 0 | +0.000000 | 0.000000 | 0 | +0.0 | 0.0 |
+| PR1_HT1_EC1（Full） | 2 | 9 | 0 | +0.000000 | 0.000000 | 0 | +0.0 | 0.0 |
+| PR0_HT1_EC1（No-PR） | 2 | 11 | 0 | +0.000000 | 0.000000 | 2 | +0.1 | **25.085**（p0002） |
+| PR1_HT0_EC1（No-HT） | 2 | 8 | 0 | +0.000000 | 0.000000 | 0 | +0.0 | 0.0 |
+| PR1_HT1_EC0（No-EC） | 2 | 9 | 0 | +0.000000 | 0.000000 | 0 | +0.0 | 0.0 |
 
 **正确的表述**：在**指定的 SPT 决策**上 HT 与 EC 未触发；在**该组的全部已保存决策**中，
-本次重跑只有 No-PR 组出现非零影响（1 个运行，最大 25.085 分钟），HT 与 EC 组本次没有非零影响。
+本轮重跑只有 No-PR 组出现非零影响（2 个运行，最大 25.085 分钟），HT 与 EC 组本轮没有非零影响。
 
 **这不足以说 HT 或 EC 一般无效。** 首轮数据（修正前）在同一位置曾出现
 No-HT 组最大 |ΔF1| = 0.0243、|ΔF2| = 10.40，No-PR 组最大 |ΔF2| = 6.63——即**影响存在与否取决于前沿里有哪些决策**。
@@ -189,7 +208,7 @@ EC 的低利用率只说明**已测决策与情景中**道路吞吐不是瓶颈�
 ### 5.3 预先选定的代表方案
 
 代表方案在回放**之前**按 `(F3, F1, F2)` 字典序选定（此处为量化键上的字典序），每组一个决策。
-明细见 `outputs/claude_v2_reviewfix/pilot_common_execution/summary/replay_representatives.csv`。
+明细见 `outputs/claude_v2_reviewfix2/pilot_common_execution/summary/replay_representatives.csv`。
 本轮四个组的代表方案在 Full 环境下全部与规划目标逐位一致（差值 0.0），
 其中 Full 组与 No-EC 组本身即 Full 环境，No-PR / No-HT 组的代表方案恰好未受执行修正影响。
 
@@ -200,21 +219,22 @@ EC 的低利用率只说明**已测决策与情景中**道路吞吐不是瓶颈�
 
 ## 6. 产物路径与校验
 
-**本报告的结论依据**：`outputs/claude_v2_reviewfix/`（复审修正后重跑）。
-修正前的 `outputs/claude_v2/` 保留作为对照，**不再作为结论依据**。
-两个目录都已纳入版本控制，克隆仓库后无需重算即可核对全部数值；`outputs/` 下的其他目录仍被忽略。
+**本报告的结论依据**：`outputs/claude_v2_reviewfix2/`（第二轮复审修正后重跑）。
+前两轮产物保留作为对照，**不再作为结论依据**。三个目录都已纳入版本控制，
+克隆仓库后无需重算即可核对全部数值；`outputs/` 下的其他目录仍被忽略。
 
 | 产物 | 路径（相对仓库根） |
 |---|---|
-| 修正后算法诊断 | `outputs/claude_v2_reviewfix/pilot_algorithm/`（18 个完整运行单元） |
-| 修正后算法回放 | `outputs/claude_v2_reviewfix/pilot_algorithm_roundtrip/replay_results.csv` |
-| 修正后模型诊断 | `outputs/claude_v2_reviewfix/pilot_planning/`（8 个完整运行单元） |
-| 固定方案诊断表 | `outputs/claude_v2_reviewfix/pilot_planning/fixed_decision_mechanism_binding.csv` |
-| 统一执行回放 | `outputs/claude_v2_reviewfix/pilot_common_execution/replay_results.csv` |
-| 回放分类汇总 | `outputs/claude_v2_reviewfix/pilot_common_execution/summary/`（按组、按运行、代表方案三张表） |
-| 旧/新代表方案对照 | `outputs/claude_v2_reviewfix/representative_comparison/` |
-| 诊断图 | `outputs/claude_v2_reviewfix/pilot_diagnostics.png` |
-| 修正前对照 | `outputs/claude_v2/`（含 `posthoc_representative/` 后处理重算结果） |
+| 修正后算法诊断 | `outputs/claude_v2_reviewfix2/pilot_algorithm/`（18 个完整运行单元） |
+| 修正后算法回放 | `outputs/claude_v2_reviewfix2/pilot_algorithm_roundtrip/replay_results.csv` |
+| 修正后模型诊断 | `outputs/claude_v2_reviewfix2/pilot_planning/`（8 个完整运行单元） |
+| 固定方案诊断表 | `outputs/claude_v2_reviewfix2/pilot_planning/fixed_decision_mechanism_binding.csv` |
+| 统一执行回放 | `outputs/claude_v2_reviewfix2/pilot_common_execution/replay_results.csv` |
+| 回放分类汇总 | `outputs/claude_v2_reviewfix2/pilot_common_execution/summary/`（按组、按运行、代表方案三张表） |
+| 旧/新代表方案对照 | `outputs/claude_v2_reviewfix2/representative_comparison/` |
+| 诊断图 | `outputs/claude_v2_reviewfix2/pilot_diagnostics.png` |
+| 第一轮修正后对照 | `outputs/claude_v2_reviewfix/` |
+| 首轮对照 | `outputs/claude_v2/`（含 `posthoc_representative/` 后处理重算结果） |
 
 每个运行单元含完整实例快照、生效评价配置与**目标比较精度**、三段完整决策、原始三目标与全部指标、
 收敛记录、预算、实际评价数与诊断计数、代码指纹；`runs/<run_key>.json` 自带 `record_sha256` 完整性校验，
@@ -264,7 +284,7 @@ manifest 中另有 `python`、`platform` 与 `git_sha`/`git_dirty` 记录运行�
 - 不得声称 HT 或 EC 在一般情况下无效。本轮只能说：在 S025 该标定的一个固定决策上未触发，
   在一组已保存决策中影响很小且不稳定。影响是否存在取决于前沿里有哪些决策，这本身是标定问题。
 - 不得把"车队趟次预算比道路吞吐更紧"写成已证明的结论——本轮未做资源放宽对照。
-- 不得把修正前后（`outputs/claude_v2/` 与 `outputs/claude_v2_reviewfix/`）的 HV/IGD 或代表目标直接比较，
+- 不得把三轮产物（`outputs/claude_v2/`、`outputs/claude_v2_reviewfix/`、`outputs/claude_v2_reviewfix2/`）的 HV/IGD 或代表目标直接比较，
   也不能把修正描述为算法的改善或恶化。
 - 不得把 P5 完成写成 publication 完成，也不得把 Full 执行环境称为已现场标定的客观现实。
 - 不得把维修总工时称为维修 makespan。
@@ -357,3 +377,71 @@ F2 3286.40 → 3296.80（Δ = 10.40）。
   （合法空实例约定为空列表）。
 - **R5-B 评价计数命名**：`distinct_evaluated` 实为评价调用快照数，同一决策评价三次会报 3。
   现分开报告 `actual_evaluations`、`evaluation_snapshots` 与 `unique_decisions`。
+
+## 11. 第二轮复审修正记录（坐标空间与 Full 曲线）
+
+`65c1014` 复审指出两处未封闭。两项均由复审方提供可执行探针复现，并提供了 `tests/test_review_consistency.py`
+（已放入真实仓库执行，修复前 2 例失败、修复后 7 例全通过）。
+
+### A 数值规则未贯穿质量指标与拥挤距离
+
+**问题**：支配已用量化键，但 pooled 参考前沿仍按 `sorted(set(raw_points))` 去重、`_normalize()` 仍以
+raw point / raw ideal / raw nadir 计算、`_assign_crowding()` 仍按原浮点排序与取邻居。
+`model_ablation_analysis.py` 更是**完全没传精度**，静默退回 `EXACT`。
+
+**已复现的反例**（复审方探针，隔离执行源码函数体）：
+
+| 反例 | 修复前 | 修复后 |
+|---|---|---|
+| a=(4,3000,−0.9) 与 b=(4,3000,−0.9+4e−9) 量化键相同 | HV 1.331 vs 0.847，`reference_front_size=2` | HV 相同，参考集合 1 个键 |
+| 再加入 c=(3,4000,−0.9)，比较 [a,c] 与 [b,c]（两维真实变化） | HV 0.231 vs 0.191，IGD 0.133 | HV 相同，IGD = 0，参考集合 2 |
+| 四点前沿中仅把第二点 F1 改 3−4e−9（键不变） | 该点 crowding 由 inf 变为 ≈2.0595 | 距离完全不变 |
+
+**修复**：去重、参考前沿、归一化上下界、距离坐标、拥挤距离的排序/端点/邻居差、代表方案选择
+全部改用整型量化键。原始目标只读不写，其范围与键跨度写入 manifest 的 `pooled_quality`
+和 `runs.csv` 的 `quality_precision` / `quality_effective_dimensions`。
+`model_ablation_analysis.py` 显式推导精度并拒绝跨版本池化。
+
+**回归**：`tests/test_objective_precision.py` 新增 5 个**真正 pooled** 的用例，
+其中一个直接在实测前沿上做"移到分箱中心"的不变性检验——不是靠放宽断言容差通过的。
+
+> 检验中发现量化有一个真实边界：把某个目标移动半个分辨率以内**并不保证**键不变，
+> 若原值靠近分箱边界就会跨越。该性质已写入[模型合同 §4.5](model_v2_contract.md)，
+> 测试改用"移到分箱中心"这一可证明保键的构造，而不是掩盖它。
+
+### B Full 校验未检查实际恢复曲线与阈值
+
+**问题**：谓词只查版本、布尔开关与参数是否为零，以及阶段/车型是否非空。
+`recovery_stages=BINARY_RECOVERY_STAGES` 配 `PR=True`、或四种车型阈值全被改成 0.30 配 `HT=True`，
+都返回空问题列表并得到自洽哈希——**哈希只说明文件没变，不说明初始语义正确**。
+另有一条正常调用路径：先 `model_factor_variant(..., PR=False, ...)` 再
+`model_factor_variant(..., PR=True, ...)`，True 分支继承的仍是二元阶段表。
+
+**修复**：
+
+- 场景构建器声明 `FullExecutionProfile`（Full 恢复曲线 + 各车型阈值），随实例传播、进入 `model_fingerprint`、随快照读写。
+- `full_execution_problems()` 逐项比对实际曲线与阈值；**二元曲线在 `PR=True` 下被结构性拒绝**。
+- 只比对两边都存在的车型，**不要求每个场景都有四种车型或四个不同阈值**。
+- `model_factor_variant()` 重新打开某因素时**从声明档案恢复**；无档案可恢复时显式报错，
+  不再"把标签改回 True"就算恢复。
+
+**回归**：`tests/test_full_execution_validation.py` 新增 8 例，含**从内存构建错误配置再 save/load**、
+重新打开开关恢复声明值、以及无档案时拒绝。
+
+### 本轮重跑与前后对照
+
+按原 P5 种子与预算在新目录重跑 18 次算法运行 + 8 次模型运行及回放，未提高预算、未开启 publication。
+修订后 `--resume` 复核：`pilot_algorithm` 18/18、`pilot_planning` 8/8 全部跳过，与提交代码逐字节一致。
+
+| 指标 | 第一轮修正后 | 本轮 |
+|---|---:|---:|
+| 存储代表方案改变（18 次运行） | — | **18 / 18** |
+| 存储代表方案 F1 均值 | 3.7933 | **3.7952**（+0.0005） |
+| 前沿点数合计 | 81 | 86 |
+| 同模型回放（saved） | 81 方案，误差 0 | **86 方案，误差 0** |
+| 统一 Full 回放 | 42 方案，0 失败 | **37 方案，0 失败** |
+| 算法评价数 | 9 000 / 9 000 | **9 000 / 9 000** |
+
+**必须区分"仅重算指标"与"重新搜索"**：拥挤距离参与环境选择，因此本轮**不是**只重算指标——
+搜索过程本身变了。但代表方案的质量水平基本未变（+0.0005），说明这次修正改变的是**选择与度量口径**，
+不是搜索能力。不得把它写成算法创新或性能提升。

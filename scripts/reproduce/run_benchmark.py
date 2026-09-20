@@ -269,6 +269,7 @@ def main() -> None:
         completed_runs=len(directory_records),
         skipped_runs=skipped,
         runs_this_invocation=len(records),
+        reference_faces=reference_faces,
     )
     print(
         f"Done. {len(records)} run records this invocation ({skipped} resumed); "
@@ -396,9 +397,18 @@ def _attach_pooled_quality(
                 "effective_dimensions"
             ]
         reference_faces[key] = {
+            "case_id": key[0],
+            "instance_seed": key[1],
             "size": metadata["reference_front_size"],
             "degenerate_dimensions": metadata["degenerate_dimensions"],
             "effective_dimensions": metadata["effective_dimensions"],
+            "raw_ranges": list(metadata["raw_ranges"]),
+            "key_spans": list(metadata["key_spans"]),
+            "ideal": list(metadata["ideal"]),
+            "nadir": list(metadata["nadir"]),
+            "coordinate_space": metadata["coordinate_space"],
+            "precision": metadata["precision"],
+            "precision_fingerprint": metadata["precision_fingerprint"],
         }
     return reference_faces
 
@@ -624,6 +634,7 @@ def _write_manifest(
     completed_runs: int,
     skipped_runs: int,
     runs_this_invocation: int,
+    reference_faces: dict[tuple[str, int], dict[str, object]] | None = None,
 ) -> None:
     manifest = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -649,6 +660,9 @@ def _write_manifest(
         "algorithms": args.algorithms,
         "budget": asdict(budget),
         "objectives": ["min_unmet_area", "min_time_cost", "min_neg_min_satisfaction"],
+        "pooled_quality": [
+            value for _key, value in sorted(reference_faces.items())
+        ],
         "representative_rule": (
             "lexicographic min of (F3, F1, F2), applied before any replay and "
             "recorded per solution as representative_selected_before_replay"

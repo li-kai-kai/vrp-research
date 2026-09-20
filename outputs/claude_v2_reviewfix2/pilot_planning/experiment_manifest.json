@@ -1,0 +1,142 @@
+{
+  "created_at_utc": "2026-09-20T09:02:15.923008+00:00",
+  "git_sha": "833a8328507c91b36cc1ba07307262ce21ada4c3",
+  "git_dirty": true,
+  "source_files_sha256": {
+    "scripts/reproduce/run_benchmark.py": "88eeb420247e8a675156422d3a3c0751d4ff5b6ff31bbb79134e33c8263e18a5",
+    "scripts/reproduce/benchmark_suite.py": "2477265e0943ae24100fbd4b093fbda5e12fc2e3f0ba38c3544d5886aba175e5",
+    "scripts/reproduce/benchmark_algorithms.py": "b5b686e955da0dbea46d78d0d94376af7aac791ec0dc56f3d9200c9b1743e034",
+    "scripts/reproduce/capacity_recovery.py": "5a016c1d7c0acab2e681b6d49c02a40e3d3e0d24c5d90b2b7cdf6b671a4fc817",
+    "scripts/reproduce/instance_generator.py": "f121ea469e6bc7f547abc1b241c0baa35792960e465bdca0ea90098307712021",
+    "scripts/reproduce/model.py": "ca01ca70a94751139e2e082c99e13d23b09bfcbf6088061e1a09dbdce43528e2",
+    "scripts/reproduce/solution_io.py": "4f4bcae51716fee0f066fb48cc9c8bdc137822682f1c0733f2ebf66684e710c1",
+    "scripts/reproduce/objective_precision.py": "2db2a9b81c4e6a5d099a686a51bb312420cabc9d30dea8cb73ad8bd44522c84f",
+    "pyproject.toml": "27788f5f0293c62cc6e6cde8b1de425210ad4ba56523795aeecd5688aa979bdb",
+    "uv.lock": "5b0cf64796c740d6c261a36e44622a83bb92c9e1886ca5a0fc233c56911fac5c",
+    "scripts/reproduce/run_model_ablation.py": "c901ab05f128e0e9c68f779ec1d0726a125895d18551c9789fdcb713061c7e64",
+    "scripts/reproduce/model_ablation_analysis.py": "4844f24796f7da72171e5e6d50226d65185b334c122d6bec0bffcc0c79d3ae07"
+  },
+  "source_fingerprint": "f55a7149bd59620bd631830851313445335557f646fc7e4e21160e48496a419e",
+  "python": "3.12.11 (main, Sep  2 2025, 14:12:30) [Clang 20.1.4 ]",
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "suite": "benchmark",
+  "cases": [
+    {
+      "case_id": "S025",
+      "size_group": "small",
+      "num_nodes": 25,
+      "gamma": 3,
+      "damage_ratio": 0.15,
+      "eta_hours": 8,
+      "capacity_scale": 0.05,
+      "supply_ratio": 0.9,
+      "source": "synthetic",
+      "fleet_capacity_ratio": 0.14
+    }
+  ],
+  "instance_seeds_by_case": {
+    "S025": [
+      101
+    ]
+  },
+  "solver_seed_start": 50000,
+  "solver_repeats": 2,
+  "solver_repeat_start": 0,
+  "algorithm": "nsga2",
+  "model_version": "v2",
+  "evaluation": {
+    "model_version": "v2",
+    "fair_share_cap": false,
+    "dispatch_timing": "period_start",
+    "enforce_within_period_arrival": true,
+    "fleet_semantics": "exogenous_period_trip_budget"
+  },
+  "evaluation_fingerprint": "a94798a40d5036ec",
+  "budget": {
+    "max_evaluations": 200,
+    "pop_size": 16,
+    "crossover_probability": 0.9,
+    "mutation_probability": 0.2,
+    "alns_probability": 0.35,
+    "alns_iterations": 4
+  },
+  "planned_runs": 8,
+  "runs_in_directory": 8,
+  "runs_this_invocation": 8,
+  "resumed_runs": 8,
+  "planned_max_objective_evaluations": 1600,
+  "model_factor_order": [
+    "progressive_recovery",
+    "heterogeneous_vehicle_thresholds",
+    "edge_capacity_constraint"
+  ],
+  "selected_model_ids": [
+    "PR1_HT1_EC1",
+    "PR0_HT1_EC1",
+    "PR1_HT0_EC1",
+    "PR1_HT1_EC0"
+  ],
+  "model_combinations": [
+    {
+      "model_id": "PR1_HT1_EC1",
+      "progressive_recovery": 1,
+      "heterogeneous_vehicle_thresholds": 1,
+      "edge_capacity_constraint": 1
+    },
+    {
+      "model_id": "PR0_HT1_EC1",
+      "progressive_recovery": 0,
+      "heterogeneous_vehicle_thresholds": 1,
+      "edge_capacity_constraint": 1
+    },
+    {
+      "model_id": "PR1_HT0_EC1",
+      "progressive_recovery": 1,
+      "heterogeneous_vehicle_thresholds": 0,
+      "edge_capacity_constraint": 1
+    },
+    {
+      "model_id": "PR1_HT1_EC0",
+      "progressive_recovery": 1,
+      "heterogeneous_vehicle_thresholds": 1,
+      "edge_capacity_constraint": 0
+    }
+  ],
+  "full_execution_environment": {
+    "model_id": "PR1_HT1_EC1",
+    "progressive_recovery": 1,
+    "heterogeneous_vehicle_thresholds": 1,
+    "edge_capacity_constraint": 1,
+    "model_version": "v2",
+    "note": "planning groups are replayed in this environment by replay_solutions.py --execution-model full"
+  },
+  "uniform_vehicle_recovery_threshold_when_disabled": 0.3,
+  "objectives": {
+    "F1": "min_unmet_area",
+    "F2": "min_time_cost",
+    "F3": "min_neg_min_satisfaction"
+  },
+  "representative_rule": "lexicographic min of (F3, F1, F2), applied before any replay and recorded per solution as representative_selected_before_replay",
+  "formal_analysis": {
+    "status": "not_applicable",
+    "reason": "subset model selection: only a descriptive and replay summary is produced, no main-effect or interaction significance results",
+    "required_algorithm": "nsga2_alns",
+    "requires_all_eight_combinations": true,
+    "synthetic_analysis_unit": "instance seed after averaging paired solver repeats",
+    "wenchuan_analysis_unit": "solver run on the single fixed case-study instance",
+    "factorial_terms": "three main effects and three second-order interactions",
+    "confidence_interval": "95% BCa bootstrap interval of analysis-unit means",
+    "test": "two-sided paired sign-flip randomization test",
+    "multiple_comparison_correction": "Holm correction across six factorial terms within case and metric",
+    "bootstrap_samples": 5000,
+    "permutation_samples": 20000,
+    "analysis_seed": 20260831
+  },
+  "quality_indicators": {
+    "pooling": "one pooled non-dominated reference front per case_id and instance_seed across the selected model combinations and repeats",
+    "normalization": "pooled observed ideal/nadir per objective",
+    "hypervolume": "exact normalized 3D HV; reference point (1.1, 1.1, 1.1)",
+    "igd": "normalized Euclidean IGD to the pooled non-dominated front",
+    "caveat": "per-planning-model hypervolume is not evidence of model value; use the common-execution replay table for that"
+  }
+}

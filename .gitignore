@@ -15,10 +15,11 @@ wheels/
 #
 # Regenerable artifacts stay out of version control. The exceptions are the
 # result sets behind docs/pilot_v2_report.md: outputs/claude_v2/ is the first
-# delivery, kept as the before/after reference for the R1-R5 review fixes, and
-# outputs/claude_v2_reviewfix/ is the corrected run the report now cites. Their
-# run records, replay tables and diagnostic figures are kept so the reported
-# numbers can be checked without re-running anything. Everything else under
+# delivery, outputs/claude_v2_reviewfix/ is the first review round, and
+# outputs/claude_v2_reviewfix2/ is the second and the one the report now cites.
+# Their run records, replay tables and diagnostic figures are kept so the
+# reported numbers can be checked without re-running anything, and so each
+# correction can be compared against what it replaced. Everything else under
 # outputs/ is rebuilt by the commands in scripts/README.md.
 #
 # Note the wildcard: "outputs/" would exclude the directory itself, and a
@@ -26,6 +27,7 @@ wheels/
 outputs/*
 !outputs/claude_v2/
 !outputs/claude_v2_reviewfix/
+!outputs/claude_v2_reviewfix2/
 figures/
 *.png
 *.jpg
@@ -38,3 +40,4 @@ figures/
 # the diagnostic figures.
 !outputs/claude_v2/pilot_diagnostics.png
 !outputs/claude_v2_reviewfix/pilot_diagnostics.png
+!outputs/claude_v2_reviewfix2/pilot_diagnostics.png

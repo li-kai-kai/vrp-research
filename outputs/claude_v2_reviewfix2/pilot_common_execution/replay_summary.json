@@ -1,0 +1,18 @@
+{
+  "input_root": "outputs/claude_v2_reviewfix2/pilot_planning",
+  "output_dir": "outputs/claude_v2_reviewfix2/pilot_common_execution",
+  "execution_model": "full",
+  "solutions": 37,
+  "identity_checked_solutions": 9,
+  "failures": 0,
+  "abs_tolerance": 1e-08,
+  "rel_tolerance": 1e-08,
+  "different_model_solutions": 28,
+  "different_model_max_abs_delta_F1": 0.0,
+  "different_model_max_abs_delta_F2": 25.085172454663734,
+  "max_abs_error_F1": 0.0,
+  "max_abs_error_F2": 0.0,
+  "max_abs_error_F3": 0.0,
+  "max_rel_error_F1": 0.0,
+  "max_rel_error_F1_missing_rows": 0
+}
