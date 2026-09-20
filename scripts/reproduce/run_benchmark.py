@@ -31,7 +31,12 @@ from scripts.reproduce.benchmark_suite import (
     build_benchmark_instance,
     default_instance_seeds,
 )
-from scripts.reproduce.capacity_recovery import CapacityIndividual, _dominates
+from scripts.reproduce.capacity_recovery import (
+    MODEL_VERSIONS,
+    CapacityIndividual,
+    EvaluationConfig,
+    _dominates,
+)
 
 
 def main() -> None:
@@ -49,6 +54,7 @@ def main() -> None:
     )
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    evaluation = EvaluationConfig.for_version(args.model_version)
 
     records: list[tuple[BenchmarkSpec, int, int, AlgorithmRun]] = []
     instance_rows: list[dict[str, object]] = []
@@ -61,7 +67,11 @@ def main() -> None:
     run_idx = 0
     for spec in specs:
         for instance_seed in instance_seeds:
-            instance = build_benchmark_instance(spec, instance_seed=instance_seed)
+            instance = build_benchmark_instance(
+                spec,
+                instance_seed=instance_seed,
+                model_version=args.model_version,
+            )
             nominal_fleet_capacity = sum(
                 vehicle.capacity_ton * vehicle.count for vehicle in instance.vehicles
             )
@@ -121,6 +131,7 @@ def main() -> None:
         instance_seeds=instance_seeds,
         solver_repeats=solver_repeats,
         budget=budget,
+        evaluation=evaluation,
     )
     print(f"Done. Benchmark outputs written to {output_dir}")
 
@@ -130,6 +141,16 @@ def _parse_args() -> argparse.Namespace:
         description="Run the unified multi-scale capacity-recovery benchmark.",
     )
     parser.add_argument("--suite", choices=["smoke", "benchmark", "publication"], default="smoke")
+    parser.add_argument(
+        "--model-version",
+        choices=list(MODEL_VERSIONS),
+        default="legacy",
+        help=(
+            "Evaluation semantics. legacy keeps the historical global "
+            "supply/demand cap and end-of-period dispatch; v2 uses the frozen "
+            "period-start semantics in docs/model_v2_contract.md."
+        ),
+    )
     parser.add_argument("--cases", nargs="*", help="Optional case IDs, e.g. S025 M100 L400.")
     parser.add_argument("--instance-seeds", type=int, nargs="*")
     parser.add_argument("--solver-repeats", type=int)
@@ -430,9 +451,12 @@ def _write_manifest(
     instance_seeds: list[int],
     solver_repeats: int,
     budget: BenchmarkBudget,
+    evaluation: EvaluationConfig,
 ) -> None:
     manifest = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "evaluation": evaluation.as_dict(),
+        "evaluation_fingerprint": evaluation.fingerprint(),
         "git_sha": _git_sha(),
         "git_dirty": _git_dirty(),
         "source_files_sha256": _source_hashes(),

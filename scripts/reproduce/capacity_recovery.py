@@ -44,6 +44,122 @@ class RecoveryStage:
     speed_ratio: float
 
 
+# Recovery-progress comparisons share one tolerance so a test exactly at a
+# vehicle threshold is decided the same way everywhere.
+PROGRESS_TOLERANCE = 1e-9
+
+
+MODEL_VERSIONS = ("legacy", "v2")
+
+FLEET_SEMANTICS_EXOGENOUS_PERIOD_TRIP_BUDGET = "exogenous_period_trip_budget"
+
+_MODEL_PROFILES: dict[str, dict[str, Any]] = {
+    "legacy": {
+        "fair_share_cap": True,
+        "dispatch_timing": "period_end_legacy",
+        "enforce_within_period_arrival": False,
+    },
+    "v2": {
+        "fair_share_cap": False,
+        "dispatch_timing": "period_start",
+        "enforce_within_period_arrival": True,
+    },
+}
+
+
+@dataclass(frozen=True)
+class EvaluationConfig:
+    """Versioned evaluation semantics shared by every entry point.
+
+    ``legacy`` keeps the original global supply/demand ratio cap and the
+    end-of-period state semantics for historical regression. ``v2`` uses the
+    semantics frozen in ``docs/model_v2_contract.md``. The flags that differ
+    between versions cannot be mixed: a half-migrated configuration is rejected
+    instead of being silently evaluated.
+    """
+
+    model_version: str = "legacy"
+    fair_share_cap: bool = True
+    dispatch_timing: str = "period_end_legacy"
+    enforce_within_period_arrival: bool = False
+    fleet_semantics: str = FLEET_SEMANTICS_EXOGENOUS_PERIOD_TRIP_BUDGET
+
+    def __post_init__(self) -> None:
+        if self.model_version not in _MODEL_PROFILES:
+            raise ValueError(
+                f"unknown model_version {self.model_version!r}; "
+                f"expected one of {sorted(_MODEL_PROFILES)}"
+            )
+        if self.fleet_semantics != FLEET_SEMANTICS_EXOGENOUS_PERIOD_TRIP_BUDGET:
+            raise ValueError(
+                "fleet_semantics is fixed to "
+                f"{FLEET_SEMANTICS_EXOGENOUS_PERIOD_TRIP_BUDGET!r} in the first round"
+            )
+        profile = _MODEL_PROFILES[self.model_version]
+        inconsistent = [
+            name for name, expected in profile.items() if getattr(self, name) != expected
+        ]
+        if inconsistent:
+            details = ", ".join(
+                f"{name}={getattr(self, name)!r} (expected {profile[name]!r})"
+                for name in inconsistent
+            )
+            raise ValueError(
+                f"model_version={self.model_version!r} requires a consistent "
+                f"evaluation profile; got {details}"
+            )
+
+    @classmethod
+    def for_version(cls, model_version: str) -> EvaluationConfig:
+        try:
+            profile = _MODEL_PROFILES[model_version]
+        except KeyError:
+            raise ValueError(
+                f"unknown model_version {model_version!r}; "
+                f"expected one of {sorted(_MODEL_PROFILES)}"
+            ) from None
+        return cls(model_version=model_version, **profile)
+
+    @property
+    def period_start_dispatch(self) -> bool:
+        return self.dispatch_timing == "period_start"
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "model_version": self.model_version,
+            "fair_share_cap": self.fair_share_cap,
+            "dispatch_timing": self.dispatch_timing,
+            "enforce_within_period_arrival": self.enforce_within_period_arrival,
+            "fleet_semantics": self.fleet_semantics,
+        }
+
+    def fingerprint(self) -> str:
+        payload = json.dumps(self.as_dict(), sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+    def validate_instance_support(self, instance: CapacityExperimentInstance) -> None:
+        """Reject settings the first v2 round does not implement.
+
+        Crew transfer time and same-network crew accessibility are first-round
+        simplifications, both pinned to zero. A non-zero value must be reported
+        instead of being accepted and silently ignored.
+        """
+        if self.model_version != "v2":
+            return
+        unsupported: list[str] = []
+        if instance.crew_transfer_time_scale != 0.0:
+            unsupported.append("crew_transfer_time_scale")
+        if instance.crew_min_access_progress != 0.0:
+            unsupported.append("crew_min_access_progress")
+        if unsupported:
+            raise ValueError(
+                "model_version='v2' does not support non-zero "
+                + ", ".join(unsupported)
+                + "; unified crew-transfer time and crew accessibility are not "
+                "implemented in the first round"
+            )
+
+
 @dataclass
 class CapacityExperimentInstance:
     base: RandomInstance
@@ -56,6 +172,7 @@ class CapacityExperimentInstance:
     progressive_recovery: bool = True
     heterogeneous_vehicle_thresholds: bool = True
     edge_capacity_constraint: bool = True
+    evaluation: EvaluationConfig = field(default_factory=EvaluationConfig)
 
 
 @dataclass
@@ -297,10 +414,18 @@ def model_factor_variant(
         progressive_recovery=progressive_recovery,
         heterogeneous_vehicle_thresholds=heterogeneous_vehicle_thresholds,
         edge_capacity_constraint=edge_capacity_constraint,
+        # Version and evaluation configuration are inherited unchanged; the
+        # variant only flips the requested model factor.
+        evaluation=instance.evaluation,
     )
 
 
-def build_simulation_instance(seed: int, *, num_nodes: int = 25) -> CapacityExperimentInstance:
+def build_simulation_instance(
+    seed: int,
+    *,
+    num_nodes: int = 25,
+    model_version: str = "legacy",
+) -> CapacityExperimentInstance:
     base = generate_random_instance(
         num_nodes=num_nodes,
         gamma=3,
@@ -316,10 +441,15 @@ def build_simulation_instance(seed: int, *, num_nodes: int = 25) -> CapacityExpe
         base=base,
         vehicles=DEFAULT_VEHICLES,
         recovery_stages=DEFAULT_RECOVERY_STAGES,
+        evaluation=EvaluationConfig.for_version(model_version),
     )
 
 
-def build_wenchuan_instance(seed: int = 0) -> CapacityExperimentInstance:
+def build_wenchuan_instance(
+    seed: int = 0,
+    *,
+    model_version: str = "legacy",
+) -> CapacityExperimentInstance:
     nodes = {
         1: ("Dujiangyan", "S", 3000), 2: ("Pengzhou", "S", 3000), 3: ("Shifang", "S", 3000),
         4: ("Yutang", "D", 342), 5: ("Zhongxing", "D", 360), 6: ("Qingchengshan", "D", 322),
@@ -407,6 +537,7 @@ def build_wenchuan_instance(seed: int = 0) -> CapacityExperimentInstance:
         base=base,
         vehicles=DEFAULT_VEHICLES,
         recovery_stages=DEFAULT_RECOVERY_STAGES,
+        evaluation=EvaluationConfig.for_version(model_version),
     )
 
 
@@ -480,11 +611,32 @@ def solve_capacity_instance(
     )
 
 
+@dataclass
+class EvaluationOutcome:
+    """Full result of one shared-model evaluation."""
+
+    objectives: tuple[float, float, float]
+    metrics: dict[str, float]
+    period_delivered: list[float] = field(default_factory=list)
+    period_reachable_ratio: list[float] = field(default_factory=list)
+    allocations: list[dict[str, Any]] = field(default_factory=list)
+
+
 def evaluate_capacity_solution(
     instance: CapacityExperimentInstance,
     individual: CapacityIndividual,
 ) -> tuple[tuple[float, float, float], dict[str, float]]:
+    outcome = evaluate_capacity_solution_detailed(instance, individual)
+    return outcome.objectives, outcome.metrics
+
+
+def evaluate_capacity_solution_detailed(
+    instance: CapacityExperimentInstance,
+    individual: CapacityIndividual,
+) -> EvaluationOutcome:
     base = instance.base
+    config = instance.evaluation
+    config.validate_instance_support(instance)
     schedule = _decode_timed_schedule(
         base,
         individual.repair_order,
@@ -516,10 +668,21 @@ def evaluate_capacity_solution(
     high_utilization_edge_periods = 0
     capacity_blocked_tons = 0.0
     total_vehicle_trips = 0
+    period_delivered: list[float] = []
+    time_infeasible_candidates: set[tuple[int, int, int]] = set()
+    time_feasible_demand_periods = 0
+    allocations: list[dict[str, Any]] = []
 
     for period in range(1, base.periods + 1):
-        time_minutes = period * base.eta_minutes
-        progress = _repair_progress_by_damage(base, schedule, time_minutes)
+        # v2 samples the state at the start of the period, so capacity built
+        # during this period is only usable next period. legacy keeps the
+        # original end-of-period sampling for historical regression.
+        progress_time = (
+            (period - 1) * base.eta_minutes
+            if config.period_start_dispatch
+            else period * base.eta_minutes
+        )
+        progress = _repair_progress_by_damage(base, schedule, progress_time)
         for value in progress.values():
             if 1e-9 < value < 1.0 - 1e-9:
                 partial_recovery_edge_periods += 1
@@ -534,9 +697,16 @@ def evaluate_capacity_solution(
             progress,
             remaining_supply,
             remaining_demand,
+            config,
         )
+        period_amount = 0.0
         for demand, amount in period_result["delivered"].items():
             delivered[demand] += amount
+            period_amount += amount
+        period_delivered.append(period_amount)
+        time_infeasible_candidates.update(period_result["time_infeasible_candidates"])
+        time_feasible_demand_periods += len(period_result["time_feasible_demands"])
+        allocations.extend(period_result["allocations"])
         total_delivery_time += period_result["delivery_time"]
         for vehicle_type, amount in period_result["vehicle_tons"].items():
             vehicle_ton_by_type[vehicle_type] += amount
@@ -579,6 +749,16 @@ def evaluate_capacity_solution(
         time_cost,
         -final_min_satisfaction,
     )
+    total_delivered_tons = sum(
+        min(delivered[demand], base.demand_amounts[demand])
+        for demand in base.demands
+    )
+    zero_service_demands = sum(
+        1 for demand in base.demands if delivered[demand] <= 1e-9
+    )
+    remaining_supply_tons = sum(
+        max(0.0, amount) for amount in remaining_supply.values()
+    )
     metrics = {
         "capacity_scale": instance.capacity_scale,
         "repair_time_weight": instance.repair_time_weight,
@@ -601,8 +781,27 @@ def evaluate_capacity_solution(
         "high_utilization_edge_periods": float(high_utilization_edge_periods),
         "capacity_blocked_tons": capacity_blocked_tons,
         "total_vehicle_trips": float(total_vehicle_trips),
+        # Discrete end-of-period sampling scaled by the period length. This is
+        # not a continuous deprivation cost integrated over exact arrival times.
+        "unmet_ratio_hours": unmet_area * base.eta_hours,
+        "zero_service_ratio": zero_service_demands / max(len(base.demands), 1),
+        "remaining_supply": remaining_supply_tons,
+        "total_delivered": total_delivered_tons,
+        "min_period_delivered": min(period_delivered, default=0.0),
+        "max_period_delivered": max(period_delivered, default=0.0),
+        # Demand connectivity separately named from the topology-based
+        # average_reachable_ratio: a demand may be topologically reachable while
+        # no single trip can arrive inside one period.
+        "time_infeasible_candidates": float(len(time_infeasible_candidates)),
+        "time_feasible_demand_periods": float(time_feasible_demand_periods),
     }
-    return objectives, metrics
+    return EvaluationOutcome(
+        objectives=objectives,
+        metrics=metrics,
+        period_delivered=period_delivered,
+        period_reachable_ratio=reachable_ratios,
+        allocations=allocations,
+    )
 
 
 def _decode_timed_schedule(
@@ -750,8 +949,11 @@ def _dispatch_with_vehicle_types(
     progress: dict[int, float],
     remaining_supply: dict[int, float],
     remaining_demand: dict[int, float],
+    config: EvaluationConfig | None = None,
 ) -> dict[str, Any]:
     base = instance.base
+    config = config if config is not None else instance.evaluation
+    period_minutes = float(base.eta_minutes)
     vehicle_trips_left = {
         vehicle.vehicle_type: vehicle.count
         for vehicle in instance.vehicles
@@ -770,16 +972,34 @@ def _dispatch_with_vehicle_types(
     for paths in shortest_by_vehicle.values():
         reachable.update(demand for _, demand in paths)
 
+    # Topology reachability keeps its original meaning. Time feasibility is a
+    # separate statistic: a demand can be reachable while no single trip can
+    # arrive inside one period.
+    time_infeasible_candidates: set[tuple[int, int, int]] = set()
+    time_feasible: set[int] = set(reachable)
+    if config.enforce_within_period_arrival:
+        time_feasible = set()
+        for vehicle in instance.vehicles:
+            for (supplier, demand), (travel_time, _path) in shortest_by_vehicle[
+                vehicle.vehicle_type
+            ].items():
+                if travel_time <= period_minutes + PROGRESS_TOLERANCE:
+                    time_feasible.add(demand)
+                else:
+                    time_infeasible_candidates.add(
+                        (supplier, demand, vehicle.vehicle_type)
+                    )
+
     delivered = {demand: 0.0 for demand in base.demands}
     vehicle_tons = {vehicle.vehicle_type: 0.0 for vehicle in instance.vehicles}
     vehicle_trips = {vehicle.vehicle_type: 0 for vehicle in instance.vehicles}
     capacity_blocked_demands: set[int] = set()
     allocations: list[dict[str, Any]] = []
     delivery_time = 0.0
-    reachable_demands = [
+    serviceable_demands = [
         demand
         for demand in base.demands
-        if demand in reachable and remaining_demand.get(demand, 0.0) > 1e-9
+        if demand in time_feasible and remaining_demand.get(demand, 0.0) > 1e-9
     ]
     available_supply = sum(max(0.0, remaining_supply.get(supplier, 0.0)) for supplier in base.suppliers)
     available_vehicle_capacity = sum(
@@ -791,22 +1011,34 @@ def _dispatch_with_vehicle_types(
         demand: max(0.0, base.demand_amounts[demand] - remaining_demand.get(demand, 0.0))
         for demand in base.demands
     }
-    fair_ceiling = min(1.0, base.total_supply / max(base.total_demand, 1e-9))
+    # legacy caps every demand point by the global supply/demand ratio. v2
+    # drops that cap: a demand point is limited only by its own requirement, so
+    # a permanently unreachable demand no longer strands the rest of the
+    # resources. Both rounds keep the fleet, passability and edge-capacity
+    # constraints below.
+    fair_ceiling = (
+        min(1.0, base.total_supply / max(base.total_demand, 1e-9))
+        if config.fair_share_cap
+        else 1.0
+    )
     target_level = min(
         fair_ceiling,
         _max_min_satisfaction_target(
             base,
-            reachable_demands,
+            serviceable_demands,
             current_delivered,
             fair_resource,
         ),
     )
+    # Both rounds pass period-total targets: _allocate_vehicle_aware subtracts
+    # this period's delivered amount itself, so pre-subtracting here would
+    # double-count the reduction.
     fair_targets = {
         demand: min(
             remaining_demand[demand],
             max(0.0, target_level * base.demand_amounts[demand] - current_delivered[demand]),
         )
-        for demand in reachable_demands
+        for demand in serviceable_demands
     }
     delivery_time += _allocate_vehicle_aware(
         instance,
@@ -822,13 +1054,16 @@ def _dispatch_with_vehicle_types(
         fair_targets,
         capacity_blocked_demands,
         allocations,
+        config=config,
+        period_minutes=period_minutes,
+        time_infeasible_candidates=time_infeasible_candidates,
     )
     residual_targets = {
         demand: min(
             remaining_demand.get(demand, 0.0),
             max(0.0, fair_ceiling * base.demand_amounts[demand] - current_delivered[demand]),
         )
-        for demand in reachable_demands
+        for demand in serviceable_demands
     }
     delivery_time += _allocate_vehicle_aware(
         instance,
@@ -844,6 +1079,9 @@ def _dispatch_with_vehicle_types(
         residual_targets,
         capacity_blocked_demands,
         allocations,
+        config=config,
+        period_minutes=period_minutes,
+        time_infeasible_candidates=time_infeasible_candidates,
     )
 
     max_edge_utilization, high_utilization_edges = _edge_utilization_stats(
@@ -860,6 +1098,8 @@ def _dispatch_with_vehicle_types(
         "delivery_time": delivery_time,
         "reachable_count": len(reachable),
         "reachable_demands": sorted(reachable),
+        "time_feasible_demands": sorted(time_feasible),
+        "time_infeasible_candidates": time_infeasible_candidates,
         "allocations": allocations,
         "vehicle_tons": vehicle_tons,
         "vehicle_trips": vehicle_trips,
@@ -909,7 +1149,12 @@ def _allocate_vehicle_aware(
     targets: dict[int, float],
     capacity_blocked_demands: set[int],
     allocations: list[dict[str, Any]],
+    *,
+    config: EvaluationConfig | None = None,
+    period_minutes: float = 0.0,
+    time_infeasible_candidates: set[tuple[int, int, int]] | None = None,
 ) -> float:
+    config = config if config is not None else instance.evaluation
     delivery_time = 0.0
     for supplier, demand in dispatch_priority:
         if targets.get(demand, 0.0) <= delivered.get(demand, 0.0) + 1e-9:
@@ -929,6 +1174,18 @@ def _allocate_vehicle_aware(
                 topology_path = shortest_by_vehicle[vehicle.vehicle_type].get((supplier, demand))
                 if topology_path is None:
                     continue
+                if (
+                    config.enforce_within_period_arrival
+                    and topology_path[0] > period_minutes + PROGRESS_TOLERANCE
+                ):
+                    # Even the topology shortest path needs more than one period.
+                    # No capacity-feasible path can be shorter, so reject before
+                    # computing one: nothing is deducted and nothing arrives.
+                    if time_infeasible_candidates is not None:
+                        time_infeasible_candidates.add(
+                            (supplier, demand, vehicle.vehicle_type)
+                        )
+                    continue
                 path_info = (
                     _capacity_feasible_shortest_path(
                         instance,
@@ -945,6 +1202,16 @@ def _allocate_vehicle_aware(
                     topology_exists_but_capacity_blocks = True
                     continue
                 travel_time, path = path_info
+                if (
+                    config.enforce_within_period_arrival
+                    and travel_time > period_minutes + PROGRESS_TOLERANCE
+                ):
+                    # A capacity detour pushed the trip past the period length.
+                    if time_infeasible_candidates is not None:
+                        time_infeasible_candidates.add(
+                            (supplier, demand, vehicle.vehicle_type)
+                        )
+                    continue
                 path_capacity_trips = (
                     _path_trip_capacity(
                         path,
@@ -1129,7 +1396,7 @@ def _build_vehicle_graph(
             ratio = _capacity_ratio(instance.recovery_stages, p)
             speed_ratio = _speed_ratio(instance.recovery_stages, p)
             passable = (
-                p >= vehicle.min_recovery_progress
+                p >= vehicle.min_recovery_progress - PROGRESS_TOLERANCE
                 and ratio > 0.0
                 and speed_ratio > 0.0
             )
@@ -1584,6 +1851,8 @@ def _experiment_parameters(
                 instance.heterogeneous_vehicle_thresholds
             ),
             "edge_capacity_constraint": instance.edge_capacity_constraint,
+            "evaluation": instance.evaluation.as_dict(),
+            "evaluation_fingerprint": instance.evaluation.fingerprint(),
             "vehicles": [asdict(vehicle) for vehicle in instance.vehicles],
             "recovery_stages": [asdict(stage) for stage in instance.recovery_stages],
         },

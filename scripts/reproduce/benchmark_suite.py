@@ -6,6 +6,7 @@ from scripts.reproduce.capacity_recovery import (
     DEFAULT_RECOVERY_STAGES,
     DEFAULT_VEHICLES,
     CapacityExperimentInstance,
+    EvaluationConfig,
     build_wenchuan_instance,
 )
 from scripts.reproduce.instance_generator import generate_random_instance
@@ -79,11 +80,14 @@ def build_benchmark_instance(
     spec: BenchmarkSpec,
     *,
     instance_seed: int,
+    model_version: str = "legacy",
 ) -> CapacityExperimentInstance:
+    evaluation = EvaluationConfig.for_version(model_version)
     if spec.source == "wenchuan":
         instance = build_wenchuan_instance(seed=instance_seed)
         instance.base.name = f"{spec.case_id}_seed{instance_seed}"
         instance.capacity_scale = spec.capacity_scale
+        instance.evaluation = evaluation
         return instance
 
     base = generate_random_instance(
@@ -117,4 +121,5 @@ def build_benchmark_instance(
         vehicles=vehicles,
         recovery_stages=list(DEFAULT_RECOVERY_STAGES),
         capacity_scale=spec.capacity_scale,
+        evaluation=evaluation,
     )
