@@ -85,6 +85,7 @@ def main() -> None:
     store = RunStore(output_dir)
     budget_payload = asdict(budget)
     source_fp = source_fingerprint(REPO_ROOT, SOURCE_FILES)
+    store.check_source_consistency(source_fp)
 
     records: list[dict[str, object]] = []
     instance_rows: list[dict[str, object]] = []
@@ -527,6 +528,10 @@ def _write_manifest(
         "algorithms": args.algorithms,
         "budget": asdict(budget),
         "objectives": ["min_unmet_area", "min_time_cost", "min_neg_min_satisfaction"],
+        "representative_rule": (
+            "lexicographic min of (F3, F1, F2), applied before any replay and "
+            "recorded per solution as representative_selected_before_replay"
+        ),
         "quality_indicators": {
             "hypervolume": "exact normalized 3D HV; pooled reference point (1.1, 1.1, 1.1)",
             "igd": "normalized Euclidean IGD to pooled non-dominated front per instance",

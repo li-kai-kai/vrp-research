@@ -196,6 +196,34 @@ class SolutionIOTest(unittest.TestCase):
             self.assertFalse(store.has_complete_run(key(model_fingerprint_value="other")))
             self.assertFalse(store.has_complete_run(key(source_fingerprint="other")))
 
+    def test_mixing_code_revisions_in_one_directory_is_refused(self):
+        instance = _instance()
+        with TemporaryDirectory() as directory:
+            store = RunStore(Path(directory))
+            store.save_run(_record(store, instance))
+
+            # The same revision is fine; a different one is refused outright
+            # rather than silently combined with the stored numbers.
+            store.check_source_consistency("test-source-fingerprint")
+            with self.assertRaises(SolutionIOError):
+                store.check_source_consistency("some-other-revision")
+
+            # A partial file from an interrupted write is not a revision clash.
+            partial = store.runs_dir / "interrupted.json"
+            partial.write_text('{"run_key": "interrupted"', encoding="utf-8")
+            store.check_source_consistency("test-source-fingerprint")
+
+    def test_operator_contributions_are_reported(self):
+        instance = _instance()
+        result, _budget = _solve(instance, algorithm="nsga2_ls")
+        operators = {
+            key: value
+            for key, value in result.diagnostics.items()
+            if key.startswith("operator.")
+        }
+        self.assertGreater(result.diagnostics["local_search_evaluations"], 0.0)
+        self.assertEqual(sum(operators.values()), result.diagnostics["local_search_evaluations"])
+
     def test_completed_runs_survive_an_interrupted_write(self):
         instance = _instance()
         with TemporaryDirectory() as directory:

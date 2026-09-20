@@ -8,13 +8,16 @@
 
 | 脚本 | 作用 | 备注 |
 |---|---|---|
-| `reproduce/run_benchmark.py` | SPT、VND、NSGA-II、自适应 NSGA-II + ALNS 的同预算算法比较 | 算法对照主入口 |
+| `reproduce/run_benchmark.py` | SPT、VND、NSGA-II、均匀局部搜索 NSGA-II、自适应 NSGA-II + ALNS 的同预算算法比较 | 算法对照主入口；`--model-version`、`--resume` |
+| `reproduce/replay_solutions.py` | 重算已保存决策：`--execution-model saved` 校验同模型可重建，`full` 在共同执行环境中重放规划决策 | 回放入口 |
+| `reproduce/solution_io.py` | 实例快照、生效配置、完整决策的共享序列化与原子写入，运行指纹与完整性校验 | 所有入口共用，不重复实现 |
+| `reproduce/plot_pilot_diagnostics.py` | 只读真实 CSV 与运行记录绘制 v2 小预算诊断图 | 无硬编码数值 |
 | `plot_benchmark_results.py` | 显式读取 benchmark `runs.csv` 绘图 | 不含硬编码实验数值 |
-| `reproduce/capacity_recovery.py` | 道路容量渐进恢复、车型阈值、边—周期 pcu 吞吐和 NSGA-II + ALNS 原型实验 | 决策/Pareto 原型入口；固定概率局部搜索 |
-| `reproduce/dynamic_interaction_experiments.py` | 二元静态、渐进静态、渐进 open-loop/rolling 对照，输出容量指标、进度预测误差和维修效率实现 | 机制验证主入口 |
+| `reproduce/capacity_recovery.py` | 道路容量渐进恢复、车型阈值、边—周期 pcu 吞吐和 NSGA-II + ALNS 原型实验 | 决策/Pareto 原型入口；`EvaluationConfig` 定义 legacy/v2 语义 |
+| `reproduce/dynamic_interaction_experiments.py` | 二元静态、渐进静态、渐进 open-loop/rolling 对照，输出容量指标、进度预测误差和维修效率实现 | 机制验证主入口；本轮显式沿用 legacy |
 | `reproduce/dynamic_interaction_grid.py` | 运行多种子 × 12 组资源设置并生成四机制配对汇总，支持容量与维修效率敏感性 | 网格复现入口 |
-| `reproduce/run_model_ablation.py` | 对渐进恢复、异质车型阈值和边—周期容量约束运行完整 `2^3` 配对消融 | 模型 factorial 入口 |
-| `reproduce/model_ablation_analysis.py` | 合并消融分片，重算统一 pooled HV/IGD，并估计主效应、二阶交互及配对统计 | 正式消融分析入口 |
+| `reproduce/run_model_ablation.py` | 对渐进恢复、异质车型阈值和边—周期容量约束运行配对消融 | `--model-ids` 子集只出描述性汇总，不做显著性 |
+| `reproduce/model_ablation_analysis.py` | 合并消融分片，重算统一 pooled HV/IGD，并估计主效应、二阶交互及配对统计 | 正式消融分析入口（完整 `2^3` + `nsga2_alns`） |
 | `reproduce/stage_visualization.py` | 按周期绘制道路、需求、维修队快照，并输出维修与配送决策时序图 | 阶段状态展示入口 |
 | `reproduce/model.py` 等模块 | 实例、调度、配送、指标、求解和可视化 | 主线共享实现 |
 | `plot_initial_network.py` | 绘制初始路网、供给点、需求点和受损路段 | 用于检查表格数据和网络结构 |
@@ -48,6 +51,55 @@ uv run python scripts/reproduce/stage_visualization.py --scenario wenchuan --mec
 效率目标中的维修作业工时权重可通过 `--repair-time-weight` 调整，默认值为 0.05；启用转场后，该权重作用于现场维修工时与转场时间之和，转场时间本身由 `--crew-transfer-time-scale` 控制。
 容量恢复实验会保存 `pareto_front_runs.csv`（每次运行的非支配 archive）、`pareto_front.csv`（跨运行合并后仍然非支配的全局近似前沿）、`pareto_solutions.json`（完整染色体决策）、`experiment_manifest.json`（全部运行参数）和 `pareto_front.png`（三目标前沿图）。前沿来自跨代外部 archive，而不再局限于最终种群中的单一代表解。
 模型消融入口固定使用 benchmark 的 `nsga2_alns` 求解器；同一实例与求解种子下的八个组合共享评价预算，并按实例汇总所有组合和重复形成 pooled reference front。输出包括 `model_ablation.csv`、`pareto_points.csv`、`pooled_reference_front.csv` 和 `experiment_manifest.json`。
+
+## 评价版本与运行产物
+
+`run_benchmark.py` 与 `run_model_ablation.py` 都接受 `--model-version {legacy,v2}`；默认 `legacy` 以保持历史回归，
+新诊断一律显式传 `v2`。`--algorithms` 现包含 `nsga2_ls`（与 `nsga2_alns` 同算子、同调用概率，但**均匀**选择、不更新权重）
+作为自适应选择的对照。`run_model_ablation.py --model-ids` 可选择八组合的任意子集，此时只输出描述性与回放汇总，
+`factor_effects*.csv` 等表写入 `not_applicable` 与原因，不计算主效应或交互显著性。
+
+两个入口都支持 `--resume`：只跳过实例、代码、模型、算法、预算**完全一致**且完整的已完成运行。
+若目录中已有**其他代码版本**产生的运行记录，入口会直接报错并要求换新目录，不会静默混用。
+
+运行目录结构（`solution_io.py` 统一维护）：
+
+```text
+<output-dir>/
+  experiment_manifest.json     实际生效配置、模型版本、代码指纹、计划/完成/跳过运行数
+  instances/<model_fp>.json    每个规划模型变体的完整实例快照
+  executions/<physical_hash>.json  四规划组共享的 Full 执行环境
+  runs/<run_key>.json          完整运行单元：决策、目标、指标、收敛、预算、诊断计数、完整性校验
+  runs.csv                     每次运行的汇总（含评价数、预算、终止原因、算子贡献）
+  solutions.jsonl              每个非支配决策一行，含完整三段决策
+  pareto_points.csv
+  convergence.csv
+```
+
+`solutions.jsonl` 与各汇总 CSV 都可以从 `runs/` 的完整运行文件再生。回放：
+
+```bash
+uv run python scripts/reproduce/replay_solutions.py \
+  --input-root outputs/claude_v2/pilot_algorithm --execution-model saved \
+  --output-dir outputs/claude_v2/pilot_algorithm_roundtrip
+uv run python scripts/reproduce/replay_solutions.py \
+  --input-root outputs/claude_v2/pilot_planning --execution-model full \
+  --output-dir outputs/claude_v2/pilot_common_execution
+```
+
+`saved` 必须逐位复现原目标（默认容差 `abs_tol=1e-8, rel_tol=1e-8`），不一致即非零退出；
+`full` 在共同执行环境中重放规划决策，差值写入 `replay_results.csv`（原始有符号差，三目标均为最小化）。
+v2 语义与单位见[模型 v2 合同](../docs/model_v2_contract.md)，已执行诊断见[v2 小预算诊断报告](../docs/pilot_v2_report.md)。
+
+```bash
+uv run python scripts/reproduce/run_benchmark.py \
+  --suite benchmark --cases S025 --model-version v2 \
+  --instance-seeds 101 102 --solver-repeats 3 --solver-seed-start 50000 \
+  --algorithms nsga2 nsga2_ls nsga2_alns \
+  --max-evaluations 500 --pop-size 32 \
+  --output-dir outputs/claude_v2/pilot_algorithm
+uv run python scripts/reproduce/plot_pilot_diagnostics.py
+```
 
 正式消融使用 `publication` 配置。合成案例以“实例种子”为统计单位，先平均同一实例上的配对 solver 重复；汶川案例是固定网络，只运行一个实例副本并以 solver 重复为统计单位，避免把同一网络改名后当作独立实例。建议按“案例 × 实例种子”分片，每个分片保留完整 30 次 solver 重复，例如：
 

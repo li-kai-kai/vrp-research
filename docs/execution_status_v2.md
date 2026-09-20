@@ -15,7 +15,7 @@
 | P2 | 完整决策保存、恢复和同模型回放 | 通过 | `scripts/reproduce/solution_io.py`、`replay_solutions.py`；`tests/test_solution_io.py`（9 个用例） |
 | P3 | 搜索档案、预算与评分修正 | 通过 | `benchmark_algorithms.py`；`tests/test_search_contract.py`（13 个用例） |
 | P4 | 不同规划模型统一执行回放 | 通过 | `run_model_ablation.py` 子集入口、`replay_solutions.py --execution-model full`；`tests/test_common_execution.py`（8 个用例） |
-| P5 | 小预算诊断与交付 | 待执行 | — |
+| P5 | 小预算诊断与交付 | 通过 | `outputs/claude_v2/`；[v2 小预算诊断报告](pilot_v2_report.md) |
 | P6 | 正式实验方案与运行 | 待执行（本轮不启动） | — |
 | P7 | 专用大邻域与动态扩展 | 待执行（本轮不实现） | — |
 
@@ -56,6 +56,19 @@ uv run python scripts/reproduce/run_benchmark.py \
 
 合同测试中发现的既有实现特征（非本轮修改，已固化为回归断言）：
 车辆额度按**趟次**计，一次分配无论载重都消耗一整趟，因此单车型 60 吨、1 辆时只能服务一个需求点。
+
+## P5 执行记录
+
+最终测试：`uv run python -m unittest discover -s tests -v` → **63 个，63 通过，0 失败，0 错误**。
+执行的诊断命令、评价预算核对、算法与模型诊断结果、产物路径与限制全部见
+[v2 小预算诊断报告](pilot_v2_report.md)。
+
+关键诊断结论（限于 S025 与 `capacity_scale=0.05`，不外推）：
+
+- 同模型回放 467 个决策，最大绝对/相对误差均为 0.0。
+- 统一 Full 执行回放 152 个决策，0 失败；Full 组自身规划目标与执行回放逐位一致。
+- 该标定下**异质阈值与边容量不改变任何目标**，绑定资源是车队趟次预算；这是需要下一轮定位的标定问题。
+- 四模型子集未输出任何主效应或交互显著性结果。
 
 ## 保护的用户已有改动
 

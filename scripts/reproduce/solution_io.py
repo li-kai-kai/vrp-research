@@ -876,6 +876,35 @@ class RunStore:
             records.append(self._validate_run(_read_json(path), path.stem))
         return records
 
+    def check_source_consistency(self, source_fingerprint_value: str) -> None:
+        """Refuse to mix runs produced by different code revisions.
+
+        Every run in one directory must come from the same source fingerprint.
+        Mixing revisions would silently combine numbers that were produced by
+        different implementations, so the caller is told to use a new directory
+        instead.
+        """
+        stale: list[str] = []
+        for path in sorted(self.runs_dir.glob("*.json")) if self.runs_dir.is_dir() else []:
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                # A partial file from an interrupted write is not evidence of a
+                # different revision; the run loop will never treat it as done.
+                continue
+            if not isinstance(payload, dict):
+                continue
+            stored = payload.get("source_fingerprint")
+            if stored is not None and stored != source_fingerprint_value:
+                stale.append(path.name)
+        if stale:
+            raise SolutionIOError(
+                f"{len(stale)} run record(s) in {self.runs_dir} were produced by a "
+                "different code revision (for example "
+                f"{sorted(stale)[0]}); write this run to a new output directory "
+                "instead of mixing revisions"
+            )
+
     def _validate_run(self, payload: dict[str, Any], run_key: str) -> dict[str, Any]:
         if not isinstance(payload, dict):
             raise SolutionIOError(f"run {run_key} is not a JSON object")
@@ -937,6 +966,15 @@ SUMMARY_COLUMNS = (
     "evaluations",
     "max_evaluations",
     "termination_reason",
+    "proposals",
+    "cache_hits",
+    "local_search_evaluations",
+    "distinct_evaluated",
+    "operator_swap_two_repairs",
+    "operator_insert_repair",
+    "operator_rebalance_team",
+    "operator_swap_two_dispatches",
+    "operator_move_high_demand_priority",
     "runtime_seconds",
     "pareto_size",
     "reference_front_size",
@@ -1082,7 +1120,8 @@ def _is_finite(value: float) -> bool:
 def run_summary_row(record: dict[str, Any]) -> dict[str, Any]:
     objectives = record.get("objectives") or [None, None, None]
     metrics = record.get("metrics") or {}
-    return {
+    diagnostics = record.get("diagnostics") or {}
+    row = {
         "run_key": record["run_key"],
         "case_id": record["case_id"],
         "suite": record.get("suite"),
@@ -1119,7 +1158,17 @@ def run_summary_row(record: dict[str, Any]) -> dict[str, Any]:
         "time_infeasible_candidates": metrics.get("time_infeasible_candidates"),
         "capacity_blocked_tons": metrics.get("capacity_blocked_tons"),
         "total_vehicle_trips": metrics.get("total_vehicle_trips"),
+        "proposals": diagnostics.get("proposals"),
+        "cache_hits": diagnostics.get("cache_hits"),
+        "local_search_evaluations": diagnostics.get("local_search_evaluations"),
+        "distinct_evaluated": diagnostics.get("distinct_evaluated"),
     }
+    # Operator contributions are written as flat columns so the search
+    # diagnostics are auditable from the summary CSV alone.
+    for key, value in diagnostics.items():
+        if key.startswith("operator."):
+            row[f"operator_{key.split('.', 1)[1].lstrip('_')}"] = value
+    return row
 
 
 def pareto_point_rows(record: dict[str, Any]) -> list[dict[str, Any]]:

@@ -135,13 +135,16 @@ class _Evaluator:
         return list(self.evaluated)
 
     def diagnostics(self) -> dict[str, float]:
-        return {
+        payload = {
             "proposals": float(self.proposals),
             "evaluations": float(self.count),
             "cache_hits": float(self.cache_hits),
             "local_search_evaluations": float(self.local_search_evaluations),
             "distinct_evaluated": float(len(self.evaluated)),
         }
+        for name, count in self.operator_proposals.items():
+            payload[f"operator.{name}"] = float(count)
+        return payload
 
 
 def solve_benchmark_algorithm(

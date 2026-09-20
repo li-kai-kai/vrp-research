@@ -216,6 +216,7 @@ def run_model_ablation(
     source_fp = source_fingerprint(
         Path(__file__).resolve().parents[2], ABLATION_SOURCE_FILES
     )
+    store.check_source_consistency(source_fp)
 
     records: list[AblationRecord] = []
     instance_rows: list[dict[str, object]] = []
@@ -814,6 +815,10 @@ def _write_manifest(
             "F2": "min_time_cost",
             "F3": "min_neg_min_satisfaction",
         },
+        "representative_rule": (
+            "lexicographic min of (F3, F1, F2), applied before any replay and "
+            "recorded per solution as representative_selected_before_replay"
+        ),
         "formal_analysis": {
             "status": analysis["status"],
             "reason": analysis["reason"],

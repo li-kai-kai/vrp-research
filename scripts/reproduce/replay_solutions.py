@@ -272,14 +272,15 @@ def _summarize(rows: list[dict[str, Any]], args: argparse.Namespace) -> dict[str
             (abs(row["replay_minus_planning_F3"]) for row in finite_rows),
             default=None,
         )
-        summary["max_rel_error_F1"] = max(
-            (
-                abs(row["replay_minus_planning_F1"])
-                / max(abs(row["planning_F1"]), 1e-12)
-                for row in finite_rows
-            ),
-            default=None,
-        )
+        # A zero planned value has no percentage. Those rows are reported as
+        # missing rather than being divided by an epsilon and inflated.
+        ratios = [
+            abs(row["replay_minus_planning_F1"]) / abs(row["planning_F1"])
+            for row in finite_rows
+            if abs(row["planning_F1"]) > 0.0
+        ]
+        summary["max_rel_error_F1"] = max(ratios, default=None)
+        summary["max_rel_error_F1_missing_rows"] = len(finite_rows) - len(ratios)
     return summary
 
 
