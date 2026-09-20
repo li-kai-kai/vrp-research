@@ -1,0 +1,229 @@
+{
+  "scope": "mechanism applicability (PR / HT / EC) diagnostic evidence; the diagnostic is read-only with respect to the model, the search, replay, numerical precision and FullExecutionProfile",
+  "code": {
+    "git_sha": "4881b6211a010cc4462817841a6a1ff07de00dfd",
+    "git_dirty": true,
+    "python": "3.12.11 (main, Sep  2 2025, 14:12:30) [Clang 20.1.4 ]",
+    "python_version": "3.12.11",
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "created_at_utc": "2026-09-20T11:52:33.591655+00:00"
+  },
+  "source_hashes": {
+    "scripts/reproduce/mechanism_applicability.py": "805e9cb34b8705f829c42abc5b1bc7862c906cb4f82de685ef7be8680313f6e5",
+    "scripts/reproduce/benchmark_algorithms.py": "b5b686e955da0dbea46d78d0d94376af7aac791ec0dc56f3d9200c9b1743e034",
+    "scripts/reproduce/benchmark_suite.py": "2477265e0943ae24100fbd4b093fbda5e12fc2e3f0ba38c3544d5886aba175e5",
+    "scripts/reproduce/capacity_recovery.py": "5a016c1d7c0acab2e681b6d49c02a40e3d3e0d24c5d90b2b7cdf6b671a4fc817",
+    "scripts/reproduce/instance_generator.py": "f121ea469e6bc7f547abc1b241c0baa35792960e465bdca0ea90098307712021",
+    "scripts/reproduce/objective_precision.py": "2db2a9b81c4e6a5d099a686a51bb312420cabc9d30dea8cb73ad8bd44522c84f",
+    "scripts/reproduce/solution_io.py": "4f4bcae51716fee0f066fb48cc9c8bdc137822682f1c0733f2ebf66684e710c1"
+  },
+  "audit_builder": "scripts/reproduce/build_mechanism_audit.py",
+  "provenance_note": "git_sha and git_dirty are captured when this file is written, so git_dirty is true whenever the evidence set itself is not yet committed. source_hashes is the authoritative pin: it is the content digest of the scripts that produced the probe outputs, and it is unaffected by commit timing.",
+  "tables": {
+    "mechanism_summary.csv": 80,
+    "topology_summary.csv": 4,
+    "resource_grid_summary.csv": 640,
+    "bottleneck_summary.csv": 8,
+    "zone_exposure.csv": 6,
+    "zone_replay_summary.csv": 12
+  },
+  "topology_cells": [
+    {
+      "cell": "fourcell_benchmark",
+      "description": "random damage, random roles",
+      "graph_bridge_count": 0,
+      "damaged_bridge_count": 0,
+      "bridge_gated_demand_count": 0
+    },
+    {
+      "cell": "fourcell_critical_random",
+      "description": "critical damage requested, random roles",
+      "graph_bridge_count": 0,
+      "damaged_bridge_count": 0,
+      "bridge_gated_demand_count": 0
+    },
+    {
+      "cell": "fourcell_critical_separated",
+      "description": "critical damage requested, separated roles",
+      "graph_bridge_count": 0,
+      "damaged_bridge_count": 0,
+      "bridge_gated_demand_count": 0
+    },
+    {
+      "cell": "fourcell_corridor",
+      "description": "explicit corridor topology",
+      "graph_bridge_count": 4,
+      "damaged_bridge_count": 1,
+      "bridge_gated_demand_count": 4
+    }
+  ],
+  "zone_landing": [
+    {
+      "zone": "inactive",
+      "instance_seed": 101,
+      "measured_utilization": 0.19851382163815334,
+      "in_target_band": true
+    },
+    {
+      "zone": "transition",
+      "instance_seed": 101,
+      "measured_utilization": 0.9029629416315711,
+      "in_target_band": true
+    },
+    {
+      "zone": "binding",
+      "instance_seed": 101,
+      "measured_utilization": 0.9893925126811962,
+      "in_target_band": true
+    },
+    {
+      "zone": "inactive",
+      "instance_seed": 102,
+      "measured_utilization": 0.19466439615167863,
+      "in_target_band": true
+    },
+    {
+      "zone": "transition",
+      "instance_seed": 102,
+      "measured_utilization": 0.9120064437363202,
+      "in_target_band": true
+    },
+    {
+      "zone": "binding",
+      "instance_seed": 102,
+      "measured_utilization": 0.9742961207316502,
+      "in_target_band": false
+    }
+  ],
+  "full_self_replay_check": {
+    "decisions": 222,
+    "max_abs_delta_F1": 0.0,
+    "max_abs_delta_F2": 0.0
+  },
+  "zone_search_manifest": {
+    "scope": "stage 2/3 mechanism diagnostic; scenarios are stress configurations whose zones are measured, not assumed",
+    "case_id": "S025",
+    "suite": "benchmark",
+    "instance_seeds": [
+      101,
+      102
+    ],
+    "zone_targets": [
+      {
+        "zone": "inactive",
+        "target_utilization": 0.2
+      },
+      {
+        "zone": "transition",
+        "target_utilization": 0.91
+      },
+      {
+        "zone": "binding",
+        "target_utilization": 0.99
+      }
+    ],
+    "zone_calibration": {
+      "method": "capacity_scale bisected per (scenario, instance seed) until the measured maximum edge utilization reaches the target",
+      "scale_bounds": [
+        1e-05,
+        0.5
+      ],
+      "utilization_tolerance": 0.01,
+      "zones_are_measured": true
+    },
+    "zone_landing": [
+      {
+        "zone": "inactive",
+        "instance_seed": 101,
+        "capacity_scale": 0.0025544869401794576,
+        "measured_utilization": 0.19851382163815334,
+        "in_target_band": true
+      },
+      {
+        "zone": "transition",
+        "instance_seed": 101,
+        "capacity_scale": 0.00022938722595187606,
+        "measured_utilization": 0.9029629416315711,
+        "in_target_band": true
+      },
+      {
+        "zone": "binding",
+        "instance_seed": 101,
+        "capacity_scale": 0.00014953487812212205,
+        "measured_utilization": 0.9893925126811962,
+        "in_target_band": true
+      },
+      {
+        "zone": "inactive",
+        "instance_seed": 102,
+        "capacity_scale": 0.007862340528634104,
+        "measured_utilization": 0.19466439615167863,
+        "in_target_band": true
+      },
+      {
+        "zone": "transition",
+        "instance_seed": 102,
+        "capacity_scale": 0.0016781874534517343,
+        "measured_utilization": 0.9120064437363202,
+        "in_target_band": true
+      },
+      {
+        "zone": "binding",
+        "instance_seed": 102,
+        "capacity_scale": 0.0005782474837716209,
+        "measured_utilization": 0.9742961207316502,
+        "in_target_band": false
+      }
+    ],
+    "scenario": "corridor",
+    "damage_strategy": "critical",
+    "node_role_strategy": "separated",
+    "network_strategy": {
+      "scenario": "corridor",
+      "damage_strategy": "corridor",
+      "node_role_strategy": "corridor"
+    },
+    "bridge_diagnostics": {
+      "graph_bridge_count": 1,
+      "damaged_bridge_count": 1,
+      "bridge_gated_demand_count": 4
+    },
+    "algorithm": "nsga2",
+    "budget": {
+      "max_evaluations": 200,
+      "pop_size": 16
+    },
+    "solver_repeats": 2,
+    "solver_seed_start": 50000,
+    "execution_model": "PR1_HT1_EC1",
+    "decisions_file": "zone_decisions.json",
+    "decisions_are_complete": true,
+    "decision_encoding": "repair_order + team_assignment + dispatch_priority; rebuildable with solution_io.decision_from_json and validated per instance",
+    "replayed_decisions": 813,
+    "distinct_decisions": 463,
+    "code": {
+      "git_sha": "4881b6211a010cc4462817841a6a1ff07de00dfd",
+      "git_dirty": true,
+      "python": "3.12.11 (main, Sep  2 2025, 14:12:30) [Clang 20.1.4 ]",
+      "python_version": "3.12.11",
+      "platform": "macOS-27.0-arm64-arm-64bit",
+      "created_at_utc": "2026-09-20T11:48:41.760032+00:00"
+    },
+    "source_hashes": {
+      "scripts/reproduce/mechanism_applicability.py": "805e9cb34b8705f829c42abc5b1bc7862c906cb4f82de685ef7be8680313f6e5",
+      "scripts/reproduce/benchmark_algorithms.py": "b5b686e955da0dbea46d78d0d94376af7aac791ec0dc56f3d9200c9b1743e034",
+      "scripts/reproduce/benchmark_suite.py": "2477265e0943ae24100fbd4b093fbda5e12fc2e3f0ba38c3544d5886aba175e5",
+      "scripts/reproduce/capacity_recovery.py": "5a016c1d7c0acab2e681b6d49c02a40e3d3e0d24c5d90b2b7cdf6b671a4fc817",
+      "scripts/reproduce/instance_generator.py": "f121ea469e6bc7f547abc1b241c0baa35792960e465bdca0ea90098307712021",
+      "scripts/reproduce/objective_precision.py": "2db2a9b81c4e6a5d099a686a51bb312420cabc9d30dea8cb73ad8bd44522c84f",
+      "scripts/reproduce/solution_io.py": "4f4bcae51716fee0f066fb48cc9c8bdc137822682f1c0733f2ebf66684e710c1"
+    }
+  },
+  "evidence_limits": [
+    "single case (S025), single network family",
+    "fleet multipliers, capacity scales, supply multipliers and repair time multipliers are stress values, not measured Wenchuan parameters",
+    "corridor and separated-role topologies are constructed, not observed",
+    "fixed decisions diagnose whether a mechanism can trigger; they are not a sample for statistical inference",
+    "stage 2/3 search budgets are small and diagnostic, not a benchmark"
+  ]
+}

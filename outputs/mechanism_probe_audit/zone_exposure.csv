@@ -1,0 +1,7 @@
+zone,instance_seed,capacity_scale,target_utilization,measured_utilization,in_target_band,graph_bridge_count,damaged_bridge_count,EC_changed_dispatch,HT_changed_dispatch,PR_changed_dispatch
+inactive,101,0.0025544869401794576,0.2,0.19851382163815334,True,1,1,False,False,False
+transition,101,0.00022938722595187606,0.91,0.9029629416315711,True,1,1,True,False,False
+binding,101,0.00014953487812212205,0.99,0.9893925126811962,True,1,1,True,False,False
+inactive,102,0.007862340528634104,0.2,0.19466439615167863,True,1,1,False,True,True
+transition,102,0.0016781874534517343,0.91,0.9120064437363202,True,1,1,False,True,True
+binding,102,0.0005782474837716209,0.99,0.9742961207316502,False,1,1,True,True,True

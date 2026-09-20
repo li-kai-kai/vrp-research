@@ -22,12 +22,18 @@ wheels/
 # correction can be compared against what it replaced. Everything else under
 # outputs/ is rebuilt by the commands in scripts/README.md.
 #
+# outputs/mechanism_probe_audit/ is the evidence set behind
+# docs/mechanism_applicability_report.md. It holds only slim projected tables
+# plus a provenance manifest; the wide per-cell CSVs it is projected from stay
+# untracked under outputs/mechanism_probe/.
+#
 # Note the wildcard: "outputs/" would exclude the directory itself, and a
 # file inside an excluded directory cannot be re-included.
 outputs/*
 !outputs/claude_v2/
 !outputs/claude_v2_reviewfix/
 !outputs/claude_v2_reviewfix2/
+!outputs/mechanism_probe_audit/
 figures/
 *.png
 *.jpg

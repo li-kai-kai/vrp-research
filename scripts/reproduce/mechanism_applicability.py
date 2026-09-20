@@ -27,6 +27,7 @@ route that delivery actually uses.
 from __future__ import annotations
 
 import argparse
+import random
 import sys
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -44,8 +45,10 @@ from scripts.reproduce.benchmark_suite import (
     build_benchmark_instance,
 )
 from scripts.reproduce.instance_generator import generate_random_instance
+from scripts.reproduce.model import RandomInstance
 from scripts.reproduce.capacity_recovery import (
     DEFAULT_RECOVERY_STAGES,
+    DamagedEdge,
     DEFAULT_VEHICLES,
     CapacityExperimentInstance,
     CapacityIndividual,
@@ -64,7 +67,25 @@ from scripts.reproduce.capacity_recovery import (
     model_factor_variant,
 )
 from scripts.reproduce.objective_precision import V2_PRECISION
-from scripts.reproduce.solution_io import write_csv_atomic, write_json_atomic
+from scripts.reproduce.solution_io import (
+    code_environment,
+    source_hashes,
+    write_csv_atomic,
+    write_json_atomic,
+)
+
+
+# Sources whose behaviour the diagnostic depends on. Pinned into the manifest
+# so an audit run can be tied to the exact code that produced it.
+DIAGNOSTIC_SOURCES = (
+    "scripts/reproduce/mechanism_applicability.py",
+    "scripts/reproduce/benchmark_algorithms.py",
+    "scripts/reproduce/benchmark_suite.py",
+    "scripts/reproduce/capacity_recovery.py",
+    "scripts/reproduce/instance_generator.py",
+    "scripts/reproduce/objective_precision.py",
+    "scripts/reproduce/solution_io.py",
+)
 
 
 # An edge-period counts as partially recovered when the road carries *some*
@@ -597,12 +618,115 @@ def same_decision_deltas(
     ):
         full, off = _delta(instance, decision, **variant)
         for index, name in enumerate(("F1", "F2", "F3")):
+            # Raw signed deltas are kept as measured.
             row[f"{label}_same_decision_delta_{name}"] = off[index] - full[index]
-        row[f"{label}_same_decision_changed"] = any(
-            abs(off[index] - full[index]) > V2_PRECISION.resolutions[index]
-            for index in range(3)
-        )
+        flags = objective_changed(full, off)
+        row[f"{label}_same_decision_changed"] = flags["changed"]
+        for name in ("F1", "F2", "F3"):
+            row[f"{label}_objective_changed_{name}"] = flags[f"changed_{name}"]
     return row
+
+
+# Fixed diagnostic precision for comparing dispatch outputs. These are
+# diagnostics, not model parameters; they exist so that a comparison of two
+# allocation sets does not turn on arbitrary float tails.
+ALLOCATION_AMOUNT_RESOLUTION = 1e-6     # tons
+ALLOCATION_MINUTES_RESOLUTION = 1e-6    # travel minutes
+
+
+def _quantize(value: float, resolution: float) -> int:
+    return int(round(value / resolution))
+
+
+def allocation_multiset(snapshot: PeriodSnapshot) -> list[tuple]:
+    """Canonical, order-independent encoding of one period's dispatch.
+
+    A dict keyed by (supplier, demand) silently drops a second allocation to
+    the same demand in the same period, and comparing only vehicle and path
+    misses a change in how much was carried or how many trips it took. The
+    multiset keeps every allocation and carries the full tuple.
+    """
+    return sorted(
+        (
+            int(allocation["supplier"]),
+            int(allocation["demand"]),
+            int(allocation["vehicle_type"]),
+            tuple(int(node) for node in allocation["path"]),
+            _quantize(float(allocation["amount"]), ALLOCATION_AMOUNT_RESOLUTION),
+            int(allocation["trips"]),
+            _quantize(float(allocation["travel_time"]), ALLOCATION_MINUTES_RESOLUTION),
+        )
+        for allocation in snapshot.allocations
+    )
+
+
+# Positions within an ``allocation_multiset`` tuple, shared by the comparison
+# so a field can never be silently compared against the wrong one.
+_ALLOCATION_FIELDS = (
+    ("route", 3),
+    ("vehicle", 2),
+    ("amount", 4),
+    ("trips", 5),
+)
+
+
+def allocation_change_flags(
+    on_snapshots: Sequence[PeriodSnapshot],
+    off_snapshots: Sequence[PeriodSnapshot],
+) -> dict[str, int]:
+    """Dispatch differences between two runs of the same decision, per period.
+
+    Every flag counts *periods* in which that aspect of the dispatch differs,
+    so ``allocation_any_changed`` is comparable with an objective-changed
+    count. Each aspect is compared as a multiset of that field alone: a change
+    in one allocation must not push the remaining ones out of alignment and
+    look like a change in all of them.
+    """
+    flags = {
+        "allocation_route_changed": 0,
+        "allocation_vehicle_changed": 0,
+        "allocation_amount_changed": 0,
+        "allocation_trips_changed": 0,
+        "allocation_count_changed": 0,
+        "allocation_any_changed": 0,
+    }
+    for on, off in zip(on_snapshots, off_snapshots):
+        on_set = allocation_multiset(on)
+        off_set = allocation_multiset(off)
+        if on_set == off_set:
+            continue
+        flags["allocation_any_changed"] += 1
+        if len(on_set) != len(off_set):
+            flags["allocation_count_changed"] += 1
+        for name, index in _ALLOCATION_FIELDS:
+            if sorted(entry[index] for entry in on_set) != sorted(
+                entry[index] for entry in off_set
+            ):
+                flags[f"allocation_{name}_changed"] += 1
+    return flags
+
+
+def objective_changed(
+    full: Sequence[float],
+    off: Sequence[float],
+    precision: ObjectivePrecision = V2_PRECISION,
+) -> dict[str, bool]:
+    """Whether two objective vectors differ, on the *pinned comparison key*.
+
+    A per-component ``abs(delta) > resolution`` test is not equivalent to the
+    quantized comparison the rest of the pipeline uses: it agrees in the
+    interior of a bin but disagrees near a bin boundary. Comparing keys keeps
+    the diagnostic consistent with how dominance, archives and the
+    representative rule decide equality.
+    """
+    full_key = precision.key(full)
+    off_key = precision.key(off)
+    return {
+        "changed": full_key != off_key,
+        "changed_F1": full_key[0] != off_key[0],
+        "changed_F2": full_key[1] != off_key[1],
+        "changed_F3": full_key[2] != off_key[2],
+    }
 
 
 def material_dispatch_changes(
@@ -610,7 +734,7 @@ def material_dispatch_changes(
     decision: CapacityIndividual,
     trace: Trace,
     **variant: bool,
-) -> int:
+) -> dict[str, int]:
     """Allocations that differ when a mechanism is switched off.
 
     Exposure says a mechanism *could* matter somewhere; this says whether the
@@ -620,20 +744,7 @@ def material_dispatch_changes(
     """
     off_instance = model_factor_variant(instance, **variant)
     off_trace = period_trace(off_instance, decision)
-    changes = 0
-    for on_snapshot, off_snapshot in zip(trace.snapshots, off_trace.snapshots):
-        on_map = {
-            (a["supplier"], a["demand"]): (a["vehicle_type"], tuple(a["path"]))
-            for a in on_snapshot.allocations
-        }
-        off_map = {
-            (a["supplier"], a["demand"]): (a["vehicle_type"], tuple(a["path"]))
-            for a in off_snapshot.allocations
-        }
-        for key in set(on_map) | set(off_map):
-            if on_map.get(key) != off_map.get(key):
-                changes += 1
-    return changes
+    return allocation_change_flags(trace.snapshots, off_trace.snapshots)
 
 
 def mechanism_report(
@@ -656,26 +767,192 @@ def mechanism_report(
     row.update(ht_exposure(instance, decision, trace))
     row.update(ec_exposure(instance, decision, trace))
     row.update(same_decision_deltas(instance, decision))
-    # Material exposure, one per mechanism: did the dispatch actually change?
-    row["PR_allocations_changed"] = material_dispatch_changes(
-        instance, decision, trace,
-        progressive_recovery=False,
-        heterogeneous_vehicle_thresholds=instance.heterogeneous_vehicle_thresholds,
-        edge_capacity_constraint=instance.edge_capacity_constraint,
-    )
-    row["HT_allocations_changed"] = material_dispatch_changes(
-        instance, decision, trace,
-        progressive_recovery=instance.progressive_recovery,
-        heterogeneous_vehicle_thresholds=False,
-        edge_capacity_constraint=instance.edge_capacity_constraint,
-    )
-    row["EC_allocations_changed"] = material_dispatch_changes(
-        instance, decision, trace,
-        progressive_recovery=instance.progressive_recovery,
-        heterogeneous_vehicle_thresholds=instance.heterogeneous_vehicle_thresholds,
-        edge_capacity_constraint=False,
-    )
+    row.update(bridge_diagnostics(instance))
+    # Dispatch participation, one per mechanism: did the actual allocation set
+    # change, and in what way?
+    for label, variant in (
+        ("PR", dict(progressive_recovery=False,
+                    heterogeneous_vehicle_thresholds=instance.heterogeneous_vehicle_thresholds,
+                    edge_capacity_constraint=instance.edge_capacity_constraint)),
+        ("HT", dict(progressive_recovery=instance.progressive_recovery,
+                    heterogeneous_vehicle_thresholds=False,
+                    edge_capacity_constraint=instance.edge_capacity_constraint)),
+        ("EC", dict(progressive_recovery=instance.progressive_recovery,
+                    heterogeneous_vehicle_thresholds=instance.heterogeneous_vehicle_thresholds,
+                    edge_capacity_constraint=False)),
+    ):
+        flags = material_dispatch_changes(instance, decision, trace, **variant)
+        for name, value in flags.items():
+            row[f"{label}_{name}"] = value
+        row[f"{label}_allocations_changed"] = flags["allocation_any_changed"]
     return row
+
+
+def bridge_diagnostics(instance: CapacityExperimentInstance) -> dict[str, int]:
+    """How many bridges the network has, how many are damaged, and whether
+    removing the damaged bridges actually isolates a supplier-demand pair.
+
+    ``damage_strategy="critical"`` only damages bridges *if the graph has any*;
+    when it has none it falls back to random sampling. A scenario labelled
+    "corridor stress" therefore has to prove it has a corridor rather than
+    trust the label.
+    """
+    graph = instance.base.graph
+    bridges = {frozenset(edge) for edge in nx.bridges(graph)}
+    damaged = {
+        frozenset((edge.u, edge.v)) for edge in instance.base.damaged_edges.values()
+    }
+    damaged_bridges = bridges & damaged
+
+    gated = 0
+    if damaged_bridges:
+        pruned = graph.copy()
+        for u, v in damaged_bridges:
+            pruned.remove_edge(u, v)
+        for supplier in instance.base.suppliers:
+            component = nx.node_connected_component(pruned, supplier)
+            for demand in instance.base.demands:
+                if demand not in component:
+                    gated += 1
+    return {
+        "graph_bridge_count": len(bridges),
+        "damaged_bridge_count": len(damaged_bridges),
+        "bridge_gated_demand_count": gated,
+    }
+
+
+def require_corridor_scenario(instance: CapacityExperimentInstance, label: str) -> None:
+    """Refuse to run a corridor experiment that has no damaged corridor."""
+    diagnostics = bridge_diagnostics(instance)
+    if diagnostics["damaged_bridge_count"] <= 0:
+        raise AssertionError(
+            f"scenario {label!r} is labelled as a corridor/bridge stress but has "
+            f"damaged_bridge_count=0 (graph has "
+            f"{diagnostics['graph_bridge_count']} bridges); it would fall back to "
+            "random damage and the label would be meaningless"
+        )
+
+
+def corridor_stress_instance(
+    spec: BenchmarkSpec,
+    *,
+    instance_seed: int,
+    corridor_repair_time: float | None = None,
+) -> CapacityExperimentInstance:
+    """Two sub-networks joined by exactly one corridor edge, which is damaged.
+
+    ``damage_strategy="critical"`` cannot produce this on the benchmark graphs:
+    at gamma=3 the S025 network has no bridges at all, so the strategy silently
+    falls back to random damage. This builds the structure explicitly -- supply
+    behind the corridor, most demand on the far side -- so "a damaged road that
+    is the only way through" is a fact of the instance, not of its label.
+
+    A diagnostic stress network only; it is not added to any benchmark suite.
+    """
+    rng = random.Random(instance_seed)
+    size = spec.num_nodes
+    half = size // 2
+    side_a = list(range(half))
+    side_b = list(range(half, size))
+
+    graph = nx.Graph()
+    graph.add_nodes_from(range(size))
+    for side in (side_a, side_b):
+        shuffled = list(side)
+        rng.shuffle(shuffled)
+        for index in range(1, len(shuffled)):
+            graph.add_edge(shuffled[index], shuffled[rng.randrange(index)])
+        # A few extra intra-side links so each side is a realistic mesh rather
+        # than a tree, which would add bridges inside the sides.
+        target = int(len(side) * 2.2)
+        guard = 0
+        while graph.subgraph(side).number_of_edges() < target and guard < 400:
+            guard += 1
+            u, v = rng.sample(side, 2)
+            graph.add_edge(u, v)
+
+    corridor = (side_a[len(side_a) // 2], side_b[len(side_b) // 2])
+    graph.add_edge(*corridor)
+
+    for edge_id, (u, v) in enumerate(sorted(graph.edges())):
+        graph[u][v]["edge_id"] = edge_id
+        graph[u][v]["free_time"] = rng.uniform(1.0, 30.0)
+        graph[u][v]["weight"] = graph[u][v]["free_time"]
+        graph[u][v]["capacity"] = rng.uniform(1000.0, 3000.0)
+        graph[u][v]["damaged"] = False
+
+    suppliers = sorted(rng.sample(side_a, max(1, len(side_a) // 8)))
+    remaining_a = [node for node in side_a if node not in suppliers]
+    demands_a = sorted(rng.sample(remaining_a, max(1, len(remaining_a) // 4)))
+    demands_b = sorted(rng.sample(side_b, max(2, len(side_b) // 3)))
+    demands = sorted(demands_a + demands_b)
+
+    demand_amounts = {node: float(rng.randint(50, 200)) for node in demands}
+    total_demand = sum(demand_amounts.values())
+    weights = [rng.random() + 0.1 for _ in suppliers]
+    weight_sum = sum(weights)
+    supply_amounts = {
+        node: total_demand * spec.supply_ratio * weights[index] / weight_sum
+        for index, node in enumerate(suppliers)
+    }
+
+    # Damage the corridor first, then some intra-side edges so repair crews
+    # still have competing work. The corridor is never optional.
+    intra = [
+        edge for edge in graph.edges()
+        if frozenset(edge) != frozenset(corridor)
+    ]
+    damaged_pairs = [corridor]
+    extra = max(1, int(spec.damage_ratio * graph.number_of_edges()) - 1)
+    damaged_pairs.extend(rng.sample(intra, min(extra, len(intra))))
+
+    damaged_edges: dict[int, DamagedEdge] = {}
+    for damage_id, (u, v) in enumerate(damaged_pairs):
+        repair_time = (
+            float(corridor_repair_time)
+            if corridor_repair_time is not None and frozenset((u, v)) == frozenset(corridor)
+            else rng.uniform(10.0, 60.0) * 60.0
+        )
+        graph[u][v]["damaged"] = True
+        graph[u][v]["damage_id"] = damage_id
+        graph[u][v]["repair_time"] = repair_time
+        damaged_edges[damage_id] = DamagedEdge(damage_id, u, v, repair_time)
+
+    base = RandomInstance(
+        name=f"{spec.case_id}_seed{instance_seed}_corridor",
+        seed=instance_seed,
+        num_nodes=size,
+        gamma=spec.gamma,
+        damage_ratio=len(damaged_edges) / graph.number_of_edges(),
+        eta_hours=spec.eta_hours,
+        horizon_hours=72,
+        graph=graph,
+        suppliers=suppliers,
+        demands=demands,
+        demand_amounts=demand_amounts,
+        supply_amounts=supply_amounts,
+        damaged_edges=damaged_edges,
+        repair_crews=max(1, size // 30 + 1),
+        vehicle_capacity=100.0,
+        vehicle_count=max(3, size // 10),
+    )
+    reference_capacity = sum(
+        vehicle.capacity_ton * vehicle.count for vehicle in DEFAULT_VEHICLES
+    )
+    scale = base.total_demand * (spec.fleet_capacity_ratio or 0.14) / reference_capacity
+    vehicles = [
+        replace(vehicle, count=max(1, round(vehicle.count * scale)))
+        for vehicle in DEFAULT_VEHICLES
+    ]
+    instance = CapacityExperimentInstance(
+        base=base,
+        vehicles=vehicles,
+        recovery_stages=list(DEFAULT_RECOVERY_STAGES),
+        capacity_scale=spec.capacity_scale,
+        evaluation=EvaluationConfig.for_version("v2"),
+    )
+    instance.full_profile = FullExecutionProfile.from_instance(instance, "synthetic_full")
+    return instance
 
 
 def stress_topology_instance(
@@ -757,18 +1034,87 @@ def scale_capacity(
     return replace(instance, capacity_scale=capacity_scale, full_profile=None)
 
 
+def scale_supply(
+    instance: CapacityExperimentInstance,
+    multiplier: float,
+) -> CapacityExperimentInstance:
+    """A stress variant with more (or less) total supply at the same nodes.
+
+    Relaxing supply is the only way to test whether the *system* is supply
+    limited. Delivering everything while trips remain unused shows that final
+    tonnage hit the supply ceiling; it does not show that F1 or F2 would not
+    improve with a larger fleet, because an early-period shortage can raise F1
+    without ever leaving supply on the table at the end.
+    """
+    if multiplier <= 0:
+        raise ValueError("supply multiplier must be positive")
+    base = instance.base
+    scaled = {
+        node: amount * multiplier for node, amount in base.supply_amounts.items()
+    }
+    return replace(
+        instance,
+        base=replace(base, supply_amounts=scaled),
+        full_profile=None,
+    )
+
+
+def bottleneck_classification(
+    instance: CapacityExperimentInstance,
+    decision: CapacityIndividual,
+    *,
+    fleet_multiplier: float = 2.0,
+    supply_multiplier: float = 1.5,
+    capacity_scale: float | None = None,
+) -> dict[str, Any]:
+    """Classify the bottleneck by *relaxing* each resource and re-evaluating.
+
+    A constraint is called binding when loosening it changes the objective.
+    More than one can bind, and none has to: the answer is a diagnosis of this
+    scenario and decision, not a single label for the model.
+    """
+    baseline = period_trace(instance, decision).objectives
+    probes = {
+        "fleet": scale_fleet(instance, fleet_multiplier),
+        "supply": scale_supply(instance, supply_multiplier),
+    }
+    if capacity_scale is not None:
+        probes["road_capacity"] = scale_capacity(instance, capacity_scale)
+
+    row: dict[str, Any] = {}
+    for label, relaxed in probes.items():
+        objectives = period_trace(relaxed, decision).objectives
+        flags = objective_changed(baseline, objectives)
+        row[f"relax_{label}_changed_objective"] = flags["changed"]
+        row[f"relax_{label}_delta_F1"] = objectives[0] - baseline[0]
+        row[f"relax_{label}_delta_F2"] = objectives[1] - baseline[1]
+    row["baseline_F1"] = baseline[0]
+    row["baseline_F2"] = baseline[1]
+    return row
+
+
 def resource_grid(
     instance: CapacityExperimentInstance,
     decision: CapacityIndividual,
     *,
     fleet_multipliers: Sequence[float],
     capacity_scales: Sequence[float],
+    supply_multipliers: Sequence[float] = (1.0,),
 ) -> list[dict[str, Any]]:
-    """Two-axis stress grid separating "fleet-bound" from "road-bound"."""
+    """Three-axis stress grid: fleet budget, road throughput, total supply.
+
+    Bottleneck attribution needs the supply axis. Without it, "everything was
+    delivered and trips were left over" only shows the final tonnage hit the
+    supply ceiling -- it cannot rule out the fleet limiting early-period
+    service, which is what F1 measures.
+    """
     rows: list[dict[str, Any]] = []
-    for fleet in fleet_multipliers:
+    for supply in supply_multipliers:
+      for fleet in fleet_multipliers:
         for capacity in capacity_scales:
-            variant = scale_capacity(scale_fleet(instance, fleet), capacity)
+            variant = scale_supply(
+                scale_capacity(scale_fleet(instance, fleet), capacity), supply
+            )
             trace = period_trace(variant, decision)
             assert_matches_evaluator(variant, decision, trace)
             exposure = ec_exposure(variant, decision, trace)
@@ -792,6 +1138,7 @@ def resource_grid(
                 {
                     "fleet_multiplier": fleet,
                     "capacity_scale": capacity,
+                    "supply_multiplier": supply,
                     "F1": trace.objectives[0],
                     "F2": trace.objectives[1],
                     "F3": trace.objectives[2],
@@ -916,19 +1263,36 @@ def main() -> None:
     summary_rows: list[dict[str, Any]] = []
     grid_rows: list[dict[str, Any]] = []
     sweep_rows: list[dict[str, Any]] = []
+    bottleneck_rows: list[dict[str, Any]] = []
 
     for instance_seed in args.instance_seeds:
-        if args.damage_strategy == "random" and args.node_role_strategy == "random":
+        if args.scenario == "benchmark":
             instance = build_benchmark_instance(
                 spec, instance_seed=instance_seed, model_version="v2"
             )
-        else:
+        elif args.scenario == "critical":
             instance = stress_topology_instance(
                 spec,
                 instance_seed=instance_seed,
-                damage_strategy=args.damage_strategy,
+                damage_strategy="critical",
                 node_role_strategy=args.node_role_strategy,
             )
+        else:
+            instance = corridor_stress_instance(spec, instance_seed=instance_seed)
+            # A corridor scenario must actually have a damaged corridor: the
+            # generator's "critical" strategy silently falls back to random
+            # damage when the graph has no bridges, which is the case for every
+            # S025 seed at gamma=3.
+            require_corridor_scenario(instance, f"corridor seed={instance_seed}")
+
+        # The corridor scenario builds its own damage and node roles, so its
+        # label must not claim a node-role strategy that was never applied.
+        scenario_label = (
+            "corridor"
+            if args.scenario == "corridor"
+            else f"{args.scenario}_{args.node_role_strategy}"
+        )
+        diagnostics = bridge_diagnostics(instance)
         decisions = fixed_decisions(
             instance,
             random_decisions=args.random_decisions,
@@ -938,13 +1302,30 @@ def main() -> None:
             row = mechanism_report(instance, decision, label)
             row["case_id"] = spec.case_id
             row["instance_seed"] = instance_seed
+            row["scenario"] = scenario_label
             summary_rows.append(row)
+
+        if args.bottleneck:
+            bottleneck_rows.append(
+                {
+                    "case_id": spec.case_id,
+                    "instance_seed": instance_seed,
+                    "scenario": scenario_label,
+                    **diagnostics,
+                    **bottleneck_classification(
+                        instance,
+                        decisions["spt"],
+                        capacity_scale=args.bottleneck_capacity_scale,
+                    ),
+                }
+            )
 
         if args.grid:
             grid_rows.extend(
                 {
                     "case_id": spec.case_id,
                     "instance_seed": instance_seed,
+                    "scenario": scenario_label,
                     "decision": "spt",
                     **entry,
                 }
@@ -953,6 +1334,7 @@ def main() -> None:
                     decisions["spt"],
                     fleet_multipliers=args.fleet_multipliers,
                     capacity_scales=args.capacity_scales,
+                    supply_multipliers=args.supply_multipliers,
                 )
             )
 
@@ -977,6 +1359,12 @@ def main() -> None:
         write_csv_atomic(
             output_dir / "repair_time_sweep.csv", sweep_rows, list(sweep_rows[0])
         )
+    if bottleneck_rows:
+        write_csv_atomic(
+            output_dir / "bottleneck_relaxation.csv",
+            bottleneck_rows,
+            list(bottleneck_rows[0]),
+        )
     write_json_atomic(
         output_dir / "mechanism_probe_manifest.json",
         {
@@ -988,14 +1376,28 @@ def main() -> None:
             "suite": args.suite,
             "instance_seeds": list(args.instance_seeds),
             "random_decisions": args.random_decisions,
-            "damage_strategy": args.damage_strategy,
+            "scenario": args.scenario,
             "node_role_strategy": args.node_role_strategy,
+            "scenario_label": scenario_label,
+            "bridge_diagnostics": diagnostics,
+            "supply_multipliers": list(args.supply_multipliers),
             "fleet_multipliers": list(args.fleet_multipliers),
             "capacity_scales": list(args.capacity_scales),
             "repair_time_multipliers": list(args.repair_time_multipliers),
             "stress_scenario_note": (
                 "fleet multipliers, capacity scales and repair-time multipliers "
                 "are stress diagnostics, not measured Wenchuan parameters"
+            ),
+            "network_strategy": {
+                "scenario": args.scenario,
+                "damage_strategy": (
+                    "corridor" if args.scenario == "corridor" else args.scenario
+                ),
+                "node_role_strategy": args.node_role_strategy,
+            },
+            "code": code_environment(),
+            "source_hashes": source_hashes(
+                Path(__file__).resolve().parents[2], DIAGNOSTIC_SOURCES
             ),
         },
     )
@@ -1025,18 +1427,29 @@ def _parse_args() -> argparse.Namespace:
         "--repair-time-multipliers", type=float, nargs="+", default=[1.0, 2.0, 4.0]
     )
     parser.add_argument(
-        "--damage-strategy",
-        choices=["random", "critical"],
-        default="random",
+        "--scenario",
+        choices=["benchmark", "critical", "corridor"],
+        default="benchmark",
         help=(
-            "random mirrors the benchmark suite; critical puts damage on bridges "
-            "and pushes demands to the rim, creating corridors a single damaged "
-            "road gates. A stress diagnostic, not a calibration."
+            "benchmark mirrors the suite (random damage, random roles); critical "
+            "asks the generator for critical damage, which only produces damaged "
+            "bridges if the graph has any; corridor builds an explicit two-side "
+            "network joined by one damaged corridor edge. The last one is a "
+            "stress diagnostic, not a calibration."
         ),
     )
     parser.add_argument(
         "--node-role-strategy", choices=["random", "separated"], default="random"
     )
+    parser.add_argument(
+        "--supply-multipliers", type=float, nargs="+", default=[1.0]
+    )
+    parser.add_argument(
+        "--bottleneck",
+        action="store_true",
+        help="classify the bottleneck by relaxing fleet, road capacity and supply",
+    )
+    parser.add_argument("--bottleneck-capacity-scale", type=float, default=None)
     parser.add_argument("--output-dir", default="outputs/mechanism_probe/S025")
     args = parser.parse_args()
     if args.random_decisions < 0:

@@ -3,7 +3,7 @@
 状态只允许四种取值：**待执行**、**执行中**、**通过**、**阻塞**。
 最后更新：2026-09-20（文档一致性清理轮）。当前基准 HEAD：`7c7a6ab`。
 
-**当前状态**：全量测试 `uv run python -m unittest discover -s tests -v` → **130 个，130 通过，0 失败，0 错误**。
+**当前状态**：全量测试 `uv run python -m unittest discover -s tests -v` → **151 个，151 通过，0 失败，0 错误**。
 **当前结论依据目录**：`outputs/claude_v2_reviewfix2/`。`outputs/claude_v2/`（首轮）与
 `outputs/claude_v2_reviewfix/`（第一轮修正后）**仅作为修复历史与前后对照**，不再作为当前结果。
 
@@ -65,7 +65,7 @@ uv run python scripts/reproduce/run_benchmark.py \
 
 ## P5 执行记录（当前状态，取自 `outputs/claude_v2_reviewfix2/`）
 
-当前全量测试：`uv run python -m unittest discover -s tests -v` → **130 个，130 通过，0 失败，0 错误**。
+当前全量测试：`uv run python -m unittest discover -s tests -v` → **151 个，151 通过，0 失败，0 错误**。
 执行的诊断命令、评价预算核对、算法与模型诊断结果、产物路径与限制全部见
 [v2 小预算诊断报告](pilot_v2_report.md)。
 
@@ -76,13 +76,15 @@ uv run python scripts/reproduce/run_benchmark.py \
 - Full 同模型恒等检查**无误差**（规划指纹等于执行指纹时逐位复现）。
 - 在当前 S025 标定下，**HT/EC 在固定 SPT 决策及本轮保存前沿中没有观察到系统性目标影响**；
   本轮证据**不足以判断二者一般无效**。HT 与 EC 是否重要取决于前沿中有哪些决策，这属于标定问题。
-- 车队趟次比道路容量更紧**只能作为待验证解释**，不是结论：本轮未做资源放宽对照。
+- 车队趟次比道路容量更紧在当时只是**待验证解释**；该解释已由后续资源放宽对照取代，
+  结论见[机制适用条件诊断报告](mechanism_applicability_report.md)：车队在两类场景中都绑定，
+  随机损伤场景中车队与供给同时参与。
 - 四模型子集未输出任何主效应或交互显著性结果。
 
 ## R1–R5 复审修正
 
 首轮 P0–P5 交付后审读提出的五项问题**全部复现属实**并已修复。
-该轮完成时回归用例为 110 个（当时值）；当前总数为 130 个。
+该轮完成时回归用例为 110 个（当时值）；当前总数为 151 个（含机制诊断 21 例）。
 本轮结论依据当时为 `outputs/claude_v2_reviewfix/`，现已被第二轮取代。
 
 | 项 | 问题 | 修复 | 回归（当前用例数） |
@@ -108,8 +110,39 @@ uv run python scripts/reproduce/run_benchmark.py \
 | B | 从降级实例直接重新打开开关会继续携带降级数据 | `model_factor_variant` 从声明档案恢复；无档案可恢复时显式报错 | 同上 |
 
 本轮起结论依据为 `outputs/claude_v2_reviewfix2/`；`outputs/claude_v2/` 与 `outputs/claude_v2_reviewfix/` 保留为对照。
-当前全量测试 **130 个全通过**。第二轮的两项修复（量化坐标、Full 曲线校验）已纳入上方阶段表的
-「复审第二轮」一行，属于**当前验收状态**。
+第二轮结束时全量测试为 130 个全通过；当前为 151 个（新增机制诊断 21 例）。第二轮的两项修复
+（量化坐标、Full 曲线校验）已纳入上方阶段表的「复审第二轮」一行，属于**当前验收状态**。
+
+## 机制适用条件诊断（当前状态）
+
+2026-09-20 完成机制诊断的最终验收修正。本轮**未修改**已通过复审的模型、搜索、回放、数值精度与
+`FullExecutionProfile`；只修改 `mechanism_applicability.py`、`mechanism_zone_search.py`、
+机制报告及相应测试/证据。
+
+修正内容：
+
+- **撤回"桥接损伤使 HT 绑定提高约 3 倍"**：直接检查发现 S025 在 gamma=3 下 0 条桥，
+  `damage_strategy="critical"` 静默退化为随机损伤。新增 `bridge_diagnostics()` 实测
+  `graph_bridge_count` / `damaged_bridge_count` / `bridge_gated_demand_count`，
+  并新增 `require_corridor_scenario()`：标称为走廊应力而 `damaged_bridge_count = 0` 时直接抛错。
+  四格对照证明提升来自 `node_role_strategy="separated"`，不是损伤策略。
+- **修复配送差异比较的真实缺陷**：`allocation_multiset` 此前把 `index` 当作主排序键，
+  使比较对输入顺序不鲁棒，且只用 (supplier, demand) 建键会丢失同一需求点的第二次分配。
+  现按内容规范化排序并保留 `amount` / `trips` / `travel_time`，差别按字段分别计数。
+- **目标是否变化改用 `V2_PRECISION.key()`**，与支配/档案/代表规则一致；
+  逐分量 `abs(delta) > resolution` 在桶边界上会给出相反答案。
+- **撤回"基准标定是供给受限"**：加入供给放宽对照后实测车队在两类场景中都绑定，
+  随机损伤场景中车队与供给同时参与。
+- **分区改为按 (场景, 实例种子) 标定**：固定 `capacity_scale` 无法跨场景工作，
+  标称"transition"的格子实测会落在 0.25 ~ 0.95 之间。
+- **`mechanism_zone_search.py` 保存完整三段决策**（`zone_decisions.json`，可用
+  `solution_io.decision_from_json` 重建），不再只存哈希与目标值。
+
+证据集：`outputs/mechanism_probe_audit/`（**进版本控制**，含 `manifest.json` 记录
+git sha、源码哈希、python、平台、种子、网络策略与实测桥数）。
+结论与限制见[机制适用条件诊断报告](mechanism_applicability_report.md)。
+
+本轮新增回归 **21 例**（`tests/test_mechanism_applicability.py`）。
 
 ## 保护的用户已有改动
 

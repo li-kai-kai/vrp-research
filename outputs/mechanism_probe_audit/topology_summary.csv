@@ -1,0 +1,5 @@
+topology_cell,topology_description,scenario,decisions,instance_seeds,graph_bridge_count,damaged_bridge_count,bridge_gated_demand_count,PR_dispatch_changed_decisions,PR_objective_changed_decisions,HT_dispatch_changed_decisions,HT_objective_changed_decisions,EC_dispatch_changed_decisions,EC_objective_changed_decisions
+fourcell_benchmark,"random damage, random roles",benchmark_random,20,1 2 101 102,0,0,0,6,6,2,2,0,0
+fourcell_critical_random,"critical damage requested, random roles",critical_random,20,1 2 101 102,0,0,0,6,6,2,2,0,0
+fourcell_critical_separated,"critical damage requested, separated roles",critical_separated,20,1 2 101 102,0,0,0,9,9,6,6,0,0
+fourcell_corridor,explicit corridor topology,corridor,20,1 2 101 102,4,1,4,9,9,9,9,0,0
