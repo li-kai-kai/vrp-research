@@ -1,12 +1,12 @@
 {
   "scope": "mechanism applicability (PR / HT / EC) diagnostic evidence; the diagnostic is read-only with respect to the model, the search, replay, numerical precision and FullExecutionProfile",
   "code": {
-    "git_sha": "4881b6211a010cc4462817841a6a1ff07de00dfd",
+    "git_sha": "ee41247e3c679352e012200983f92888acd98d23",
     "git_dirty": true,
     "python": "3.12.11 (main, Sep  2 2025, 14:12:30) [Clang 20.1.4 ]",
     "python_version": "3.12.11",
     "platform": "macOS-27.0-arm64-arm-64bit",
-    "created_at_utc": "2026-09-20T11:52:33.591655+00:00"
+    "created_at_utc": "2026-09-20T11:52:46.139278+00:00"
   },
   "source_hashes": {
     "scripts/reproduce/mechanism_applicability.py": "805e9cb34b8705f829c42abc5b1bc7862c906cb4f82de685ef7be8680313f6e5",
