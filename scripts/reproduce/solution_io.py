@@ -41,6 +41,7 @@ from scripts.reproduce.capacity_recovery import (
     EvaluationConfig,
     RecoveryStage,
     VehicleProfile,
+    full_execution_problems,
 )
 from scripts.reproduce.objective_precision import precision_for
 from scripts.reproduce.model import DamagedEdge, RandomInstance
@@ -876,8 +877,16 @@ class RunStore:
     # -- instances ---------------------------------------------------------
 
     # Metadata keys are stored next to the snapshot body and stripped again on
-    # load, so the integrity check covers the snapshot itself.
-    _SNAPSHOT_METADATA = ("snapshot_sha256", "physical_instance_hash", "model_fingerprint")
+    # load, so the integrity check covers the snapshot itself. The Full-role
+    # verdict lives here too: it describes what the snapshot may be used for,
+    # and is recomputed from the instance on every load rather than trusted.
+    _SNAPSHOT_METADATA = (
+        "snapshot_sha256",
+        "physical_instance_hash",
+        "model_fingerprint",
+        "is_full_execution",
+        "full_execution_problems",
+    )
 
     def save_instance(self, instance: CapacityExperimentInstance) -> str:
         """Store one planning variant and return its model fingerprint.
@@ -895,14 +904,47 @@ class RunStore:
         return fingerprint
 
     def save_execution_instance(self, instance: CapacityExperimentInstance) -> str:
-        """Store the shared execution environment for one physical scenario."""
+        """Store the shared execution environment for one physical scenario.
+
+        The snapshot records whether it is the agreed Full environment and, if
+        not, why. Storing a non-Full environment is allowed -- the caller may
+        legitimately be running a reduced model -- but it can never be loaded
+        as the Full execution environment later.
+        """
         physical_hash = physical_instance_hash(instance)
+        fingerprint = model_fingerprint(instance)
+        path = self.execution_instance_path(physical_hash)
+
+        # One physical scenario has exactly one execution environment. Keeping
+        # a different model under the same physical hash would let a replay
+        # silently run against another recovery curve or threshold set.
+        existing = self._read_execution_metadata(path)
+        if existing is not None and existing.get("model_fingerprint") != fingerprint:
+            raise SolutionIOError(
+                f"{path} already holds a different execution environment "
+                f"(model fingerprint {existing.get('model_fingerprint')}, "
+                f"requested {fingerprint}). The physical scenario matches but the "
+                "model does not; use a separate output directory."
+            )
+
+        problems = full_execution_problems(instance)
         payload = serialize_instance(instance)
         payload["snapshot_sha256"] = _digest(payload)
         payload["physical_instance_hash"] = physical_hash
-        payload["model_fingerprint"] = model_fingerprint(instance)
-        write_json_atomic(self.execution_instance_path(physical_hash), payload)
+        payload["model_fingerprint"] = fingerprint
+        payload["is_full_execution"] = not problems
+        payload["full_execution_problems"] = problems
+        write_json_atomic(path, payload)
         return physical_hash
+
+    def _read_execution_metadata(self, path: Path) -> dict[str, Any] | None:
+        if not path.is_file():
+            return None
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        return payload if isinstance(payload, dict) else None
 
     def load_instance(self, model_fingerprint_value: str) -> CapacityExperimentInstance:
         return self._load_snapshot(
@@ -910,12 +952,39 @@ class RunStore:
             expected_model_fingerprint=model_fingerprint_value,
         )
 
-    def load_execution_instance(self, physical_hash: str) -> CapacityExperimentInstance:
+    def load_execution_instance(
+        self,
+        physical_hash: str,
+        *,
+        require_full: bool = True,
+    ) -> CapacityExperimentInstance:
         path = self.execution_instance_path(physical_hash)
         payload = _read_json(path)
         if payload.get("physical_instance_hash") != physical_hash:
             raise SolutionIOError(f"execution snapshot {path} does not match its file name")
-        return self._load_snapshot(path, expected_physical_hash=physical_hash)
+        instance = self._load_snapshot(path, expected_physical_hash=physical_hash)
+
+        if require_full:
+            # The stored reason and the recomputed one must both agree: a
+            # tampered snapshot is rejected rather than trusted.
+            recorded = payload.get("full_execution_problems") or []
+            recomputed = full_execution_problems(instance)
+            if payload.get("is_full_execution") is not True or recorded or recomputed:
+                reasons = recomputed or recorded or ["snapshot is not marked Full"]
+                raise SolutionIOError(
+                    "the execution environment stored for physical scenario "
+                    f"{physical_hash} is not the agreed Full environment: "
+                    + "; ".join(reasons)
+                    + ". Re-run the planning experiment with --model-version v2 so "
+                    "a Full environment is stored, or replay with "
+                    "--execution-model saved."
+                )
+            stored_fingerprint = payload.get("model_fingerprint")
+            if stored_fingerprint != model_fingerprint(instance):
+                raise SolutionIOError(
+                    f"execution snapshot {path} does not reproduce its model fingerprint"
+                )
+        return instance
 
     def _load_snapshot(
         self,

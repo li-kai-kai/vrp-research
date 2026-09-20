@@ -345,6 +345,58 @@ BINARY_RECOVERY_STAGES = [
 UNIFORM_VEHICLE_RECOVERY_THRESHOLD = 0.30
 
 
+def full_execution_problems(instance: CapacityExperimentInstance) -> list[str]:
+    """Reasons this instance is not the agreed Full execution environment.
+
+    ``physical_instance_hash`` deliberately excludes the planning-model
+    factors, so two scenarios with the same physical hash can carry different
+    recovery curves, vehicle thresholds or evaluation semantics. Checking that
+    hash alone would let a legacy or reduced model be replayed while being
+    labelled Full, so the factors themselves are checked here.
+
+    Returns an empty list when the instance is a valid Full environment.
+    """
+    problems: list[str] = []
+    evaluation = instance.evaluation
+    if evaluation.model_version != "v2":
+        problems.append(
+            f"evaluation.model_version is {evaluation.model_version!r}, expected 'v2'"
+        )
+    if not evaluation.enforce_within_period_arrival:
+        problems.append("within-period arrival is not enforced")
+    if evaluation.dispatch_timing != "period_start":
+        problems.append(
+            f"dispatch_timing is {evaluation.dispatch_timing!r}, expected 'period_start'"
+        )
+    if not evaluation.fair_share_cap is False:
+        problems.append("the v2 allocation policy is not in force")
+    if not instance.progressive_recovery:
+        problems.append("progressive recovery is disabled (binary recovery in force)")
+    if not instance.heterogeneous_vehicle_thresholds:
+        problems.append("heterogeneous vehicle thresholds are disabled")
+    if not instance.edge_capacity_constraint:
+        problems.append("edge-capacity throughput accounting is disabled")
+    if instance.crew_transfer_time_scale != 0.0:
+        problems.append(
+            f"crew_transfer_time_scale is {instance.crew_transfer_time_scale}, "
+            "which the first round does not implement"
+        )
+    if instance.crew_min_access_progress != 0.0:
+        problems.append(
+            f"crew_min_access_progress is {instance.crew_min_access_progress}, "
+            "which the first round does not implement"
+        )
+    if not instance.vehicles:
+        problems.append("the instance carries no vehicle profiles")
+    if not instance.recovery_stages:
+        problems.append("the instance carries no recovery stages")
+    return problems
+
+
+def is_full_execution_environment(instance: CapacityExperimentInstance) -> bool:
+    return not full_execution_problems(instance)
+
+
 DEFAULT_VEHICLES = [
     VehicleProfile(
         1,

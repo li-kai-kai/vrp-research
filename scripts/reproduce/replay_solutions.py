@@ -73,6 +73,7 @@ REPLAY_COLUMNS = (
     "replay_zero_service_ratio",
     "replay_remaining_supply",
     "representative_selected_before_replay",
+    "identity_checked",
     "replay_success",
     "replay_error",
 )
@@ -111,7 +112,14 @@ def main() -> None:
             execution_instance = planning_cache[instance_file]
         else:
             if physical_hash not in execution_cache:
-                execution_cache[physical_hash] = store.load_execution_instance(physical_hash)
+                # require_full validates the v2 evaluation profile, progressive
+                # recovery, heterogeneous thresholds and edge-capacity
+                # accounting, not just the physical hash -- which deliberately
+                # excludes them.
+                execution_cache[physical_hash] = store.load_execution_instance(
+                    physical_hash,
+                    require_full=True,
+                )
             execution_instance = execution_cache[physical_hash]
             expected = physical_instance_hash(execution_instance)
             if expected != physical_hash:
@@ -185,6 +193,7 @@ def _replay_solution(
         "representative_selected_before_replay": (
             solution["decision_hash"] == record.get("decision_hash")
         ),
+        "identity_checked": False,
         "replay_success": False,
         "replay_error": None,
     }
@@ -205,14 +214,22 @@ def _replay_solution(
         row["replay_final_min_satisfaction"] = outcome.metrics["final_min_satisfaction"]
         row["replay_zero_service_ratio"] = outcome.metrics["zero_service_ratio"]
         row["replay_remaining_supply"] = outcome.metrics["remaining_supply"]
-        if execution_model == "saved":
+        same_model = (
+            record["model_fingerprint"] == row["execution_model_fingerprint"]
+        )
+        row["identity_checked"] = bool(execution_model == "saved" or same_model)
+        if row["identity_checked"]:
+            # Whenever the execution model is the planning model -- always for
+            # "saved", and for a Full-planned run replayed in Full -- the
+            # stored objectives must be reproduced. Returning finite numbers is
+            # not enough, so a tampered or stale planning objective fails here.
             row["replay_success"] = all(
                 _close(planned, replayed, abs_tolerance, rel_tolerance)
                 for planned, replayed in zip(planning_objectives, replay_objectives)
             )
         else:
-            # Under a different execution model the objectives are expected to
-            # move; the replay itself succeeded if it produced finite numbers.
+            # Under a genuinely different execution model the objectives are
+            # expected to move; the replay succeeded if it produced numbers.
             row["replay_success"] = all(math.isfinite(value) for value in replay_objectives)
     except (SolutionIOError, ValueError, KeyError) as error:
         row["replay_error"] = f"{type(error).__name__}: {error}"
@@ -237,11 +254,15 @@ def _close(planned: float, replayed: float, abs_tolerance: float, rel_tolerance:
 
 
 def _summarize(rows: list[dict[str, Any]], args: argparse.Namespace) -> dict[str, Any]:
-    finite_rows = [
-        row
-        for row in rows
-        if row["replay_minus_planning_F1"] is not None
-        and all(
+    """Summarize the rows whose objectives are required to reproduce.
+
+    Those are the "saved" rows and, in "full" mode, the rows whose planning
+    model already *is* the execution model. Rows planning a genuinely
+    different model are expected to move and are summarized separately, so a
+    real model effect is never reported as a replay error.
+    """
+    def finite_differences(row):
+        return row["replay_minus_planning_F1"] is not None and all(
             math.isfinite(row[field])
             for field in (
                 "replay_minus_planning_F1",
@@ -249,17 +270,33 @@ def _summarize(rows: list[dict[str, Any]], args: argparse.Namespace) -> dict[str
                 "replay_minus_planning_F3",
             )
         )
+
+    identity_rows = [row for row in rows if row["identity_checked"]]
+    finite_rows = [row for row in identity_rows if finite_differences(row)]
+    moved_rows = [
+        row
+        for row in rows
+        if not row["identity_checked"] and finite_differences(row)
     ]
     summary: dict[str, Any] = {
         "input_root": str(args.input_root),
         "output_dir": str(args.output_dir),
         "execution_model": args.execution_model,
         "solutions": len(rows),
+        "identity_checked_solutions": len(identity_rows),
         "failures": sum(1 for row in rows if not row["replay_success"]),
         "abs_tolerance": args.abs_tolerance,
         "rel_tolerance": args.rel_tolerance,
+        "different_model_solutions": len(moved_rows),
     }
-    if args.execution_model == "saved":
+    if moved_rows:
+        summary["different_model_max_abs_delta_F1"] = max(
+            abs(row["replay_minus_planning_F1"]) for row in moved_rows
+        )
+        summary["different_model_max_abs_delta_F2"] = max(
+            abs(row["replay_minus_planning_F2"]) for row in moved_rows
+        )
+    if identity_rows:
         summary["max_abs_error_F1"] = max(
             (abs(row["replay_minus_planning_F1"]) for row in finite_rows),
             default=None,
@@ -281,6 +318,8 @@ def _summarize(rows: list[dict[str, Any]], args: argparse.Namespace) -> dict[str
         ]
         summary["max_rel_error_F1"] = max(ratios, default=None)
         summary["max_rel_error_F1_missing_rows"] = len(finite_rows) - len(ratios)
+    elif not moved_rows:
+        summary["note"] = "no solution required identity reproduction"
     return summary
 
 

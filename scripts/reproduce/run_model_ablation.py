@@ -316,6 +316,9 @@ def run_model_ablation(
                         ),
                         edge_capacity_constraint=factors.edge_capacity_constraint,
                     )
+                    # Store this planning variant's snapshot before recording a
+                    # run that references it, so a "saved" replay can rebuild it.
+                    instance_file = store.save_instance(instance)
                     if physical_instance_hash(instance) != physical_instance_hash(
                         base_instance
                     ):
@@ -373,7 +376,7 @@ def run_model_ablation(
                             extra={
                                 "diagnostics": result.diagnostics,
                                 **factors.row(),
-                                "instance_file": model_fingerprint(instance),
+                                "instance_file": instance_file,
                                 "max_evaluations": selected_budget.max_evaluations,
                             },
                         )
