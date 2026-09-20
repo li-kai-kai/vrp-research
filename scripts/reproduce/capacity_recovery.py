@@ -22,6 +22,12 @@ if __package__ is None or __package__ == "":
 
 from scripts.reproduce.instance_generator import generate_random_instance
 from scripts.reproduce.model import DamagedEdge, RandomInstance
+from scripts.reproduce.objective_precision import (
+    EXACT_PRECISION,
+    ObjectivePrecision,
+    V2_PRECISION,
+    precision_for,
+)
 
 
 @dataclass(frozen=True)
@@ -549,6 +555,7 @@ def solve_capacity_instance(
     scenario: str,
 ) -> CapacityExperimentResult:
     rng = random.Random(seed)
+    precision = precision_for(instance)
     start = time.perf_counter()
     population = [_create_individual(instance, rng) for _ in range(config.pop_size)]
     pareto_archive: list[CapacityIndividual] = []
@@ -556,8 +563,8 @@ def solve_capacity_instance(
 
     for generation in range(config.generations):
         _evaluate_population(instance, population)
-        pareto_archive = _update_pareto_archive(pareto_archive, population)
-        fronts = _assign_rank_and_crowding(population)
+        pareto_archive = update_pareto_archive(pareto_archive, population, precision)
+        fronts = _assign_rank_and_crowding(population, precision)
         best_front = fronts[0] if fronts else []
         if best_front:
             best = min(best_front, key=_representative_key)
@@ -582,17 +589,22 @@ def solve_capacity_instance(
                 offspring.append(child_b)
 
         _evaluate_population(instance, offspring)
-        pareto_archive = _update_pareto_archive(
+        pareto_archive = update_pareto_archive(
             pareto_archive,
             population + offspring,
+            precision,
         )
-        population = _select_next_generation(population + offspring, config.pop_size)
+        population = _select_next_generation(
+            population + offspring,
+            config.pop_size,
+            precision,
+        )
 
     _evaluate_population(instance, population)
-    pareto_archive = _update_pareto_archive(pareto_archive, population)
+    pareto_archive = update_pareto_archive(pareto_archive, population, precision)
     best_front = pareto_archive
-    _assign_crowding(best_front)
-    best = min(best_front, key=_representative_key)
+    _assign_crowding(best_front, precision)
+    best = min(best_front, key=lambda item: _representative_key(item, precision))
     pareto_front = _serialize_pareto_front(best_front)
     runtime = time.perf_counter() - start
     return CapacityExperimentResult(
@@ -1443,13 +1455,20 @@ def _speed_ratio(stages: list[RecoveryStage], progress: float) -> float:
     return 0.0
 
 
-def _representative_key(individual: CapacityIndividual) -> tuple[float, float, float]:
+def _representative_key(
+    individual: CapacityIndividual,
+    precision: ObjectivePrecision = EXACT_PRECISION,
+) -> tuple[float, float, float]:
+    """Lexicographic (F3, F1, F2), compared on the quantized key.
+
+    Quantizing here is what stops a 1e-13 fairness difference from outranking an
+    11% difference in cumulative unmet demand.
+    """
     objectives = individual.objectives or (math.inf, math.inf, math.inf)
-    return (
-        objectives[2],
-        objectives[0],
-        objectives[1],
-    )
+    if precision.is_exact:
+        return (objectives[2], objectives[0], objectives[1])
+    f1, f2, f3 = precision.key(objectives)
+    return (f3, f1, f2)
 
 
 def _create_individual(
@@ -1480,24 +1499,32 @@ def _evaluate_population(
 def _dominates(
     left: tuple[float, float, float],
     right: tuple[float, float, float],
+    precision: ObjectivePrecision = EXACT_PRECISION,
 ) -> bool:
-    return all(a <= b for a, b in zip(left, right)) and any(a < b for a, b in zip(left, right))
+    """Dominance under a pinned resolution.
+
+    Defaults to the historical exact rule so legacy callers are unchanged; v2
+    callers pass the instance's precision.
+    """
+    return precision.dominates(left, right)
 
 
 def _assign_rank_and_crowding(
     population: list[CapacityIndividual],
+    precision: ObjectivePrecision = EXACT_PRECISION,
 ) -> list[list[CapacityIndividual]]:
-    fronts = _fast_non_dominated_sort(population)
+    fronts = _fast_non_dominated_sort(population, precision)
     for rank, front in enumerate(fronts):
         for individual in front:
             individual.rank = rank
             individual.crowding = 0.0
-        _assign_crowding(front)
+        _assign_crowding(front, precision)
     return fronts
 
 
 def _fast_non_dominated_sort(
     population: list[CapacityIndividual],
+    precision: ObjectivePrecision = EXACT_PRECISION,
 ) -> list[list[CapacityIndividual]]:
     dominates_map: dict[int, list[int]] = {idx: [] for idx in range(len(population))}
     dominated_count = {idx: 0 for idx in range(len(population))}
@@ -1508,9 +1535,9 @@ def _fast_non_dominated_sort(
         for q in range(len(population)):
             if p == q:
                 continue
-            if _dominates(objectives[p], objectives[q]):
+            if precision.dominates(objectives[p], objectives[q]):
                 dominates_map[p].append(q)
-            elif _dominates(objectives[q], objectives[p]):
+            elif precision.dominates(objectives[q], objectives[p]):
                 dominated_count[p] += 1
         if dominated_count[p] == 0:
             fronts_idx[0].append(p)
@@ -1529,18 +1556,35 @@ def _fast_non_dominated_sort(
     return [[population[idx] for idx in front] for front in fronts_idx if front]
 
 
-def _assign_crowding(front: list[CapacityIndividual]) -> None:
+def _assign_crowding(
+    front: list[CapacityIndividual],
+    precision: ObjectivePrecision = EXACT_PRECISION,
+) -> None:
+    """Crowding distance, with resolution-dead dimensions contributing nothing.
+
+    A dimension whose spread across the front is smaller than the resolution
+    carries no service information. Letting min-max normalization amplify it
+    would make rounding noise look like the most important source of diversity,
+    so that dimension is skipped and its endpoints are not marked infinite.
+    """
     if len(front) <= 2:
         for individual in front:
             individual.crowding = math.inf
         return
     for obj_idx in range(3):
         front.sort(key=lambda item: (item.objectives or (math.inf, math.inf, math.inf))[obj_idx])
-        front[0].crowding = math.inf
-        front[-1].crowding = math.inf
         min_value = (front[0].objectives or (0, 0, 0))[obj_idx]
         max_value = (front[-1].objectives or (0, 0, 0))[obj_idx]
-        scale = max(max_value - min_value, 1e-9)
+        span = max_value - min_value
+        resolution = precision.resolutions[obj_idx]
+        if span <= resolution:
+            # legacy keeps its historical endpoint handling for an exactly
+            # constant dimension; v2 treats a sub-resolution spread as constant.
+            if not precision.is_exact:
+                continue
+        front[0].crowding = math.inf
+        front[-1].crowding = math.inf
+        scale = max(span, 1e-9)
         for idx in range(1, len(front) - 1):
             previous_value = (front[idx - 1].objectives or (0, 0, 0))[obj_idx]
             next_value = (front[idx + 1].objectives or (0, 0, 0))[obj_idx]
@@ -1559,6 +1603,22 @@ def _update_pareto_archive(
     archive: list[CapacityIndividual],
     candidates: list[CapacityIndividual],
 ) -> list[CapacityIndividual]:
+    return update_pareto_archive(archive, candidates, EXACT_PRECISION)
+
+
+def update_pareto_archive(
+    archive: list[CapacityIndividual],
+    candidates: list[CapacityIndividual],
+    precision: ObjectivePrecision,
+) -> list[CapacityIndividual]:
+    """Non-dominated set over `archive + candidates` under one resolution.
+
+    De-duplication keeps one decision per *quantized objective key*, not per
+    exact objective triple: two decisions that are indistinguishable at the
+    service resolution are one point on the front, and the survivor is chosen
+    deterministically by decision signature so the result does not depend on
+    input order.
+    """
     unique: dict[tuple[Any, ...], CapacityIndividual] = {}
     for individual in archive + candidates:
         if individual.objectives is None:
@@ -1566,19 +1626,26 @@ def _update_pareto_archive(
         signature = _decision_signature(individual)
         unique.setdefault(signature, individual.clone())
 
-    values = list(unique.values())
+    # Collapse decisions with the same resolution-equivalent objectives,
+    # keeping the lowest decision signature so the choice is order-independent.
+    by_objective: dict[Any, CapacityIndividual] = {}
+    for individual in sorted(unique.values(), key=_decision_signature):
+        objectives = individual.objectives or (math.inf, math.inf, math.inf)
+        by_objective.setdefault(precision.key(objectives), individual)
+    values = list(by_objective.values())
+
     non_dominated = [
         individual
         for idx, individual in enumerate(values)
         if not any(
-            _dominates(other.objectives, individual.objectives)
+            precision.dominates(other.objectives, individual.objectives)
             for other_idx, other in enumerate(values)
             if idx != other_idx and other.objectives is not None
         )
     ]
     non_dominated.sort(
         key=lambda item: (
-            item.objectives or (math.inf, math.inf, math.inf),
+            precision.key(item.objectives or (math.inf, math.inf, math.inf)),
             _decision_signature(item),
         )
     )
@@ -1611,8 +1678,9 @@ def _serialize_pareto_front(front: list[CapacityIndividual]) -> list[ParetoSolut
 def _select_next_generation(
     combined: list[CapacityIndividual],
     pop_size: int,
+    precision: ObjectivePrecision = EXACT_PRECISION,
 ) -> list[CapacityIndividual]:
-    fronts = _assign_rank_and_crowding(combined)
+    fronts = _assign_rank_and_crowding(combined, precision)
     selected: list[CapacityIndividual] = []
     for front in fronts:
         if len(selected) + len(front) <= pop_size:

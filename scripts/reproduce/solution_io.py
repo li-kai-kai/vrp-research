@@ -42,6 +42,7 @@ from scripts.reproduce.capacity_recovery import (
     RecoveryStage,
     VehicleProfile,
 )
+from scripts.reproduce.objective_precision import precision_for
 from scripts.reproduce.model import DamagedEdge, RandomInstance
 
 
@@ -439,9 +440,18 @@ def physical_instance_hash(instance: CapacityExperimentInstance) -> str:
 
 
 def model_fingerprint(instance: CapacityExperimentInstance) -> str:
-    """Fingerprint of the planning/evaluation assumptions in force."""
+    """Fingerprint of the planning/evaluation/numerical assumptions in force.
+
+    The objective-comparison precision is part of the model: it decides which
+    decisions count as tied, which enter the archive, and which one is reported
+    as the representative, so two runs that differ only in resolution are not
+    the same model and must not share a fingerprint.
+    """
+    precision = precision_for(instance)
     payload = {
         "physical_instance_hash": physical_instance_hash(instance),
+        "objective_precision": precision.as_dict(),
+        "objective_precision_fingerprint": precision.fingerprint(),
         "progressive_recovery": bool(instance.progressive_recovery),
         "heterogeneous_vehicle_thresholds": bool(
             instance.heterogeneous_vehicle_thresholds
@@ -1039,6 +1049,7 @@ def build_run_record(
     extra: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Assemble one complete, self-describing run unit."""
+    precision = precision_for(instance)
     representative_hash = decision_hash(representative)
     solutions: list[dict[str, Any]] = []
     for index, individual in enumerate(front, start=1):
@@ -1080,6 +1091,10 @@ def build_run_record(
         "model_fingerprint": model_fingerprint(instance),
         "evaluation": instance.evaluation.as_dict(),
         "evaluation_fingerprint": instance.evaluation.fingerprint(),
+        # The resolution objectives are compared at. Raw objectives below are
+        # the untouched measured values; only the comparison key is quantized.
+        "objective_precision": precision.as_dict(),
+        "objective_precision_fingerprint": precision.fingerprint(),
         "source_fingerprint": source_fingerprint_value,
         "objectives": [float(value) for value in (representative.objectives or ())],
         "metrics": _finite_metrics(representative.metrics or {}),

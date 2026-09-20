@@ -24,9 +24,14 @@ from scripts.reproduce.capacity_recovery import (
     _swap_two_dispatches,
     _swap_two_repairs,
     _tournament,
-    _update_pareto_archive,
     _weighted_score,
     evaluate_capacity_solution,
+    update_pareto_archive,
+)
+from scripts.reproduce.objective_precision import (
+    EXACT_PRECISION,
+    ObjectivePrecision,
+    precision_for,
 )
 
 
@@ -181,8 +186,9 @@ def solve_benchmark_algorithm(
             use_local_search=algorithm in LOCAL_SEARCH_ALGORITHMS,
             adaptive=algorithm == "nsga2_alns",
         )
-    _assign_crowding(front)
-    representative = min(front, key=_representative_key)
+    precision = precision_for(instance)
+    _assign_crowding(front, precision)
+    representative = min(front, key=lambda item: _representative_key(item, precision))
     return AlgorithmRun(
         algorithm=algorithm,
         front=front,
@@ -245,6 +251,7 @@ def _solve_vnd(
     evaluator: _Evaluator,
     rng: random.Random,
 ) -> tuple[list[CapacityIndividual], list[dict[str, float]], str]:
+    precision = precision_for(instance)
     current = _greedy_individual(instance)
     evaluator.evaluate(current)
     convergence = [_convergence_row(evaluator.count, current)]
@@ -275,7 +282,10 @@ def _solve_vnd(
         convergence.append(
             _convergence_row(
                 evaluator.count,
-                min(evaluator.archive_candidates(), key=_representative_key),
+                min(
+                    evaluator.archive_candidates(),
+                    key=lambda item: _representative_key(item, precision),
+                ),
             )
         )
     front = _archived_front(instance, evaluator)
@@ -291,13 +301,17 @@ def _solve_nsga(
     use_local_search: bool,
     adaptive: bool,
 ) -> tuple[list[CapacityIndividual], list[dict[str, float]], str]:
+    precision = precision_for(instance)
     initial_size = min(budget.pop_size, evaluator.remaining)
     population = [_create_individual(instance, rng) for _ in range(initial_size)]
     population = evaluator.population(population)
     convergence = [
         _convergence_row(
             evaluator.count,
-            min(evaluator.archive_candidates(), key=_representative_key),
+            min(
+                evaluator.archive_candidates(),
+                key=lambda item: _representative_key(item, precision),
+            ),
         )
     ]
     selector = _AdaptiveOperators(_local_operators(), adaptive=adaptive)
@@ -313,7 +327,7 @@ def _solve_nsga(
     previous_count = evaluator.count
 
     while evaluator.remaining > 0 and len(population) >= 2:
-        _assign_rank_and_crowding(population)
+        _assign_rank_and_crowding(population, precision)
         offspring: list[CapacityIndividual] = []
         while len(offspring) < budget.pop_size and evaluator.remaining > 0:
             parent_a = _tournament(population, rng)
@@ -343,11 +357,15 @@ def _solve_nsga(
         population = _select_next_generation(
             population + offspring,
             min(budget.pop_size, len(population) + len(offspring)),
+            precision,
         )
         convergence.append(
             _convergence_row(
                 evaluator.count,
-                min(evaluator.archive_candidates(), key=_representative_key),
+                min(
+                    evaluator.archive_candidates(),
+                    key=lambda item: _representative_key(item, precision),
+                ),
             )
         )
         # A combination such as crossover=0 with mutation=0 rebuilds only
@@ -372,7 +390,11 @@ def _archived_front(
     evaluator: _Evaluator,
 ) -> list[CapacityIndividual]:
     """Non-dominated front over every decision the run actually evaluated."""
-    front = _update_pareto_archive([], evaluator.archive_candidates())
+    front = update_pareto_archive(
+        [],
+        evaluator.archive_candidates(),
+        precision_for(instance),
+    )
     if not front:
         raise RuntimeError("evaluator produced no candidates to archive")
     return front
@@ -467,7 +489,8 @@ def _accept_improvement(
 ) -> bool:
     if candidate.objectives is None or incumbent.objectives is None:
         return False
-    return _dominates(candidate.objectives, incumbent.objectives) or (
+    precision = precision_for(instance)
+    return precision.dominates(candidate.objectives, incumbent.objectives) or (
         _score(instance, candidate) < _score(instance, incumbent)
     )
 
@@ -511,9 +534,16 @@ def _normalized_score(
     return (f1 + f2 + f3) / 3.0
 
 
-def _representative_key(individual: CapacityIndividual) -> tuple[float, float, float]:
+def _representative_key(
+    individual: CapacityIndividual,
+    precision: ObjectivePrecision = EXACT_PRECISION,
+) -> tuple[float, float, float]:
+    """Lexicographic (F3, F1, F2) on the pinned resolution."""
     objectives = individual.objectives or (math.inf, math.inf, math.inf)
-    return objectives[2], objectives[0], objectives[1]
+    if precision.is_exact:
+        return objectives[2], objectives[0], objectives[1]
+    f1, f2, f3 = precision.key(objectives)
+    return f3, f1, f2
 
 
 def _convergence_row(evaluations: int, individual: CapacityIndividual) -> dict[str, float]:

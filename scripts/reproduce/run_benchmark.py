@@ -37,8 +37,16 @@ from scripts.reproduce.capacity_recovery import (
     EvaluationConfig,
     _dominates,
 )
+from scripts.reproduce.objective_precision import (
+    EXACT_PRECISION,
+    V2_PRECISION,
+    ObjectivePrecision,
+    degenerate_dimensions,
+    effective_span,
+)
 from scripts.reproduce.solution_io import (
     RunStore,
+    SolutionIOError,
     build_run_record,
     decision_hash as solution_decision_hash,
     make_run_key,
@@ -328,19 +336,48 @@ def _attach_pooled_quality(
             ]
             for index in indices
         ]
-        quality_rows, metadata = pooled_quality_indicators(fronts)
+        # Every run pooling into one reference front shares one model version,
+        # so the resolution is unambiguous; assert it rather than assume it.
+        versions = {
+            (records[index].get("evaluation") or {}).get("model_version")
+            for index in indices
+        }
+        if len(versions) != 1:
+            raise SolutionIOError(
+                f"cannot pool quality indicators across model versions {sorted(versions)} "
+                f"for {key}"
+            )
+        precision = (
+            V2_PRECISION if versions == {"v2"} else EXACT_PRECISION
+        )
+        quality_rows, metadata = pooled_quality_indicators(fronts, precision)
         for index, quality in zip(indices, quality_rows):
             records[index].update(quality)
-        reference_faces[key] = {"size": metadata["reference_front_size"]}
+            records[index]["quality_precision"] = metadata["precision"]["label"]
+            records[index]["quality_effective_dimensions"] = metadata[
+                "effective_dimensions"
+            ]
+        reference_faces[key] = {
+            "size": metadata["reference_front_size"],
+            "degenerate_dimensions": metadata["degenerate_dimensions"],
+            "effective_dimensions": metadata["effective_dimensions"],
+        }
     return reference_faces
 
 
-def _non_dominated(points: Iterable[tuple[float, float, float]]) -> list[tuple[float, float, float]]:
+def _non_dominated(
+    points: Iterable[tuple[float, float, float]],
+    precision: ObjectivePrecision = EXACT_PRECISION,
+) -> list[tuple[float, float, float]]:
     unique = sorted(set(points))
     return [
         point
         for idx, point in enumerate(unique)
-        if not any(_dominates(other, point) for other_idx, other in enumerate(unique) if idx != other_idx)
+        if not any(
+            precision.dominates(other, point)
+            for other_idx, other in enumerate(unique)
+            if idx != other_idx
+        )
     ]
 
 
@@ -356,11 +393,24 @@ def _normalize(
     point: tuple[float, float, float],
     ideal: tuple[float, ...],
     nadir: tuple[float, ...],
+    precision: ObjectivePrecision = EXACT_PRECISION,
 ) -> tuple[float, float, float]:
-    return tuple(
-        (point[idx] - ideal[idx]) / max(nadir[idx] - ideal[idx], 1e-12)
-        for idx in range(3)
-    )
+    """Min-max normalize against one shared reference frame.
+
+    Each dimension is divided by its *effective* span: a dimension whose
+    observed range is below the pinned resolution is floored at the resolution
+    instead of being divided by a near-zero range, which would otherwise turn
+    rounding noise into the dominant component of the distance.
+    """
+    normalized = []
+    for idx in range(3):
+        span, _floored = effective_span(
+            ideal[idx],
+            nadir[idx],
+            precision.resolutions[idx],
+        )
+        normalized.append((point[idx] - ideal[idx]) / max(span, 1e-12))
+    return tuple(normalized)
 
 
 def hypervolume_3d(
@@ -417,22 +467,29 @@ def inverted_generational_distance(
 
 def pooled_quality_indicators(
     fronts: list[list[tuple[float, float, float]]],
+    precision: ObjectivePrecision = EXACT_PRECISION,
 ) -> tuple[list[dict[str, float]], dict[str, object]]:
-    """Calculate normalized HV/IGD against one front pooled across all runs."""
+    """Calculate normalized HV/IGD against one front pooled across all runs.
+
+    Raw objectives are never overwritten; the normalized values are derived
+    here and the metadata records the raw range of every dimension and which
+    dimensions were too flat to carry information at the pinned resolution.
+    """
     all_points = [point for front in fronts for point in front]
     if not all_points:
         raise ValueError("at least one objective point is required")
-    reference_front = _non_dominated(all_points)
+    reference_front = _non_dominated(all_points, precision)
     # Use the full observed range, not only the non-dominated points, so every
     # compared run uses exactly the same normalization and reference front.
     ideal, nadir = _bounds(all_points)
+    degenerate = degenerate_dimensions(ideal, nadir, precision)
     normalized_reference = [
-        _normalize(point, ideal, nadir)
+        _normalize(point, ideal, nadir, precision)
         for point in reference_front
     ]
     quality_rows = []
     for front in fronts:
-        normalized = [_normalize(point, ideal, nadir) for point in front]
+        normalized = [_normalize(point, ideal, nadir, precision) for point in front]
         quality_rows.append(
             {
                 "hypervolume": hypervolume_3d(normalized, (1.1, 1.1, 1.1)),
@@ -446,6 +503,11 @@ def pooled_quality_indicators(
         "reference_front_size": len(reference_front),
         "ideal": ideal,
         "nadir": nadir,
+        "raw_ranges": tuple(nadir[idx] - ideal[idx] for idx in range(3)),
+        "degenerate_dimensions": degenerate,
+        "effective_dimensions": 3 - len(degenerate),
+        "precision": precision.as_dict(),
+        "precision_fingerprint": precision.fingerprint(),
         "reference_point_normalized": (1.1, 1.1, 1.1),
     }
     return quality_rows, metadata

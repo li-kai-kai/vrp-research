@@ -16,7 +16,7 @@ from scripts.reproduce.benchmark_algorithms import (
     _Evaluator,
     _local_operators,
     _normalized_score,
-    _update_pareto_archive,
+    update_pareto_archive,
     solve_benchmark_algorithm,
 )
 from scripts.reproduce.benchmark_suite import benchmark_specs, build_benchmark_instance
@@ -27,6 +27,7 @@ from scripts.reproduce.capacity_recovery import (
     _dominates,
     evaluate_capacity_solution,
 )
+from scripts.reproduce.objective_precision import EXACT_PRECISION, V2_PRECISION
 from scripts.reproduce.run_benchmark import hypervolume_3d
 from tests.test_model_contract import _make_instance
 
@@ -93,9 +94,10 @@ class ArchiveTest(unittest.TestCase):
             repair_order=[2], team_assignment=[0], dispatch_priority=[(0, 1)],
             objectives=(20.0, 20.0, 0.5),
         )
-        archive = _update_pareto_archive(
+        archive = update_pareto_archive(
             [],
             [better_scalar, non_dominated_but_worse_scalar, dominated],
+            EXACT_PRECISION,
         )
         signatures = {tuple(item.repair_order) for item in archive}
 
@@ -110,7 +112,7 @@ class ArchiveTest(unittest.TestCase):
             dispatch_priority=[(0, 1)],
             objectives=(1.0, 1.0, -0.5),
         )
-        archive = _update_pareto_archive([], [candidate])
+        archive = update_pareto_archive([], [candidate], EXACT_PRECISION)
         # Mutating the caller's object afterwards must not rewrite history.
         candidate.repair_order.reverse()
         candidate.objectives = (99.0, 99.0, 99.0)
@@ -145,7 +147,7 @@ class ArchiveTest(unittest.TestCase):
         archive = []
         previous = -1.0
         for candidate in candidates:
-            archive = _update_pareto_archive(archive, [candidate])
+            archive = update_pareto_archive(archive, [candidate], EXACT_PRECISION)
             points = [tuple(item.objectives) for item in archive]
             current = hypervolume_3d(points, reference)
             # Accumulating evaluated candidates must never lose ground.
@@ -378,31 +380,61 @@ class EnumeratedSubproblemTest(unittest.TestCase):
             decision.objectives = objectives
             points.append((objectives, decision))
 
-        non_dominated = [
-            decision
-            for objectives, decision in points
-            if not any(
-                _dominates(other_objectives, objectives)
-                for other_objectives, other in points
-                if other is not decision
-            )
-        ]
-        self.assertGreater(len(non_dominated), 0)
-
         # Re-evaluating any enumerated decision reproduces its objectives: the
         # reference front is derived from the shared evaluator, not from a
         # parallel implementation.
-        for decision in non_dominated:
+        for _objectives, decision in points:
             repeated, _metrics = evaluate_capacity_solution(instance, decision.clone())
             self.assertEqual(tuple(decision.objectives), tuple(repeated))
 
-        # The archive of the enumerated subspace is exactly the pairwise
-        # non-dominated set.
-        archive = _update_pareto_archive([], [decision for _objectives, decision in points])
+        archive = update_pareto_archive(
+            [],
+            [decision for _objectives, decision in points],
+            V2_PRECISION,
+        )
+        self.assertGreater(len(archive), 0)
+
+        # (a) The archive is internally consistent: no member dominates another
+        # under the pinned resolution.
+        archive_objectives = [tuple(item.objectives) for item in archive]
+        for left_idx, left in enumerate(archive_objectives):
+            for right_idx, right in enumerate(archive_objectives):
+                if left_idx != right_idx:
+                    self.assertFalse(V2_PRECISION.dominates(left, right))
+
+        # (b) It is complete: every enumerated decision is dominated by, or
+        # resolution-equivalent to, some archive member. Nothing is lost by
+        # quantizing -- only sub-resolution distinctions are.
+        for objectives, _candidate in points:
+            self.assertTrue(
+                any(
+                    V2_PRECISION.dominates(member, objectives)
+                    or V2_PRECISION.equivalent(member, objectives)
+                    for member in archive_objectives
+                ),
+                f"enumerated decision {objectives} is unrepresented in the archive",
+            )
+
+        # (c) Order independence: the archive does not depend on input order.
+        shuffled = [decision for _objectives, decision in points]
+        random.Random(4).shuffle(shuffled)
         self.assertEqual(
             sorted(tuple(item.objectives) for item in archive),
-            sorted(tuple(item.objectives) for item in non_dominated),
+            sorted(
+                tuple(item.objectives)
+                for item in update_pareto_archive([], shuffled, V2_PRECISION)
+            ),
         )
+
+        # Under the exact legacy rule the same enumeration keeps more points:
+        # the quantized archive only ever removes sub-resolution distinctions,
+        # never real ones.
+        exact_archive = update_pareto_archive(
+            [],
+            [decision for _objectives, decision in points],
+            EXACT_PRECISION,
+        )
+        self.assertGreaterEqual(len(exact_archive), len(archive))
 
     def test_search_front_is_never_dominated_by_an_enumerated_decision(self):
         """NSGA-II may not return a point an enumerated encoding dominates."""
