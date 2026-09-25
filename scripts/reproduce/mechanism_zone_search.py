@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +29,7 @@ from scripts.reproduce.benchmark_algorithms import (
     solve_benchmark_algorithm,
 )
 from scripts.reproduce.benchmark_suite import benchmark_specs
+from scripts.reproduce.run_benchmark import SOURCE_FILES
 from scripts.reproduce.capacity_recovery import (
     CapacityIndividual,
     evaluate_capacity_solution_detailed,
@@ -45,6 +47,9 @@ from scripts.reproduce.mechanism_applicability import (
     stress_topology_instance,
 )
 from scripts.reproduce.solution_io import (
+    RunStore, build_run_record, make_run_key, model_fingerprint,
+    physical_instance_hash, source_fingerprint, write_store_indexes,
+    decision_from_json,
     code_environment,
     decision_hash,
     decision_to_json,
@@ -99,6 +104,7 @@ PLANNING_MODELS = (
 )
 
 FULL_MODEL = "PR1_HT1_EC1"
+ZONE_SOURCES = tuple(dict.fromkeys(SOURCE_FILES + DIAGNOSTIC_SOURCES + ("scripts/reproduce/mechanism_zone_search.py",)))
 
 
 SCAN_POINTS = 25
@@ -206,9 +212,26 @@ def main() -> None:
     budget = BenchmarkBudget(
         max_evaluations=args.max_evaluations,
         pop_size=args.pop_size,
+        crossover_probability=args.crossover_probability,
+        mutation_probability=args.mutation_probability,
         alns_probability=args.alns_probability,
         alns_iterations=args.alns_iterations,
     )
+
+    store = RunStore(output_dir)
+    budget_payload = asdict(budget)
+    source_fp = source_fingerprint(Path(__file__).resolve().parents[2],
+                                   ZONE_SOURCES)
+    store.enforce_contract(entry_point="mechanism_zone_search", fixed={
+        "suite": args.suite, "case_id": args.case,
+        "instance_seeds": sorted(set(args.instance_seeds)),
+        "scenario": args.scenario, "damage_strategy": args.damage_strategy,
+        "node_role_strategy": args.node_role_strategy, "algorithm": args.algorithm,
+        "budget": budget_payload, "solver_repeats": args.solver_repeats,
+        "solver_seed_start": args.solver_seed_start, "source_fingerprint": source_fp,
+        "model_version": "v2",
+    }, varying={})
+    store.check_source_consistency(source_fp)
 
     exposure_rows: list[dict[str, Any]] = []
     bottleneck_rows: list[dict[str, Any]] = []
@@ -231,6 +254,7 @@ def main() -> None:
             calibrate_zones(scenario, instance_seed), ZONE_TARGETS
         ):
             instance = scale_capacity(scenario, capacity_scale)
+            store.save_execution_instance(instance)
 
             # Measure the zone instead of trusting its label.
             probe = fixed_decisions(instance, random_decisions=0, seed=instance_seed)["spt"]
@@ -278,9 +302,43 @@ def main() -> None:
                 solver_seed = args.solver_seed_start + instance_seed * 10_000 + repeat
                 for model_id, factors in PLANNING_MODELS:
                     planning_instance = model_factor_variant(instance, **factors)
-                    result = solve_benchmark_algorithm(
-                        args.algorithm, planning_instance, budget, seed=solver_seed
+                    instance_file = store.save_instance(planning_instance)
+                    if physical_instance_hash(planning_instance) != physical_instance_hash(instance):
+                        raise ValueError("planning variant changed physical instance")
+                    run_key = make_run_key(
+                        case_id=f"{spec.case_id}@{args.scenario}@{zone}",
+                        instance_seed=instance_seed, algorithm=args.algorithm,
+                        solver_seed=solver_seed, solver_repeat=repeat, model_id=model_id,
+                        budget=budget_payload, model_fingerprint_value=model_fingerprint(planning_instance),
+                        source_fingerprint=source_fp,
                     )
+                    if args.resume and store.has_complete_run(run_key):
+                        record = store.load_run(run_key)
+                        print(f"Resume {run_key}", flush=True)
+                    else:
+                        print(f"Solve {run_key}", flush=True)
+                        result = solve_benchmark_algorithm(
+                            args.algorithm, planning_instance, budget, seed=solver_seed
+                        )
+                        record = build_run_record(
+                            run_key=run_key, case_id=spec.case_id, suite=args.suite,
+                            source=spec.source, size_group=spec.size_group, num_nodes=spec.num_nodes,
+                            instance_seed=instance_seed, solver_seed=solver_seed, solver_repeat=repeat,
+                            algorithm=args.algorithm, instance=planning_instance,
+                            front=result.front, representative=result.representative,
+                            evaluations=result.evaluations, runtime_seconds=result.runtime_seconds,
+                            convergence=result.convergence, budget=budget_payload,
+                            termination_reason=result.termination_reason, source_fingerprint_value=source_fp,
+                            extra={"instance_file": instance_file, "model_id": model_id,
+                                   "zone": zone, "scenario_family": args.scenario,
+                                   "capacity_scale": capacity_scale, "diagnostics": result.diagnostics},
+                        )
+                        store.save_run(record)
+                    front = []
+                    for solution in record["pareto_front"]:
+                        individual = decision_from_json(solution["decision"], planning_instance)
+                        individual.objectives = tuple(solution["objectives"])
+                        front.append(individual)
                     run_row: dict[str, Any] = {
                         "zone": zone,
                         "capacity_scale": capacity_scale,
@@ -290,12 +348,12 @@ def main() -> None:
                         "solver_repeat": repeat,
                         "algorithm": args.algorithm,
                         "model_id": model_id,
-                        "evaluations": result.evaluations,
-                        "termination_reason": result.termination_reason,
-                        "pareto_size": len(result.front),
-                        "planning_F1": result.representative.objectives[0],
-                        "planning_F2": result.representative.objectives[1],
-                        "planning_F3": result.representative.objectives[2],
+                        "evaluations": record["evaluations"],
+                        "termination_reason": record["termination_reason"],
+                        "pareto_size": len(front),
+                        "planning_F1": record["objectives"][0],
+                        "planning_F2": record["objectives"][1],
+                        "planning_F3": record["objectives"][2],
                     }
                     run_rows.append(run_row)
 
@@ -304,7 +362,7 @@ def main() -> None:
                     full_instance = model_factor_variant(
                         instance, **dict(PLANNING_MODELS)[FULL_MODEL]
                     )
-                    for solution_index, individual in enumerate(result.front):
+                    for solution_index, individual in enumerate(front):
                         decisions[decision_hash(individual)] = decision_to_json(individual)
                         replay_rows.append(
                             _replay(
@@ -321,6 +379,7 @@ def main() -> None:
                             )
                         )
 
+    write_store_indexes(store, store.load_runs_for_experiment())
     write_csv_atomic(output_dir / "zone_exposure.csv", exposure_rows, list(exposure_rows[0]))
     write_csv_atomic(
         output_dir / "zone_bottleneck.csv", bottleneck_rows, list(bottleneck_rows[0])
@@ -373,7 +432,7 @@ def main() -> None:
             },
             "bridge_diagnostics": diagnostics,
             "algorithm": args.algorithm,
-            "budget": {"max_evaluations": args.max_evaluations, "pop_size": args.pop_size},
+            "budget": budget_payload,
             "solver_repeats": args.solver_repeats,
             "solver_seed_start": args.solver_seed_start,
             "execution_model": FULL_MODEL,
@@ -387,7 +446,7 @@ def main() -> None:
             "distinct_decisions": len(decisions),
             "code": code_environment(),
             "source_hashes": source_hashes(
-                Path(__file__).resolve().parents[2], DIAGNOSTIC_SOURCES
+                Path(__file__).resolve().parents[2], ZONE_SOURCES
             ),
         },
     )
@@ -464,6 +523,9 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--node-role-strategy", choices=["random", "separated"], default="separated")
     parser.add_argument("--algorithm", default="nsga2")
     parser.add_argument("--max-evaluations", type=int, default=200)
+    parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--crossover-probability", type=float, default=0.9)
+    parser.add_argument("--mutation-probability", type=float, default=0.2)
     parser.add_argument("--pop-size", type=int, default=16)
     parser.add_argument("--alns-probability", type=float, default=0.35)
     parser.add_argument("--alns-iterations", type=int, default=4)

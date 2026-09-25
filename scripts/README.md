@@ -159,3 +159,65 @@ uv run python scripts/reproduce/model_ablation_analysis.py --input-root outputs/
 渐进恢复状态的默认含义为：`blocked`（进度 0–30%，容量和速度为 0）、`temporary`（30–60%，临时便道，容量/速度恢复到 30%）、`one_lane`（60–80%，单车道通行，恢复到 60%）、`basic`（80–100%，基本恢复，恢复到 80%）和 `full`（100%，完全恢复）。车型仍需同时满足自身进度阈值 30%、50%、70% 和 80% 才能通行。
 
 正式算法 benchmark 使用 `--suite publication`，同样**必须显式传 `--model-version v2`**。汶川应单独指定 `--cases WEN38 --instance-seeds 1`，否则该入口会遍历默认实例种子而重复同一固定网络；合成案例按默认多实例运行。SPT 仅一次构造评价，其余搜索受 `max-evaluations` 上限约束。benchmark 汇总与绘图先平均实例内 solver 重复，图中误差条为实例间标准差；固定汶川实例的零误差条不表示求解器没有随机波动，应另查看各 solver 运行。
+
+## 2026-09-25 交接复现
+
+本轮范围及长期路线取舍见 [research_scope.md](../docs/research_scope.md)，实测结果见
+[公平准备诊断](../docs/research_readiness_report.md)与[共同执行先导](../docs/model_value_pilot_report.md)。
+以下命令从仓库根目录运行；复现到新目录时统一替换输出根目录。不要覆盖历史证据目录。
+
+```bash
+uv sync --frozen
+uv run --frozen python -m unittest discover -s tests -v
+
+uv run --frozen python scripts/reproduce/run_benchmark.py \
+  --suite benchmark --cases WEN38 --instance-seeds 1 --model-version v2 \
+  --solver-repeats 2 --solver-seed-start 50000 --algorithms nsga2 \
+  --max-evaluations 500 --pop-size 32 \
+  --output-dir outputs/handoff_20260925/readiness/wen38_search
+
+uv run --frozen python scripts/reproduce/research_readiness.py \
+  --historical-root outputs/claude_v2_reviewfix2/pilot_algorithm \
+  --search-root outputs/handoff_20260925/readiness/wen38_search \
+  --output-dir outputs/handoff_20260925/readiness/analysis
+
+uv run --frozen python scripts/reproduce/run_model_ablation.py \
+  --suite benchmark --cases WEN38 --model-version v2 --algorithm nsga2 \
+  --model-ids PR1_HT1_EC1 PR0_HT1_EC1 PR1_HT0_EC1 PR1_HT1_EC0 \
+  --instance-seeds 1 --solver-repeats 2 --solver-seed-start 50000 \
+  --max-evaluations 500 --pop-size 32 \
+  --output-dir outputs/handoff_20260925/pilot/wen38
+
+uv run --frozen python scripts/reproduce/mechanism_zone_search.py \
+  --suite benchmark --case S025 --instance-seeds 101 102 --scenario corridor \
+  --algorithm nsga2 --solver-repeats 2 --solver-seed-start 50000 \
+  --max-evaluations 500 --pop-size 32 \
+  --output-dir outputs/handoff_20260925/pilot/corridor
+
+uv run --frozen python scripts/reproduce/common_execution_analysis.py \
+  --input-roots outputs/handoff_20260925/pilot/wen38 outputs/handoff_20260925/pilot/corridor \
+  --output-dir outputs/handoff_20260925/pilot/analysis --representative-traces
+
+uv run --frozen python scripts/plot_common_execution.py \
+  --input-dir outputs/handoff_20260925/pilot/analysis \
+  --output-dir outputs/handoff_20260925/pilot/figures
+
+uv run --frozen python -m unittest discover -s tests -v \
+  > outputs/handoff_20260925/tests.log 2>&1
+```
+
+分区入口额外支持 `--resume`：完全相同且完整的运行跳过求解，重建原 `zone_*.csv`、
+`zone_decisions.json` 和标准索引。每次求解完成立即写 `runs/` 独立记录，保存完整实例和决策；
+run key 包含分区身份，相同物理实例的不同分区也不覆盖。
+
+分区目录固定 suite、case、实例种子集合、scenario、damage/node-role 策略、算法、完整预算、
+重复数、起始种子和源码指纹；改任一固定条件必须使用新目录。完整预算同时记录交叉、变异、
+ALNS 概率及迭代数，默认依次为 0.9、0.2、0.35、4。
+
+共同执行分析只接受兼容 v2 合同、完整四模型配对与合法 Full 快照；验证规划 self-replay，
+再回放 Full，在执行目标上重新去重、筛非支配集。`execution_pairs.csv` 是配对前沿/代表差，
+`prediction_bias.csv` 是同一方案的预测偏差。参考前沿按物理配置分别建立；
+`instance_summary.csv` 先平均求解重复，`group_summary.csv` 再对实例等权平均，不做显著性检验。
+
+公平诊断遇到历史输入缺失会在 manifest 记录限制，不伪造历史样本。新四模型先导可独立运行。
+`service_diagnostics.py` 复用共享轨迹并检查评价一致性、逐供应点库存与守恒。
