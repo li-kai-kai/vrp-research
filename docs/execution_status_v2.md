@@ -1,11 +1,14 @@
 # v2 执行状态表
 
 状态只允许四种取值：**待执行**、**执行中**、**通过**、**阻塞**。
-最后更新：2026-09-20（文档一致性清理轮）。当前基准 HEAD：`7c7a6ab`。
+最后更新：2026-09-25（本地交接执行 + WEN38 预算与资源审计）。本轮起点 HEAD：`7ee2cec074def4235d25ebb95d27434d1edcdf93`。
 
-**当前状态**：全量测试 `uv run python -m unittest discover -s tests -v` → **202 个，202 通过，0 失败，0 错误**。
-**当前结论依据目录**：`outputs/claude_v2_reviewfix2/`。`outputs/claude_v2/`（首轮）与
-`outputs/claude_v2_reviewfix/`（第一轮修正后）**仅作为修复历史与前后对照**，不再作为当前结果。
+**当前状态**：`uv run --frozen python -m unittest discover -s tests -v` → **231 个，231 通过，0 跳过**。
+**本轮结论依据目录**：`outputs/handoff_20260925/`；见[四模型先导报告](model_value_pilot_report.md)、
+[公平准备诊断](research_readiness_report.md)与[核验摘要](handoff_validation_20260925.json)。
+WEN38 预算与资源审计的依据目录是 `outputs/report_reproduction/`，只入库 `analysis/`、
+`ec_diagnosis/` 与三个来源文件，运行记录和 Word 交付物不入库。
+`outputs/claude_v2_reviewfix2/` 保留为 2026-09-20 诊断与本轮历史输入；更早两轮目录保留修复历史。
 
 下文各阶段条目中标注的测试数字是**该阶段当时**的实际值，保留为历史记录，不等于当前总数。
 基线（`1a1a5d5`）测试为 **21 个，21 通过**，其中 `tests/legacy/` 2 个被 discover 发现，单独运行亦通过。
@@ -22,6 +25,11 @@
 | R1–R5 | 复审修正第一轮（精度、目录约定、Full 校验、报告、加载） | 通过 | 见下；[v2 小预算诊断报告](pilot_v2_report.md) §10 |
 | 复审第二轮 | 坐标空间与 Full 曲线校验 | 通过 | 见下；[v2 小预算诊断报告](pilot_v2_report.md) §11 |
 | P5 | 小预算诊断与交付 | 通过（已按两轮复审修正重跑） | **`outputs/claude_v2_reviewfix2/`**；[v2 小预算诊断报告](pilot_v2_report.md) |
+| 交接补充：公平准备 | 151 条方案诊断、零服务原因与库存守恒 | 通过 | `readiness/analysis/`；未改 F3 |
+| 交接补充：分区保存恢复 | 完整 RunStore、固定目录合同、分区身份、resume | 通过 | 48 条运行恢复后字节一致；回归测试不调用求解器 |
+| 交接补充：共同执行先导 | 56 次四模型运行、1475 条回放、42 配对及两图 | 通过 | `pilot/analysis/`、`pilot/figures/`；只是小预算描述性证据 |
+| 交接补充：WEN38 预算收敛 | 60 次搜索、15 万评价、3063 条回放；三档预算判定 | 通过 | `outputs/report_reproduction/analysis/`；见[WEN38 预算检查](wen38_budget_convergence_report.md) |
+| 交接补充：容量与 EC 审计 | 容量来源核对；15 个代表 × 5 资源变体、75 次评价 | 通过 | `outputs/report_reproduction/ec_diagnosis/`；见[容量来源审计](wen38_capacity_audit.md)、[EC 诊断](wen38_ec_diagnosis.md) |
 | P6 | 正式实验方案与运行 | 待执行（本轮不启动） | — |
 | P7 | 专用大邻域与动态扩展 | 待执行（本轮不实现） | — |
 
