@@ -11,6 +11,9 @@ wheels/
 # Virtual environments
 .venv
 
+# Office lock files ("~$report.docx" appears while Word has the file open)
+~$*
+
 # Experiment outputs
 #
 # Regenerable artifacts stay out of version control. The exceptions are the
@@ -30,6 +33,20 @@ wheels/
 # outputs/ht_natural_corridor_audit/ is the evidence set behind
 # docs/ht_natural_corridor_report.md -- the WEN38 natural-corridor diagnostic.
 #
+# outputs/handoff_20260925/ is the evidence set behind
+# docs/model_value_pilot_report.md and docs/research_readiness_report.md -- the
+# 2026-09-25 local handoff reproduction. Unlike the sets above it keeps the full
+# run records, executions and instance snapshots, because the reports cite 1475
+# replay rows and 58 searches that have to be re-checkable in place.
+#
+# outputs/report_reproduction/ is the delivery root behind docs/wen38_*.md and
+# the Word report. Only two slim sets are versioned, plus the small provenance
+# files the report cites: analysis/ (the projected quality, pairing and
+# representative tables -- the same shape as mechanism_probe_audit/),
+# ec_diagnosis/, commands.sh, protocol.json and input_roots.json. The 267M
+# report/ build, the budget_*/ and corridor/ run records, the publication
+# figures and the Word delivery zip stay local; commands.sh rebuilds them.
+#
 # Note the wildcard: "outputs/" would exclude the directory itself, and a
 # file inside an excluded directory cannot be re-included.
 outputs/*
@@ -38,6 +55,14 @@ outputs/*
 !outputs/claude_v2_reviewfix2/
 !outputs/mechanism_probe_audit/
 !outputs/ht_natural_corridor_audit/
+!outputs/handoff_20260925/
+!outputs/report_reproduction/
+outputs/report_reproduction/*
+!outputs/report_reproduction/analysis/
+!outputs/report_reproduction/ec_diagnosis/
+!outputs/report_reproduction/commands.sh
+!outputs/report_reproduction/protocol.json
+!outputs/report_reproduction/input_roots.json
 figures/
 *.png
 *.jpg
@@ -47,7 +72,11 @@ figures/
 !references/*.pdf
 
 # Must come after the extension rules above, which would otherwise exclude
-# the diagnostic figures.
+# the diagnostic figures. The handoff report figures need their directory
+# re-included as well, since "figures/" matches it.
 !outputs/claude_v2/pilot_diagnostics.png
 !outputs/claude_v2_reviewfix/pilot_diagnostics.png
 !outputs/claude_v2_reviewfix2/pilot_diagnostics.png
+!outputs/handoff_20260925/pilot/figures/
+!outputs/handoff_20260925/pilot/figures/*.pdf
+!outputs/handoff_20260925/pilot/figures/*.png

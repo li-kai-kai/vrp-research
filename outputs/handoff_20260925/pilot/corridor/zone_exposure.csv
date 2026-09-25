@@ -1,0 +1,7 @@
+zone,case_id,instance_seed,capacity_scale,scenario,target_utilization,in_target_band,graph_bridge_count,damaged_bridge_count,bridge_gated_demand_count,max_edge_utilization,capacity_reroutes,EC_same_decision_changed,HT_same_decision_changed,PR_same_decision_changed,partial_edge_used_periods,threshold_sensitive_od_periods
+inactive,S025,101,0.0025544869401794576,corridor,0.2,True,1,1,4,0.19851382163815334,0,False,False,False,0,0
+transition,S025,101,0.00022938722595187606,corridor,0.91,True,1,1,4,0.9029629416315711,5,True,False,False,0,0
+binding,S025,101,0.00014953487812212205,corridor,0.99,True,1,1,4,0.9893925126811962,11,True,False,False,0,0
+inactive,S025,102,0.007862340528634104,corridor,0.2,True,1,1,4,0.19466439615167863,0,False,True,True,2,4
+transition,S025,102,0.0016781874534517343,corridor,0.91,True,1,1,4,0.9120064437363202,0,False,True,True,2,4
+binding,S025,102,0.0005782474837716209,corridor,0.99,False,1,1,4,0.9742961207316502,16,True,True,True,2,4

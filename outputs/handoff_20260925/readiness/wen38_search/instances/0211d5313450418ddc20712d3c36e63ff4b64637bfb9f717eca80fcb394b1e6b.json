@@ -1,0 +1,1275 @@
+{
+  "format": "capacity_recovery_instance",
+  "format_version": 1,
+  "name": "WEN38_seed1",
+  "instance_seed": 1,
+  "num_nodes": 38,
+  "gamma": 0,
+  "damage_ratio": 0.3137254901960784,
+  "eta_hours": 8,
+  "horizon_hours": 72,
+  "repair_crews": 3,
+  "vehicle_capacity": 100.0,
+  "vehicle_count": 10,
+  "suppliers": [
+    1,
+    2,
+    3
+  ],
+  "demands": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38
+  ],
+  "demand_amounts": [
+    [
+      4,
+      342.0
+    ],
+    [
+      5,
+      360.0
+    ],
+    [
+      6,
+      322.0
+    ],
+    [
+      7,
+      361.0
+    ],
+    [
+      8,
+      382.0
+    ],
+    [
+      9,
+      327.0
+    ],
+    [
+      10,
+      361.0
+    ],
+    [
+      11,
+      344.0
+    ],
+    [
+      12,
+      321.0
+    ],
+    [
+      13,
+      363.0
+    ],
+    [
+      14,
+      344.0
+    ],
+    [
+      15,
+      384.0
+    ],
+    [
+      16,
+      251.0
+    ],
+    [
+      17,
+      339.0
+    ],
+    [
+      18,
+      358.0
+    ],
+    [
+      19,
+      302.0
+    ],
+    [
+      20,
+      282.0
+    ],
+    [
+      21,
+      281.0
+    ],
+    [
+      22,
+      205.0
+    ],
+    [
+      23,
+      324.0
+    ],
+    [
+      24,
+      280.0
+    ],
+    [
+      25,
+      241.0
+    ],
+    [
+      26,
+      382.0
+    ],
+    [
+      27,
+      320.0
+    ],
+    [
+      28,
+      262.0
+    ],
+    [
+      29,
+      328.0
+    ],
+    [
+      30,
+      320.0
+    ],
+    [
+      31,
+      268.0
+    ],
+    [
+      32,
+      323.0
+    ],
+    [
+      33,
+      300.0
+    ],
+    [
+      34,
+      282.0
+    ],
+    [
+      35,
+      359.0
+    ],
+    [
+      36,
+      365.0
+    ],
+    [
+      37,
+      302.0
+    ],
+    [
+      38,
+      403.0
+    ]
+  ],
+  "supply_amounts": [
+    [
+      1,
+      3000.0
+    ],
+    [
+      2,
+      3000.0
+    ],
+    [
+      3,
+      3000.0
+    ]
+  ],
+  "nodes": [
+    {
+      "id": 1,
+      "attrs": {
+        "name": "Dujiangyan",
+        "node_type": "S",
+        "value": 3000
+      }
+    },
+    {
+      "id": 2,
+      "attrs": {
+        "name": "Pengzhou",
+        "node_type": "S",
+        "value": 3000
+      }
+    },
+    {
+      "id": 3,
+      "attrs": {
+        "name": "Shifang",
+        "node_type": "S",
+        "value": 3000
+      }
+    },
+    {
+      "id": 4,
+      "attrs": {
+        "name": "Yutang",
+        "node_type": "D",
+        "value": 342
+      }
+    },
+    {
+      "id": 5,
+      "attrs": {
+        "name": "Zhongxing",
+        "node_type": "D",
+        "value": 360
+      }
+    },
+    {
+      "id": 6,
+      "attrs": {
+        "name": "Qingchengshan",
+        "node_type": "D",
+        "value": 322
+      }
+    },
+    {
+      "id": 7,
+      "attrs": {
+        "name": "Daguang",
+        "node_type": "D",
+        "value": 361
+      }
+    },
+    {
+      "id": 8,
+      "attrs": {
+        "name": "Anlong",
+        "node_type": "D",
+        "value": 382
+      }
+    },
+    {
+      "id": 9,
+      "attrs": {
+        "name": "Shiyang",
+        "node_type": "D",
+        "value": 327
+      }
+    },
+    {
+      "id": 10,
+      "attrs": {
+        "name": "Cuiyuehu",
+        "node_type": "D",
+        "value": 361
+      }
+    },
+    {
+      "id": 11,
+      "attrs": {
+        "name": "Zipingpu",
+        "node_type": "D",
+        "value": 344
+      }
+    },
+    {
+      "id": 12,
+      "attrs": {
+        "name": "Longchi",
+        "node_type": "D",
+        "value": 321
+      }
+    },
+    {
+      "id": 13,
+      "attrs": {
+        "name": "Xingfu",
+        "node_type": "D",
+        "value": 363
+      }
+    },
+    {
+      "id": 14,
+      "attrs": {
+        "name": "Juyuan",
+        "node_type": "D",
+        "value": 344
+      }
+    },
+    {
+      "id": 15,
+      "attrs": {
+        "name": "Chongyi",
+        "node_type": "D",
+        "value": 384
+      }
+    },
+    {
+      "id": 16,
+      "attrs": {
+        "name": "Xujia",
+        "node_type": "D",
+        "value": 251
+      }
+    },
+    {
+      "id": 17,
+      "attrs": {
+        "name": "Puyang",
+        "node_type": "D",
+        "value": 339
+      }
+    },
+    {
+      "id": 18,
+      "attrs": {
+        "name": "Hongkou",
+        "node_type": "D",
+        "value": 358
+      }
+    },
+    {
+      "id": 19,
+      "attrs": {
+        "name": "Xiang'e",
+        "node_type": "D",
+        "value": 302
+      }
+    },
+    {
+      "id": 20,
+      "attrs": {
+        "name": "Tianma",
+        "node_type": "D",
+        "value": 282
+      }
+    },
+    {
+      "id": 21,
+      "attrs": {
+        "name": "Lichun",
+        "node_type": "D",
+        "value": 281
+      }
+    },
+    {
+      "id": 22,
+      "attrs": {
+        "name": "Guihua",
+        "node_type": "D",
+        "value": 205
+      }
+    },
+    {
+      "id": 23,
+      "attrs": {
+        "name": "Longfeng",
+        "node_type": "D",
+        "value": 324
+      }
+    },
+    {
+      "id": 24,
+      "attrs": {
+        "name": "Danjingshan",
+        "node_type": "D",
+        "value": 280
+      }
+    },
+    {
+      "id": 25,
+      "attrs": {
+        "name": "Cifeng",
+        "node_type": "D",
+        "value": 241
+      }
+    },
+    {
+      "id": 26,
+      "attrs": {
+        "name": "Tongji",
+        "node_type": "D",
+        "value": 382
+      }
+    },
+    {
+      "id": 27,
+      "attrs": {
+        "name": "Xinxing",
+        "node_type": "D",
+        "value": 320
+      }
+    },
+    {
+      "id": 28,
+      "attrs": {
+        "name": "Xiaoyudong",
+        "node_type": "D",
+        "value": 262
+      }
+    },
+    {
+      "id": 29,
+      "attrs": {
+        "name": "Longmenshan",
+        "node_type": "D",
+        "value": 328
+      }
+    },
+    {
+      "id": 30,
+      "attrs": {
+        "name": "Gexianshan",
+        "node_type": "D",
+        "value": 320
+      }
+    },
+    {
+      "id": 31,
+      "attrs": {
+        "name": "Hongyan",
+        "node_type": "D",
+        "value": 268
+      }
+    },
+    {
+      "id": 32,
+      "attrs": {
+        "name": "Shigu",
+        "node_type": "D",
+        "value": 323
+      }
+    },
+    {
+      "id": 33,
+      "attrs": {
+        "name": "Jiandi",
+        "node_type": "D",
+        "value": 300
+      }
+    },
+    {
+      "id": 34,
+      "attrs": {
+        "name": "Bailu",
+        "node_type": "D",
+        "value": 282
+      }
+    },
+    {
+      "id": 35,
+      "attrs": {
+        "name": "Bajiao",
+        "node_type": "D",
+        "value": 359
+      }
+    },
+    {
+      "id": 36,
+      "attrs": {
+        "name": "Luoshui",
+        "node_type": "D",
+        "value": 365
+      }
+    },
+    {
+      "id": 37,
+      "attrs": {
+        "name": "Yinghua",
+        "node_type": "D",
+        "value": 302
+      }
+    },
+    {
+      "id": 38,
+      "attrs": {
+        "name": "Hongbai",
+        "node_type": "D",
+        "value": 403
+      }
+    }
+  ],
+  "edges": [
+    {
+      "u": 1,
+      "v": 4,
+      "free_time": 16.0,
+      "weight": 16.0,
+      "capacity": 1200.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 1,
+      "v": 11,
+      "free_time": 36.0,
+      "weight": 36.0,
+      "capacity": 1200.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 1,
+      "v": 13,
+      "free_time": 16.0,
+      "weight": 16.0,
+      "capacity": 1200.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 1,
+      "v": 17,
+      "free_time": 28.0,
+      "weight": 28.0,
+      "capacity": 1200.0,
+      "damaged": true,
+      "damage_id": 0,
+      "repair_time": 900.0
+    },
+    {
+      "u": 2,
+      "v": 3,
+      "free_time": 50.0,
+      "weight": 50.0,
+      "capacity": 1000.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 2,
+      "v": 21,
+      "free_time": 36.0,
+      "weight": 36.0,
+      "capacity": 1200.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 2,
+      "v": 23,
+      "free_time": 40.0,
+      "weight": 40.0,
+      "capacity": 1200.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 3,
+      "v": 32,
+      "free_time": 52.0,
+      "weight": 52.0,
+      "capacity": 1000.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 3,
+      "v": 36,
+      "free_time": 60.0,
+      "weight": 60.0,
+      "capacity": 1000.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 4,
+      "v": 5,
+      "free_time": 22.0,
+      "weight": 22.0,
+      "capacity": 1000.0,
+      "damaged": true,
+      "damage_id": 1,
+      "repair_time": 180.0
+    },
+    {
+      "u": 4,
+      "v": 11,
+      "free_time": 40.0,
+      "weight": 40.0,
+      "capacity": 600.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 5,
+      "v": 6,
+      "free_time": 18.0,
+      "weight": 18.0,
+      "capacity": 1000.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 6,
+      "v": 7,
+      "free_time": 24.0,
+      "weight": 24.0,
+      "capacity": 1000.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 6,
+      "v": 10,
+      "free_time": 13.0,
+      "weight": 13.0,
+      "capacity": 1000.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 7,
+      "v": 8,
+      "free_time": 34.0,
+      "weight": 34.0,
+      "capacity": 800.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 8,
+      "v": 9,
+      "free_time": 50.0,
+      "weight": 50.0,
+      "capacity": 600.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 9,
+      "v": 10,
+      "free_time": 50.0,
+      "weight": 50.0,
+      "capacity": 600.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 11,
+      "v": 12,
+      "free_time": 64.0,
+      "weight": 64.0,
+      "capacity": 500.0,
+      "damaged": true,
+      "damage_id": 2,
+      "repair_time": 270.0
+    },
+    {
+      "u": 11,
+      "v": 18,
+      "free_time": 74.0,
+      "weight": 74.0,
+      "capacity": 500.0,
+      "damaged": true,
+      "damage_id": 3,
+      "repair_time": 210.0
+    },
+    {
+      "u": 13,
+      "v": 14,
+      "free_time": 22.0,
+      "weight": 22.0,
+      "capacity": 1000.0,
+      "damaged": true,
+      "damage_id": 4,
+      "repair_time": 720.0
+    },
+    {
+      "u": 13,
+      "v": 16,
+      "free_time": 24.0,
+      "weight": 24.0,
+      "capacity": 1000.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 13,
+      "v": 17,
+      "free_time": 24.0,
+      "weight": 24.0,
+      "capacity": 1000.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 14,
+      "v": 15,
+      "free_time": 16.0,
+      "weight": 16.0,
+      "capacity": 1000.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 16,
+      "v": 20,
+      "free_time": 28.0,
+      "weight": 28.0,
+      "capacity": 800.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 16,
+      "v": 22,
+      "free_time": 42.0,
+      "weight": 42.0,
+      "capacity": 600.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 17,
+      "v": 19,
+      "free_time": 28.0,
+      "weight": 28.0,
+      "capacity": 800.0,
+      "damaged": true,
+      "damage_id": 5,
+      "repair_time": 1080.0
+    },
+    {
+      "u": 17,
+      "v": 22,
+      "free_time": 36.0,
+      "weight": 36.0,
+      "capacity": 800.0,
+      "damaged": true,
+      "damage_id": 6,
+      "repair_time": 180.0
+    },
+    {
+      "u": 18,
+      "v": 25,
+      "free_time": 180.0,
+      "weight": 180.0,
+      "capacity": 400.0,
+      "damaged": true,
+      "damage_id": 7,
+      "repair_time": 270.0
+    },
+    {
+      "u": 19,
+      "v": 25,
+      "free_time": 32.0,
+      "weight": 32.0,
+      "capacity": 800.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 20,
+      "v": 21,
+      "free_time": 56.0,
+      "weight": 56.0,
+      "capacity": 600.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 21,
+      "v": 23,
+      "free_time": 48.0,
+      "weight": 48.0,
+      "capacity": 600.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 22,
+      "v": 23,
+      "free_time": 34.0,
+      "weight": 34.0,
+      "capacity": 800.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 22,
+      "v": 24,
+      "free_time": 28.0,
+      "weight": 28.0,
+      "capacity": 800.0,
+      "damaged": true,
+      "damage_id": 8,
+      "repair_time": 810.0
+    },
+    {
+      "u": 23,
+      "v": 24,
+      "free_time": 16.0,
+      "weight": 16.0,
+      "capacity": 1000.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 24,
+      "v": 27,
+      "free_time": 24.0,
+      "weight": 24.0,
+      "capacity": 1000.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 24,
+      "v": 30,
+      "free_time": 64.0,
+      "weight": 64.0,
+      "capacity": 500.0,
+      "damaged": true,
+      "damage_id": 9,
+      "repair_time": 270.0
+    },
+    {
+      "u": 25,
+      "v": 26,
+      "free_time": 50.0,
+      "weight": 50.0,
+      "capacity": 600.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 26,
+      "v": 27,
+      "free_time": 20.0,
+      "weight": 20.0,
+      "capacity": 1000.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 26,
+      "v": 28,
+      "free_time": 32.0,
+      "weight": 32.0,
+      "capacity": 800.0,
+      "damaged": true,
+      "damage_id": 10,
+      "repair_time": 720.0
+    },
+    {
+      "u": 26,
+      "v": 34,
+      "free_time": 46.0,
+      "weight": 46.0,
+      "capacity": 600.0,
+      "damaged": true,
+      "damage_id": 11,
+      "repair_time": 1050.0
+    },
+    {
+      "u": 28,
+      "v": 29,
+      "free_time": 28.0,
+      "weight": 28.0,
+      "capacity": 800.0,
+      "damaged": true,
+      "damage_id": 12,
+      "repair_time": 360.0
+    },
+    {
+      "u": 30,
+      "v": 31,
+      "free_time": 28.0,
+      "weight": 28.0,
+      "capacity": 800.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 31,
+      "v": 32,
+      "free_time": 46.0,
+      "weight": 46.0,
+      "capacity": 600.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 32,
+      "v": 33,
+      "free_time": 36.0,
+      "weight": 36.0,
+      "capacity": 800.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 32,
+      "v": 36,
+      "free_time": 56.0,
+      "weight": 56.0,
+      "capacity": 600.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 33,
+      "v": 34,
+      "free_time": 60.0,
+      "weight": 60.0,
+      "capacity": 500.0,
+      "damaged": true,
+      "damage_id": 13,
+      "repair_time": 180.0
+    },
+    {
+      "u": 33,
+      "v": 36,
+      "free_time": 24.0,
+      "weight": 24.0,
+      "capacity": 1000.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 34,
+      "v": 35,
+      "free_time": 100.0,
+      "weight": 100.0,
+      "capacity": 400.0,
+      "damaged": true,
+      "damage_id": 14,
+      "repair_time": 450.0
+    },
+    {
+      "u": 35,
+      "v": 37,
+      "free_time": 32.0,
+      "weight": 32.0,
+      "capacity": 800.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    },
+    {
+      "u": 36,
+      "v": 37,
+      "free_time": 56.0,
+      "weight": 56.0,
+      "capacity": 600.0,
+      "damaged": true,
+      "damage_id": 15,
+      "repair_time": 330.0
+    },
+    {
+      "u": 37,
+      "v": 38,
+      "free_time": 52.0,
+      "weight": 52.0,
+      "capacity": 600.0,
+      "damaged": false,
+      "damage_id": null,
+      "repair_time": null
+    }
+  ],
+  "damaged_edges": [
+    {
+      "damage_id": 0,
+      "u": 1,
+      "v": 17,
+      "repair_time": 900.0
+    },
+    {
+      "damage_id": 1,
+      "u": 4,
+      "v": 5,
+      "repair_time": 180.0
+    },
+    {
+      "damage_id": 2,
+      "u": 11,
+      "v": 12,
+      "repair_time": 270.0
+    },
+    {
+      "damage_id": 3,
+      "u": 11,
+      "v": 18,
+      "repair_time": 210.0
+    },
+    {
+      "damage_id": 4,
+      "u": 13,
+      "v": 14,
+      "repair_time": 720.0
+    },
+    {
+      "damage_id": 5,
+      "u": 17,
+      "v": 19,
+      "repair_time": 1080.0
+    },
+    {
+      "damage_id": 6,
+      "u": 17,
+      "v": 22,
+      "repair_time": 180.0
+    },
+    {
+      "damage_id": 7,
+      "u": 18,
+      "v": 25,
+      "repair_time": 270.0
+    },
+    {
+      "damage_id": 8,
+      "u": 22,
+      "v": 24,
+      "repair_time": 810.0
+    },
+    {
+      "damage_id": 9,
+      "u": 24,
+      "v": 30,
+      "repair_time": 270.0
+    },
+    {
+      "damage_id": 10,
+      "u": 26,
+      "v": 28,
+      "repair_time": 720.0
+    },
+    {
+      "damage_id": 11,
+      "u": 26,
+      "v": 34,
+      "repair_time": 1050.0
+    },
+    {
+      "damage_id": 12,
+      "u": 28,
+      "v": 29,
+      "repair_time": 360.0
+    },
+    {
+      "damage_id": 13,
+      "u": 33,
+      "v": 34,
+      "repair_time": 180.0
+    },
+    {
+      "damage_id": 14,
+      "u": 34,
+      "v": 35,
+      "repair_time": 450.0
+    },
+    {
+      "damage_id": 15,
+      "u": 36,
+      "v": 37,
+      "repair_time": 330.0
+    }
+  ],
+  "model": {
+    "capacity_scale": 1.0,
+    "repair_time_weight": 0.05,
+    "crew_transfer_time_scale": 0.0,
+    "crew_min_access_progress": 0.0,
+    "progressive_recovery": true,
+    "heterogeneous_vehicle_thresholds": true,
+    "edge_capacity_constraint": true,
+    "evaluation": {
+      "model_version": "v2",
+      "fair_share_cap": false,
+      "dispatch_timing": "period_start",
+      "enforce_within_period_arrival": true,
+      "fleet_semantics": "exogenous_period_trip_budget"
+    },
+    "full_profile": {
+      "label": "wenchuan_full",
+      "recovery_stages": [
+        [
+          0.0,
+          0.3,
+          0.0,
+          0.0
+        ],
+        [
+          0.3,
+          0.6,
+          0.3,
+          0.3
+        ],
+        [
+          0.6,
+          0.8,
+          0.6,
+          0.6
+        ],
+        [
+          0.8,
+          1.0,
+          0.8,
+          0.8
+        ],
+        [
+          1.0,
+          1.01,
+          1.0,
+          1.0
+        ]
+      ],
+      "vehicle_thresholds": [
+        [
+          1,
+          0.3
+        ],
+        [
+          2,
+          0.5
+        ],
+        [
+          3,
+          0.7
+        ],
+        [
+          4,
+          0.8
+        ]
+      ]
+    },
+    "vehicles": [
+      {
+        "vehicle_type": 1,
+        "capacity_ton": 5.0,
+        "count": 150,
+        "occupied_od_pcu_h": 300.0,
+        "min_recovery_progress": 0.3,
+        "pcu_per_vehicle": 1.0,
+        "speed_factor": 1.0
+      },
+      {
+        "vehicle_type": 2,
+        "capacity_ton": 10.0,
+        "count": 110,
+        "occupied_od_pcu_h": 500.0,
+        "min_recovery_progress": 0.5,
+        "pcu_per_vehicle": 1.5,
+        "speed_factor": 1.0
+      },
+      {
+        "vehicle_type": 3,
+        "capacity_ton": 15.0,
+        "count": 70,
+        "occupied_od_pcu_h": 800.0,
+        "min_recovery_progress": 0.7,
+        "pcu_per_vehicle": 2.0,
+        "speed_factor": 1.0
+      },
+      {
+        "vehicle_type": 4,
+        "capacity_ton": 20.0,
+        "count": 40,
+        "occupied_od_pcu_h": 1000.0,
+        "min_recovery_progress": 0.8,
+        "pcu_per_vehicle": 2.5,
+        "speed_factor": 1.0
+      }
+    ],
+    "recovery_stages": [
+      {
+        "lower": 0.0,
+        "upper": 0.3,
+        "capacity_ratio": 0.0,
+        "label": "blocked",
+        "speed_ratio": 0.0
+      },
+      {
+        "lower": 0.3,
+        "upper": 0.6,
+        "capacity_ratio": 0.3,
+        "label": "temporary",
+        "speed_ratio": 0.3
+      },
+      {
+        "lower": 0.6,
+        "upper": 0.8,
+        "capacity_ratio": 0.6,
+        "label": "one_lane",
+        "speed_ratio": 0.6
+      },
+      {
+        "lower": 0.8,
+        "upper": 1.0,
+        "capacity_ratio": 0.8,
+        "label": "basic",
+        "speed_ratio": 0.8
+      },
+      {
+        "lower": 1.0,
+        "upper": 1.01,
+        "capacity_ratio": 1.0,
+        "label": "full",
+        "speed_ratio": 1.0
+      }
+    ]
+  },
+  "snapshot_sha256": "2ee5b05aedb1b0fd8313cf5f8a5cdf37fba37f55c0e9c8ce519e8c27d8405bb0",
+  "physical_instance_hash": "cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7",
+  "model_fingerprint": "0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b"
+}

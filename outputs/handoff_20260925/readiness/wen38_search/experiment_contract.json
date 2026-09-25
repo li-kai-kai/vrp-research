@@ -1,0 +1,50 @@
+{
+  "format": "capacity_recovery_experiment_contract",
+  "format_version": 1,
+  "created_at_utc": "2026-09-24T17:42:24.794955+00:00",
+  "fixed": {
+    "suite": "benchmark",
+    "model_version": "v2",
+    "evaluation": {
+      "model_version": "v2",
+      "fair_share_cap": false,
+      "dispatch_timing": "period_start",
+      "enforce_within_period_arrival": true,
+      "fleet_semantics": "exogenous_period_trip_budget"
+    },
+    "evaluation_fingerprint": "a94798a40d5036ec",
+    "budget": {
+      "max_evaluations": 500,
+      "pop_size": 32,
+      "crossover_probability": 0.9,
+      "mutation_probability": 0.2,
+      "alns_probability": 0.35,
+      "alns_iterations": 4
+    },
+    "source_fingerprint": "5818a0f9a415dbede5356352feb3efe1df486c16a95a43e61626a6713c8fe8dc",
+    "entry_point": "run_benchmark"
+  },
+  "varying": {
+    "algorithms": [
+      "nsga2"
+    ],
+    "cases": [
+      "WEN38"
+    ],
+    "instance_seeds": [
+      1
+    ],
+    "solver_repeats": 2,
+    "solver_seed_start": 50000
+  },
+  "revisions": [
+    {
+      "git_sha": "7ee2cec074def4235d25ebb95d27434d1edcdf93",
+      "git_dirty": true,
+      "python": "3.12.11 (main, Sep  2 2025, 14:12:30) [Clang 20.1.4 ]",
+      "python_version": "3.12.11",
+      "platform": "macOS-27.0-arm64-arm-64bit",
+      "created_at_utc": "2026-09-24T17:42:24.819404+00:00"
+    }
+  ]
+}

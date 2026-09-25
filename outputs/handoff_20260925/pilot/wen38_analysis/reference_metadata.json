@@ -1,0 +1,58 @@
+[
+  {
+    "case_id": "WEN38",
+    "scenario_family": "benchmark",
+    "zone": "original",
+    "instance_seed": 1,
+    "physical_instance_hash": "cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7",
+    "reference_front_size": 27,
+    "ideal": [
+      2.460869302565837,
+      81636.66666666667,
+      -0.445542109163398
+    ],
+    "nadir": [
+      2.9530404965316848,
+      188717.83333333334,
+      -0.0
+    ],
+    "raw_ranges": [
+      0.49217119396584774,
+      107081.16666666667,
+      0.445542109163398
+    ],
+    "ideal_key": [
+      246086930,
+      81636666667,
+      -44554211
+    ],
+    "nadir_key": [
+      295304050,
+      188717833333,
+      0
+    ],
+    "key_spans": [
+      49217120,
+      107081166666,
+      44554211
+    ],
+    "degenerate_dimensions": [],
+    "effective_dimensions": 3,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  }
+]

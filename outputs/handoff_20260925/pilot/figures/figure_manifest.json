@@ -1,0 +1,11 @@
+{
+  "inputs": {
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/analysis/execution_pairs.csv": "85c1b5c9a2d704e2e753892de2673a7f9fc757849ccc2b9b53b4bcf07a1d8863",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/analysis/representative_periods.csv": "af472ea23ed6f0b2906d30bbc42b11261d768bdbbebdf60354626ac8cab10688"
+  },
+  "plot_source_sha256": "e4dce55f3e2d3c0c933894dcaab2e9748576b6c50359f2ac6ac423769a04fe6d",
+  "paired_points": 42,
+  "service_rows": 72,
+  "semantics": "One point per paired solver run; period-end post-step service; overlaps retained.",
+  "matplotlib_version": "3.10.8"
+}

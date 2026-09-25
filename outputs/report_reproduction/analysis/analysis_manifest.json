@@ -1,0 +1,592 @@
+{
+  "code": {
+    "git_sha": "7ee2cec074def4235d25ebb95d27434d1edcdf93",
+    "git_dirty": true,
+    "python": "3.12.11 (main, Sep  2 2025, 14:12:30) [Clang 20.1.4 ]",
+    "python_version": "3.12.11",
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "created_at_utc": "2026-09-25T08:56:41.764646+00:00"
+  },
+  "source_hashes": {
+    "scripts/reproduce/run_benchmark.py": "88eeb420247e8a675156422d3a3c0751d4ff5b6ff31bbb79134e33c8263e18a5",
+    "scripts/reproduce/benchmark_suite.py": "2477265e0943ae24100fbd4b093fbda5e12fc2e3f0ba38c3544d5886aba175e5",
+    "scripts/reproduce/benchmark_algorithms.py": "b5b686e955da0dbea46d78d0d94376af7aac791ec0dc56f3d9200c9b1743e034",
+    "scripts/reproduce/capacity_recovery.py": "5a016c1d7c0acab2e681b6d49c02a40e3d3e0d24c5d90b2b7cdf6b671a4fc817",
+    "scripts/reproduce/instance_generator.py": "f121ea469e6bc7f547abc1b241c0baa35792960e465bdca0ea90098307712021",
+    "scripts/reproduce/model.py": "ca01ca70a94751139e2e082c99e13d23b09bfcbf6088061e1a09dbdce43528e2",
+    "scripts/reproduce/solution_io.py": "4f4bcae51716fee0f066fb48cc9c8bdc137822682f1c0733f2ebf66684e710c1",
+    "scripts/reproduce/objective_precision.py": "2db2a9b81c4e6a5d099a686a51bb312420cabc9d30dea8cb73ad8bd44522c84f",
+    "pyproject.toml": "27788f5f0293c62cc6e6cde8b1de425210ad4ba56523795aeecd5688aa979bdb",
+    "uv.lock": "5b0cf64796c740d6c261a36e44622a83bb92c9e1886ca5a0fc233c56911fac5c",
+    "scripts/reproduce/run_model_ablation.py": "c901ab05f128e0e9c68f779ec1d0726a125895d18551c9789fdcb713061c7e64",
+    "scripts/reproduce/model_ablation_analysis.py": "4844f24796f7da72171e5e6d50226d65185b334c122d6bec0bffcc0c79d3ae07",
+    "scripts/reproduce/common_execution_analysis.py": "e59dd01c0e674bcbe616cd9d6141eab409644619a1c110817330c32ee94220e8",
+    "scripts/reproduce/replay_solutions.py": "dc6db301687c1f918d4311fd8f928a46bcf1092b5d2168db6e0085343cded6af",
+    "scripts/reproduce/service_diagnostics.py": "d9ee6728e21de4bbe1a876bde2571d2ff4dcac8180b8df111a2191f322f67a01",
+    "scripts/reproduce/mechanism_applicability.py": "7f90ab192cfe7174035c50d74ba4c5364ee593e94bc3b2dfe6050a422563e1bc",
+    "scripts/reproduce/mechanism_zone_search.py": "4e0fc5de922a09daaa770e893b733d59f0f623a5b964139eb1db6eb79fa36b12",
+    "scripts/reproduce/budget_convergence_analysis.py": "2fd206fee45de82d43f855987319ad59df91946e2af54148db9e4faab5d81792"
+  },
+  "protocol": {
+    "created_at_utc": "2026-09-25T08:15:45.238583+00:00",
+    "scope": "WEN38 report reproduction: eight verified searches reused; 52 additional searches",
+    "case_id": "WEN38",
+    "instance_seed": 1,
+    "model_version": "v2",
+    "algorithm": "nsga2",
+    "model_ids": [
+      "PR1_HT1_EC1",
+      "PR0_HT1_EC1",
+      "PR1_HT0_EC1",
+      "PR1_HT1_EC0"
+    ],
+    "initial_budgets": [
+      500,
+      2000,
+      5000
+    ],
+    "pop_size": 32,
+    "solver_seeds": [
+      60000,
+      60001,
+      60002,
+      60003,
+      60004
+    ],
+    "solver_repeats": 5,
+    "solver_repeat_start": 0,
+    "source_fingerprint": "f55a7149bd59620bd631830851313445335557f646fc7e4e21160e48496a419e",
+    "initial_planned_runs": 60,
+    "initial_planned_evaluations": 150000,
+    "reused_runs": [
+      {
+        "run_key": "WEN38:i1:nsga2:s60000:r0:PR0_HT1_EC1:b9f998d6cc5d",
+        "record_sha256": "e9956137d2de7058139c4168f4c81886952c740dac38d68939a82327e8a4963f",
+        "source_root": "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38"
+      },
+      {
+        "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT0_EC1:ed89f90c2cee",
+        "record_sha256": "9adf47f778f5533bb24251b7847e0d425dec4948ad3d94b2208167c55f29d09c",
+        "source_root": "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38"
+      },
+      {
+        "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC0:233634bab1fc",
+        "record_sha256": "2dfa17bfd72b7ab616f3877fad0e0b872c9acc8d6661d476d67942fdc09e5cd2",
+        "source_root": "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38"
+      },
+      {
+        "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC1:ac79a73486e1",
+        "record_sha256": "44e24b83616b8d9adc5f38cd85fa0f29579830347eaef910c0555da46a2ece10",
+        "source_root": "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38"
+      },
+      {
+        "run_key": "WEN38:i1:nsga2:s60001:r1:PR0_HT1_EC1:2aca52bb3fb1",
+        "record_sha256": "efb5be01c541e9da823424092a3589c6089f9e7f250263b46dd9fa66009e096c",
+        "source_root": "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38"
+      },
+      {
+        "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT0_EC1:810cc032fd7d",
+        "record_sha256": "52d4df97fb434ee60c6a54bf01de8147f756fc3874e6860ac749e684364524e9",
+        "source_root": "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38"
+      },
+      {
+        "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC0:f2ee064e9de3",
+        "record_sha256": "b7eed5313c60724bbfc1273b7da9f938f0c26c134c2a33e6db978461d56ec18a",
+        "source_root": "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38"
+      },
+      {
+        "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC1:ceb9ada93d38",
+        "record_sha256": "0ecd2b76dee90fa28ca65c5c08d19f013da49d36f6294047505d5290e0cf7287",
+        "source_root": "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38"
+      }
+    ],
+    "runtime_scope": "Eight 500-budget runs reused from the verified pilot. New searches use up to four concurrent subprocesses, each with a disjoint RunStore. Runtime is descriptive, not a solver-speed benchmark.",
+    "plateau_screen": {
+      "hv_relative_change_tolerance": 0.01,
+      "igd_absolute_change_tolerance": 0.01,
+      "minimum_small_change_pairs": 4,
+      "pairs_per_model": 5,
+      "confirmation_budget": 10000
+    }
+  },
+  "protocol_sha256": "cb3ba071c1ae20b9822d81146b1d54e8c54a40648368f6ac528d9c652f5711a5",
+  "input_roots": [
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60000",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60001",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60002",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60003",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60004",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60000",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60001",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60002",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60003",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60004",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60002",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60003",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60004"
+  ],
+  "input_runs": [
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR0_HT1_EC1:b9f998d6cc5d",
+      "record_sha256": "e9956137d2de7058139c4168f4c81886952c740dac38d68939a82327e8a4963f"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT0_EC1:ed89f90c2cee",
+      "record_sha256": "9adf47f778f5533bb24251b7847e0d425dec4948ad3d94b2208167c55f29d09c"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC0:233634bab1fc",
+      "record_sha256": "2dfa17bfd72b7ab616f3877fad0e0b872c9acc8d6661d476d67942fdc09e5cd2"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC1:ac79a73486e1",
+      "record_sha256": "44e24b83616b8d9adc5f38cd85fa0f29579830347eaef910c0555da46a2ece10"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR0_HT1_EC1:2aca52bb3fb1",
+      "record_sha256": "efb5be01c541e9da823424092a3589c6089f9e7f250263b46dd9fa66009e096c"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT0_EC1:810cc032fd7d",
+      "record_sha256": "52d4df97fb434ee60c6a54bf01de8147f756fc3874e6860ac749e684364524e9"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC0:f2ee064e9de3",
+      "record_sha256": "b7eed5313c60724bbfc1273b7da9f938f0c26c134c2a33e6db978461d56ec18a"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC1:ceb9ada93d38",
+      "record_sha256": "0ecd2b76dee90fa28ca65c5c08d19f013da49d36f6294047505d5290e0cf7287"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR0_HT1_EC1:7b250956fe84",
+      "record_sha256": "664ce5fd919ff02dc20f1243a6901cce7fd9d2da167a61e5535b739c5e0819f6"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT0_EC1:08ec9ca4fa4d",
+      "record_sha256": "44ea7d6695a76536e16fd2f5834f7a8678185ed66d8e482a1efd73fa8867103b"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT1_EC0:abbe524f5fc3",
+      "record_sha256": "06bf1e45ce4453d523c45dec6617c6059545f117b27f69db89c8d182af1afc31"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT1_EC1:6bf81821659d",
+      "record_sha256": "cebedafd979a0bfb91b6f75eadd6d7de505446b0a456bf58700883faf25a920c"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR0_HT1_EC1:8f1a51c5366d",
+      "record_sha256": "060b9ca8578dcf4eb2ae559c76802f42910f4d2ad09b7d2ad93956384870fa19"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT0_EC1:5993863257aa",
+      "record_sha256": "e2c7daced344f24afef04157c27170aacfa2fefc6e9e19f1033c3f13f3e91af6"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT1_EC0:3ec21dc8c2c8",
+      "record_sha256": "ab774036a1b4d6c2d2f25204bd62b4b1cd9afeec749aee9533421523ff4f5147"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT1_EC1:0c451e3d1f0d",
+      "record_sha256": "55db9d923c83cf66fb4ed367feff4db402ba087b8a67fe80c57e573adf573485"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR0_HT1_EC1:2a86c697db65",
+      "record_sha256": "f50413acb85d0361dd917badc0fd5bca58e02672ff65f850d7e28a730d60ce91"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT0_EC1:6d949d439727",
+      "record_sha256": "c921d94323ab0b0bd9905d44df1d3bb1b035d61497ac69685eee94badc4e9dfb"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT1_EC0:daf2b42676e8",
+      "record_sha256": "d01badabbf125d3775495c51c7ed1853a9a0f3f905c37860046ca15229363de5"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT1_EC1:f55fe0988612",
+      "record_sha256": "b79f82a921358effb4b53f69628eb4cd175dad15e45a833ff18da0cea4e013fa"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR0_HT1_EC1:851e264b20f4",
+      "record_sha256": "248462396832a1df500f03d12d308a1b864f3d4d96400e863c9939b1226b8414"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT0_EC1:7506b3adc82a",
+      "record_sha256": "f1af87a5f571757c7c44781a3329722a51fba870ac8419cb208586c5dd7b7d51"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC0:19d5b96ee482",
+      "record_sha256": "834530ef032c7446ffa34007f65887d0544074113dcaddb75e0b30de24da8402"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC1:ed30a9d4a9ff",
+      "record_sha256": "2c97f8d0484f1dabf592fb0347068521ccca9db0f47d8892c0a2221678b29384"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR0_HT1_EC1:234cd11ee600",
+      "record_sha256": "63d3b6fb4e9a8c04805280d685d260734707041d2989789caaacf2f7b601ce9b"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT0_EC1:e483dd3402ce",
+      "record_sha256": "d772097aa2660852da74b058687e98d105d5a9ef7cb145322cb253ef0f01e49b"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC0:4e6755c4f558",
+      "record_sha256": "9ed31302d687adbce958476035fa23effd09d7a791dda5b302c38fe5d4f2b45c"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC1:742a07617751",
+      "record_sha256": "e746a202693dfbb1ca9d8b899ecc27954660fd8e14d9b63d7f30d96adafc385a"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR0_HT1_EC1:1f998f0148e6",
+      "record_sha256": "cb5b0ec1189d50ede8afcb74070145a54601e2894f51a43a2a64c5d1b9ee2efe"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT0_EC1:e31b85b97044",
+      "record_sha256": "941d460c66ca869308d5412ec8596299a4c9e63666aafd90b503b31bac0f7809"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT1_EC0:785d4370cf5e",
+      "record_sha256": "9908f4edbb871e216ef7ef1337fab89d73b60b5b4786525e6d6f5493a359a3d9"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT1_EC1:073244d3b9aa",
+      "record_sha256": "2d6ce1b7ae3cf43bcba7e2460ef1f436200e6385a059969cbac653fa0a44b2a7"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR0_HT1_EC1:c9ecedbe9866",
+      "record_sha256": "381cb693c715fe6a922bb4e3d1e4343f90e0e9a833015f497ded65e6f4a04582"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT0_EC1:097c71e9a8cb",
+      "record_sha256": "852f622fe96b23c32cf54d86abdd236f7b3acdc93caeb750205dbfafe05bd50a"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT1_EC0:511599eb579d",
+      "record_sha256": "ca3cd2dfdd694229fbeefae52c43430292d67fc10fb5687dbd0892e7010d2cd8"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT1_EC1:af1912c5b598",
+      "record_sha256": "7fc411f85a7c61214f82d819e3684b962b9ac20ad6d4922a8605dbf0519d9655"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR0_HT1_EC1:1fc0c8443b44",
+      "record_sha256": "7bdedff5a2f81b77fc40530cf5bf5ffc62a5aa7704a76f309cfb2a738f068482"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT0_EC1:3123814e608b",
+      "record_sha256": "34d91e467e161c2f694c2cf0ab815e5dc5b5aaf614c813238847d4fd0d003a0a"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT1_EC0:384c4b2a81e6",
+      "record_sha256": "bdabaf891f5af58703ff78c962a419873c4b84bf6a2520fd408ff7aa84fd3f4c"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT1_EC1:a8804fc163b2",
+      "record_sha256": "63510bd74f548cd5b44e077792c2d1df3f3c145f83c0451df88463c0a67d9ecd"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR0_HT1_EC1:9081e514fb6f",
+      "record_sha256": "1218789928d0eded27b32a9996cefa1d30bf1994d501597cfbed92efbca3a12c"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT0_EC1:1639f57d8023",
+      "record_sha256": "933c2fd25e758804a15e9d49351b3c1cecf613987ab56d4ad546c337d838a4ab"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC0:133825dd952b",
+      "record_sha256": "287df4adf5e8ef4e0ee109a6c5f048e9ac1486139dff536a44167ccb56dfa39b"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC1:ee51f2059906",
+      "record_sha256": "711d2c6301e45f43a3fd9c94a00ad7bbd5077fabd1b72faa90edfcf18fdf1fb4"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR0_HT1_EC1:40665960a588",
+      "record_sha256": "82c86e38b5079e94ccb77d4417508915474192be25b58991c00d678e2375cd39"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT0_EC1:78ea841c0ff5",
+      "record_sha256": "67f7e72975901aa38a826694427713891f4a80af4b6d504e6fe8a122a2a5ceae"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC0:a68aa1d27e59",
+      "record_sha256": "b55b85628d2d472eb48de384285ee84787c5f80aa99c9d53ed6494ee663ffa05"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC1:23ae88380adf",
+      "record_sha256": "552f3704d3d22ff632d6424a0e64a970f95f678ac093beb41ade434b5eea0f28"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR0_HT1_EC1:808bda2358e2",
+      "record_sha256": "1f6b9d5ea45821208f2da59652e7b4f3be8c3e29792f22e2ce757e0331d0268b"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT0_EC1:aa692b75cf5c",
+      "record_sha256": "06842b0f4690919b666756385fed96d280ce1c1e75d4676b8b84ecfa50fcfb33"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT1_EC0:33a10700af6f",
+      "record_sha256": "d4b06dd44c8e95ac435de722aa4f654912e99bd6198ba59af72b23be905d0880"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT1_EC1:fcbd0dabd7d4",
+      "record_sha256": "c07ba5056d90683c9b20c279698bde36df704bb694d900386ffeb70fd999a721"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR0_HT1_EC1:c710c850bf31",
+      "record_sha256": "8474ec376b04011860d725b117c18cbc382827719ede3c90199475821eaf521f"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT0_EC1:5dd76293d3f3",
+      "record_sha256": "5ebd16160e50e1a2e60a17a588dd5cf06d782cad98bbc1d51b901110d4a32624"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT1_EC0:81e09eaca11b",
+      "record_sha256": "0a28638e5cd538a81080df852450ddbe2c8924dcd76cad8884bb92e32326d506"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT1_EC1:e6fe7a604964",
+      "record_sha256": "6c310589c1357a7d88855d555d181c3eed5feaa96bd8ff636ad8674dab64d74c"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR0_HT1_EC1:5cf91a1f9acc",
+      "record_sha256": "e28e9d3bda56b5a11279d143b76a444af338ab72a302d4cb57bd7d7f943e5b6e"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT0_EC1:3c278f15c52c",
+      "record_sha256": "f5c617dbc211d97e2c1f158de6f8bf3b69e4672bbe32e1e941a9cbb89607878f"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT1_EC0:55d5a07c7ef1",
+      "record_sha256": "0a0fba23d3086509c8fb4314b3953946ac9a70f7f27884f6bb277a17f5448628"
+    },
+    {
+      "root": "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT1_EC1:412ad82c5ece",
+      "record_sha256": "b61f4d2f1878cb56bddd7c284423d6ab872a5a5397821ddf1f831b1e1b57efac"
+    }
+  ],
+  "runs": 60,
+  "budgets": [
+    500,
+    2000,
+    5000
+  ],
+  "actual_evaluations": 150000,
+  "replayed_decisions": 3063,
+  "replay_failures": 0,
+  "identity_checked_decisions": 694,
+  "max_abs_identity_error": 0.0,
+  "max_abs_planning_self_replay_error": 0.0,
+  "quality_reference": "Fixed across all included budgets. Planning frames separate by model; Full execution frame shared by all models.",
+  "runtime_scope": "Eight 500-budget runs reused from the verified pilot. New searches use up to four concurrent subprocesses, each with a disjoint RunStore. Runtime is descriptive, not a solver-speed benchmark.",
+  "validated_input_hashes": {
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot/experiment_contract.json": "4ecd8d21371cf02e99350a5c6ad8777cbab72b3cb121cb47a46c1961e9f44222",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot/runs/WEN38_i1_nsga2_s60000_r0_PR0_HT1_EC1_b9f998d6cc5d.json": "e9956137d2de7058139c4168f4c81886952c740dac38d68939a82327e8a4963f",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT0_EC1_ed89f90c2cee.json": "9adf47f778f5533bb24251b7847e0d425dec4948ad3d94b2208167c55f29d09c",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT1_EC0_233634bab1fc.json": "2dfa17bfd72b7ab616f3877fad0e0b872c9acc8d6661d476d67942fdc09e5cd2",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT1_EC1_ac79a73486e1.json": "44e24b83616b8d9adc5f38cd85fa0f29579830347eaef910c0555da46a2ece10",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot/runs/WEN38_i1_nsga2_s60001_r1_PR0_HT1_EC1_2aca52bb3fb1.json": "efb5be01c541e9da823424092a3589c6089f9e7f250263b46dd9fa66009e096c",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT0_EC1_810cc032fd7d.json": "52d4df97fb434ee60c6a54bf01de8147f756fc3874e6860ac749e684364524e9",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT1_EC0_f2ee064e9de3.json": "b7eed5313c60724bbfc1273b7da9f938f0c26c134c2a33e6db978461d56ec18a",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT1_EC1_ceb9ada93d38.json": "0ecd2b76dee90fa28ca65c5c08d19f013da49d36f6294047505d5290e0cf7287",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60002/experiment_contract.json": "1d731ed6c6ab86d485df83112c8931ec1c9688552cb88388cd1482b46f55214e",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR0_HT1_EC1_7b250956fe84.json": "664ce5fd919ff02dc20f1243a6901cce7fd9d2da167a61e5535b739c5e0819f6",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60002/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60002/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT0_EC1_08ec9ca4fa4d.json": "44ea7d6695a76536e16fd2f5834f7a8678185ed66d8e482a1efd73fa8867103b",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60002/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT1_EC0_abbe524f5fc3.json": "06bf1e45ce4453d523c45dec6617c6059545f117b27f69db89c8d182af1afc31",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60002/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT1_EC1_6bf81821659d.json": "cebedafd979a0bfb91b6f75eadd6d7de505446b0a456bf58700883faf25a920c",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60002/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60003/experiment_contract.json": "3fd5241b073b970f44b19978c17577065e74e4bc32b8272d7b471dd2b1dd7762",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR0_HT1_EC1_8f1a51c5366d.json": "060b9ca8578dcf4eb2ae559c76802f42910f4d2ad09b7d2ad93956384870fa19",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60003/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60003/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT0_EC1_5993863257aa.json": "e2c7daced344f24afef04157c27170aacfa2fefc6e9e19f1033c3f13f3e91af6",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60003/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT1_EC0_3ec21dc8c2c8.json": "ab774036a1b4d6c2d2f25204bd62b4b1cd9afeec749aee9533421523ff4f5147",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60003/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT1_EC1_0c451e3d1f0d.json": "55db9d923c83cf66fb4ed367feff4db402ba087b8a67fe80c57e573adf573485",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60003/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60004/experiment_contract.json": "50bb0e16f86dc6200155422e5b27e75377181bda70949fcce28afc2ae5812a90",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR0_HT1_EC1_2a86c697db65.json": "f50413acb85d0361dd917badc0fd5bca58e02672ff65f850d7e28a730d60ce91",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60004/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60004/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT0_EC1_6d949d439727.json": "c921d94323ab0b0bd9905d44df1d3bb1b035d61497ac69685eee94badc4e9dfb",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60004/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT1_EC0_daf2b42676e8.json": "d01badabbf125d3775495c51c7ed1853a9a0f3f905c37860046ca15229363de5",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60004/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT1_EC1_f55fe0988612.json": "b79f82a921358effb4b53f69628eb4cd175dad15e45a833ff18da0cea4e013fa",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60004/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60000/experiment_contract.json": "05f1f26561af68b4dbe5f3d4031778b89e7b697bf1b8cacb452ae8d0bdc38b7e",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR0_HT1_EC1_851e264b20f4.json": "248462396832a1df500f03d12d308a1b864f3d4d96400e863c9939b1226b8414",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60000/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60000/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT0_EC1_7506b3adc82a.json": "f1af87a5f571757c7c44781a3329722a51fba870ac8419cb208586c5dd7b7d51",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60000/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT1_EC0_19d5b96ee482.json": "834530ef032c7446ffa34007f65887d0544074113dcaddb75e0b30de24da8402",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60000/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT1_EC1_ed30a9d4a9ff.json": "2c97f8d0484f1dabf592fb0347068521ccca9db0f47d8892c0a2221678b29384",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60000/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60001/experiment_contract.json": "2dfb04b8b137046a0fd662f7a17a128f97e1551fd9d52eea364a1428108ea03e",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR0_HT1_EC1_234cd11ee600.json": "63d3b6fb4e9a8c04805280d685d260734707041d2989789caaacf2f7b601ce9b",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60001/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60001/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT0_EC1_e483dd3402ce.json": "d772097aa2660852da74b058687e98d105d5a9ef7cb145322cb253ef0f01e49b",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60001/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT1_EC0_4e6755c4f558.json": "9ed31302d687adbce958476035fa23effd09d7a791dda5b302c38fe5d4f2b45c",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60001/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT1_EC1_742a07617751.json": "e746a202693dfbb1ca9d8b899ecc27954660fd8e14d9b63d7f30d96adafc385a",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60001/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60002/experiment_contract.json": "a7903a4c35965bae712e7263dc89e494d70a300242b268435879557a353a0b82",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR0_HT1_EC1_1f998f0148e6.json": "cb5b0ec1189d50ede8afcb74070145a54601e2894f51a43a2a64c5d1b9ee2efe",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60002/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60002/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT0_EC1_e31b85b97044.json": "941d460c66ca869308d5412ec8596299a4c9e63666aafd90b503b31bac0f7809",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60002/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT1_EC0_785d4370cf5e.json": "9908f4edbb871e216ef7ef1337fab89d73b60b5b4786525e6d6f5493a359a3d9",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60002/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT1_EC1_073244d3b9aa.json": "2d6ce1b7ae3cf43bcba7e2460ef1f436200e6385a059969cbac653fa0a44b2a7",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60002/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60003/experiment_contract.json": "28922739530c99ce1eb7488aa1ff9ffcaa66f30d24cc7c26c81a89f27f45ed07",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR0_HT1_EC1_c9ecedbe9866.json": "381cb693c715fe6a922bb4e3d1e4343f90e0e9a833015f497ded65e6f4a04582",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60003/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60003/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT0_EC1_097c71e9a8cb.json": "852f622fe96b23c32cf54d86abdd236f7b3acdc93caeb750205dbfafe05bd50a",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60003/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT1_EC0_511599eb579d.json": "ca3cd2dfdd694229fbeefae52c43430292d67fc10fb5687dbd0892e7010d2cd8",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60003/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT1_EC1_af1912c5b598.json": "7fc411f85a7c61214f82d819e3684b962b9ac20ad6d4922a8605dbf0519d9655",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60003/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60004/experiment_contract.json": "8cab7f91ea14617140aad9be570e3d8531c8a9a88db52324b07e5e0047386dfd",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR0_HT1_EC1_1fc0c8443b44.json": "7bdedff5a2f81b77fc40530cf5bf5ffc62a5aa7704a76f309cfb2a738f068482",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60004/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60004/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT0_EC1_3123814e608b.json": "34d91e467e161c2f694c2cf0ab815e5dc5b5aaf614c813238847d4fd0d003a0a",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60004/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT1_EC0_384c4b2a81e6.json": "bdabaf891f5af58703ff78c962a419873c4b84bf6a2520fd408ff7aa84fd3f4c",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60004/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT1_EC1_a8804fc163b2.json": "63510bd74f548cd5b44e077792c2d1df3f3c145f83c0451df88463c0a67d9ecd",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60004/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60000/experiment_contract.json": "abd23d01d94cec7768fdc477d63ff8aa32f07717f34c84608f6beb98bbbe5df8",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR0_HT1_EC1_9081e514fb6f.json": "1218789928d0eded27b32a9996cefa1d30bf1994d501597cfbed92efbca3a12c",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60000/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60000/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT0_EC1_1639f57d8023.json": "933c2fd25e758804a15e9d49351b3c1cecf613987ab56d4ad546c337d838a4ab",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60000/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT1_EC0_133825dd952b.json": "287df4adf5e8ef4e0ee109a6c5f048e9ac1486139dff536a44167ccb56dfa39b",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60000/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT1_EC1_ee51f2059906.json": "711d2c6301e45f43a3fd9c94a00ad7bbd5077fabd1b72faa90edfcf18fdf1fb4",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60000/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60001/experiment_contract.json": "4fd272baac000ea4feea6c69c65bf29f2253fe55c3b7237f9a723667bb749f4b",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR0_HT1_EC1_40665960a588.json": "82c86e38b5079e94ccb77d4417508915474192be25b58991c00d678e2375cd39",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60001/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60001/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT0_EC1_78ea841c0ff5.json": "67f7e72975901aa38a826694427713891f4a80af4b6d504e6fe8a122a2a5ceae",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60001/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT1_EC0_a68aa1d27e59.json": "b55b85628d2d472eb48de384285ee84787c5f80aa99c9d53ed6494ee663ffa05",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60001/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT1_EC1_23ae88380adf.json": "552f3704d3d22ff632d6424a0e64a970f95f678ac093beb41ade434b5eea0f28",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60001/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60002/experiment_contract.json": "b5f5eaf41272c0b7be7044ba937914f63c7ec3ac0f9ac1626971bc32cfb0ee41",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR0_HT1_EC1_808bda2358e2.json": "1f6b9d5ea45821208f2da59652e7b4f3be8c3e29792f22e2ce757e0331d0268b",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60002/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60002/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT0_EC1_aa692b75cf5c.json": "06842b0f4690919b666756385fed96d280ce1c1e75d4676b8b84ecfa50fcfb33",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60002/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT1_EC0_33a10700af6f.json": "d4b06dd44c8e95ac435de722aa4f654912e99bd6198ba59af72b23be905d0880",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60002/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT1_EC1_fcbd0dabd7d4.json": "c07ba5056d90683c9b20c279698bde36df704bb694d900386ffeb70fd999a721",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60002/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60003/experiment_contract.json": "d7d32c64414d40a83da11019e84fdcc95c02574b2404080574f938cd4444450a",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR0_HT1_EC1_c710c850bf31.json": "8474ec376b04011860d725b117c18cbc382827719ede3c90199475821eaf521f",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60003/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60003/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT0_EC1_5dd76293d3f3.json": "5ebd16160e50e1a2e60a17a588dd5cf06d782cad98bbc1d51b901110d4a32624",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60003/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT1_EC0_81e09eaca11b.json": "0a28638e5cd538a81080df852450ddbe2c8924dcd76cad8884bb92e32326d506",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60003/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT1_EC1_e6fe7a604964.json": "6c310589c1357a7d88855d555d181c3eed5feaa96bd8ff636ad8674dab64d74c",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60003/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60004/experiment_contract.json": "0c656d9aab0f49bfbe84f9f5e44b8e262a8fe9343e5f7caaf9517400b9b667b6",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR0_HT1_EC1_5cf91a1f9acc.json": "e28e9d3bda56b5a11279d143b76a444af338ab72a302d4cb57bd7d7f943e5b6e",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60004/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60004/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT0_EC1_3c278f15c52c.json": "f5c617dbc211d97e2c1f158de6f8bf3b69e4672bbe32e1e941a9cbb89607878f",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60004/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT1_EC0_55d5a07c7ef1.json": "0a0fba23d3086509c8fb4314b3953946ac9a70f7f27884f6bb277a17f5448628",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60004/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT1_EC1_412ad82c5ece.json": "b61f4d2f1878cb56bddd7c284423d6ab872a5a5397821ddf1f831b1e1b57efac",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60004/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb"
+  },
+  "scope": "Five paired search repeats on one WEN38 case, no independent-network or statistical-significance claim."
+}

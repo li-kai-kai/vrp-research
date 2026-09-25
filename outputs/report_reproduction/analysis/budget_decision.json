@@ -1,0 +1,26 @@
+{
+  "status": "no_common_plateau_in_tested_range",
+  "steps": [
+    {
+      "low_budget": 500,
+      "high_budget": 2000,
+      "passed_models": [],
+      "all_models_small": false
+    },
+    {
+      "low_budget": 2000,
+      "high_budget": 5000,
+      "passed_models": [],
+      "all_models_small": false
+    }
+  ],
+  "confirmation_required": false,
+  "confirmation_budget": 10000,
+  "candidate_budget": null,
+  "tested_budgets": [
+    500,
+    2000,
+    5000
+  ],
+  "interpretation": "Predeclared descriptive search-stability screen, not a proof of optimality. Review service outcomes separately; model wins do not enter this screen."
+}

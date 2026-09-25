@@ -1,0 +1,369 @@
+test_evaluation_satisfaction_bounds_and_unique_repairs (legacy.test_baseline.LegacyBaselineTest.test_evaluation_satisfaction_bounds_and_unique_repairs) ... ok
+test_unreachable_demands_do_not_receive_allocations (legacy.test_baseline.LegacyBaselineTest.test_unreachable_demands_do_not_receive_allocations) ... ok
+test_all_baselines_share_evaluation_budget_and_objectives (test_benchmark.BenchmarkTest.test_all_baselines_share_evaluation_budget_and_objectives) ... ok
+test_instance_builder_is_reproducible_and_scales_fleet (test_benchmark.BenchmarkTest.test_instance_builder_is_reproducible_and_scales_fleet) ... ok
+test_publication_suite_covers_real_and_all_size_groups (test_benchmark.BenchmarkTest.test_publication_suite_covers_real_and_all_size_groups) ... ok
+test_quality_indicators_have_known_values (test_benchmark.BenchmarkTest.test_quality_indicators_have_known_values) ... ok
+test_binary_mechanism_requires_full_recovery (test_capacity_recovery.CapacityRecoveryTest.test_binary_mechanism_requires_full_recovery) ... ok
+test_capacity_solver_exports_complete_non_dominated_archive (test_capacity_recovery.CapacityRecoveryTest.test_capacity_solver_exports_complete_non_dominated_archive) ... ok
+test_edge_capacity_factor_can_disable_only_throughput_accounting (test_capacity_recovery.CapacityRecoveryTest.test_edge_capacity_factor_can_disable_only_throughput_accounting) ... ok
+test_edge_period_capacity_is_enforced (test_capacity_recovery.CapacityRecoveryTest.test_edge_period_capacity_is_enforced) ... ok
+test_model_factors_are_orthogonal_and_do_not_mutate_source (test_capacity_recovery.CapacityRecoveryTest.test_model_factors_are_orthogonal_and_do_not_mutate_source) ... ok
+test_wenchuan_capacity_case_supply_ceiling (test_capacity_recovery.CapacityRecoveryTest.test_wenchuan_capacity_case_supply_ceiling) ... ok
+test_full_design_still_computes_the_formal_analysis (test_common_execution.AblationSubsetTest.test_full_design_still_computes_the_formal_analysis) ... [1/8] S020/instance=1 solver=60000/model=PR0_HT0_EC0
+[2/8] S020/instance=1 solver=60000/model=PR0_HT0_EC1
+[3/8] S020/instance=1 solver=60000/model=PR0_HT1_EC0
+[4/8] S020/instance=1 solver=60000/model=PR0_HT1_EC1
+[5/8] S020/instance=1 solver=60000/model=PR1_HT0_EC0
+[6/8] S020/instance=1 solver=60000/model=PR1_HT0_EC1
+[7/8] S020/instance=1 solver=60000/model=PR1_HT1_EC0
+[8/8] S020/instance=1 solver=60000/model=PR1_HT1_EC1
+ok
+test_subset_reports_no_significance_tables (test_common_execution.AblationSubsetTest.test_subset_reports_no_significance_tables) ... Done. Model ablation outputs written to /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmpfai4a2qd/full
+[1/8] S020/instance=1 solver=60000/model=PR1_HT1_EC1
+[2/8] S020/instance=1 solver=60000/model=PR0_HT1_EC1
+[3/8] S020/instance=1 solver=60000/model=PR1_HT0_EC1
+[4/8] S020/instance=1 solver=60000/model=PR1_HT1_EC0
+[5/8] S020/instance=1 solver=60001/model=PR1_HT1_EC1
+[6/8] S020/instance=1 solver=60001/model=PR0_HT1_EC1
+[7/8] S020/instance=1 solver=60001/model=PR1_HT0_EC1
+[8/8] S020/instance=1 solver=60001/model=PR1_HT1_EC0
+ok
+test_full_planning_replays_identically_in_the_full_environment (test_common_execution.FullExecutionReplayTest.test_full_planning_replays_identically_in_the_full_environment) ... ok
+test_no_ec_decision_is_penalized_in_the_full_environment (test_common_execution.FullExecutionReplayTest.test_no_ec_decision_is_penalized_in_the_full_environment) ... ok
+test_binary_recovery_makes_vehicle_thresholds_inert (test_common_execution.PhysicalScenarioSharingTest.test_binary_recovery_makes_vehicle_thresholds_inert)
+Under PR0 the passability threshold cannot discriminate. ... ok
+test_no_ec_only_removes_throughput_accounting (test_common_execution.PhysicalScenarioSharingTest.test_no_ec_only_removes_throughput_accounting)
+Throughput throttling disappears; passability and timing do not. ... ok
+test_no_ht_keeps_load_pcu_and_counts (test_common_execution.PhysicalScenarioSharingTest.test_no_ht_keeps_load_pcu_and_counts) ... ok
+test_planning_groups_and_execution_environment_share_one_scenario (test_common_execution.PhysicalScenarioSharingTest.test_planning_groups_and_execution_environment_share_one_scenario) ... ok
+test_crew_transfer_time_consumes_period_repair_budget (test_dynamic_interaction.DynamicInteractionTest.test_crew_transfer_time_consumes_period_repair_budget) ... ok
+test_deterministic_openloop_matches_rolling_without_new_information (test_dynamic_interaction.DynamicInteractionTest.test_deterministic_openloop_matches_rolling_without_new_information) ... ok
+test_dynamic_state_snapshots_cover_every_period (test_dynamic_interaction.DynamicInteractionTest.test_dynamic_state_snapshots_cover_every_period) ... ok
+test_revealed_repair_efficiency_can_change_rolling_decisions (test_dynamic_interaction.DynamicInteractionTest.test_revealed_repair_efficiency_can_change_rolling_decisions) ... ok
+test_ablation_may_extend_its_declared_model_group (test_experiment_contract.ExperimentContractTest.test_ablation_may_extend_its_declared_model_group)
+The four-model subset is a declared variation, not a new experiment. ... Done. Model ablation outputs written to /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmpqmz5jzuf/subset
+[1/2] S020/instance=1 solver=60000/model=PR1_HT1_EC1
+[2/2] S020/instance=1 solver=60000/model=PR0_HT1_EC1
+Done. Model ablation outputs written to /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmpggprsqce/abl
+[1/4] S020/instance=1 solver=60000/model=PR1_HT1_EC1
+[2/4] S020/instance=1 solver=60000/model=PR0_HT1_EC1
+[3/4] S020/instance=1 solver=60000/model=PR1_HT0_EC1
+[4/4] S020/instance=1 solver=60000/model=PR1_HT1_EC0
+ok
+test_ablation_treats_the_solver_as_fixed (test_experiment_contract.ExperimentContractTest.test_ablation_treats_the_solver_as_fixed) ... Done. Model ablation outputs written to /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmpggprsqce/abl
+[1/2] S020/instance=1 solver=60000/model=PR1_HT1_EC1
+[2/2] S020/instance=1 solver=60000/model=PR1_HT1_EC0
+ok
+test_changing_the_budget_in_one_directory_is_refused (test_experiment_contract.ExperimentContractTest.test_changing_the_budget_in_one_directory_is_refused) ... Done. Model ablation outputs written to /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmpfwiwclui/abl
+[1/1] S020/instance=101 algorithm=nsga2/solver=1060000
+  front=3 evals=12 unmet=4.0472 min_sat=0.9000 runtime=0.165s stop=budget_exhausted
+ok
+test_contract_is_written_and_lists_its_variation (test_experiment_contract.ExperimentContractTest.test_contract_is_written_and_lists_its_variation) ... Done. 1 run records this invocation (0 resumed); 1 in /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmp6yxci149/exp
+[1/1] S020/instance=101 algorithm=nsga2/solver=1060000
+  front=3 evals=12 unmet=4.0472 min_sat=0.9000 runtime=0.163s stop=budget_exhausted
+ok
+test_declared_variation_may_grow_the_same_experiment (test_experiment_contract.ExperimentContractTest.test_declared_variation_may_grow_the_same_experiment)
+Adding an algorithm is a declared dimension, not a new experiment. ... Done. 1 run records this invocation (0 resumed); 1 in /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmp1cyas5h9/exp
+[1/1] S020/instance=101 algorithm=nsga2/solver=1060000
+  front=3 evals=12 unmet=4.0472 min_sat=0.9000 runtime=0.163s stop=budget_exhausted
+Done. 1 run records this invocation (0 resumed); 1 in /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmp29yhqdub/exp
+[1/2] S020/instance=101 algorithm=nsga2/solver=1060000
+  front=3 evals=12 unmet=4.0472 min_sat=0.9000 runtime=0.164s stop=budget_exhausted
+[2/2] S020/instance=101 algorithm=nsga2_ls/solver=1060000
+  front=2 evals=12 unmet=3.9717 min_sat=0.9000 runtime=0.158s stop=budget_exhausted
+ok
+test_identical_configuration_resumes_without_duplicates (test_experiment_contract.ExperimentContractTest.test_identical_configuration_resumes_without_duplicates) ... Done. 2 run records this invocation (0 resumed); 2 in /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmp29yhqdub/exp
+[1/1] S020/instance=101 algorithm=nsga2/solver=1060000
+  front=3 evals=12 unmet=4.0472 min_sat=0.9000 runtime=0.163s stop=budget_exhausted
+Done. 1 run records this invocation (0 resumed); 1 in /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmpsp6d41yo/exp
+[1/1] S020:i101:nsga2:s1060000:r0:dea6d9bb9f8e already complete, skipped
+ok
+test_source_fingerprint_covers_dependencies (test_experiment_contract.ExperimentContractTest.test_source_fingerprint_covers_dependencies) ... ok
+test_summaries_and_replay_see_the_same_run_set (test_experiment_contract.ExperimentContractTest.test_summaries_and_replay_see_the_same_run_set) ... Done. 1 run records this invocation (1 resumed); 1 in /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmpsp6d41yo/exp
+[1/1] S020/instance=101 algorithm=nsga2/solver=1060000
+  front=3 evals=12 unmet=4.0472 min_sat=0.9000 runtime=0.163s stop=budget_exhausted
+Done. 1 run records this invocation (0 resumed); 1 in /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmpln_qjy5o/exp
+[1/2] S020:i101:nsga2:s1060000:r0:dea6d9bb9f8e already complete, skipped
+[2/2] S020/instance=101 algorithm=nsga2_ls/solver=1060000
+  front=2 evals=12 unmet=3.9717 min_sat=0.9000 runtime=0.159s stop=budget_exhausted
+ok
+test_switching_model_version_in_one_directory_is_refused (test_experiment_contract.ExperimentContractTest.test_switching_model_version_in_one_directory_is_refused) ... Done. 2 run records this invocation (1 resumed); 2 in /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmpln_qjy5o/exp
+[1/1] S020/instance=101 algorithm=nsga2/solver=1060000
+  front=3 evals=12 unmet=4.2771 min_sat=0.9000 runtime=0.160s stop=budget_exhausted
+ok
+test_every_recorded_run_can_rebuild_its_planning_instance (test_full_execution_validation.AblationExecutionEnvironmentTest.test_every_recorded_run_can_rebuild_its_planning_instance)
+A run that references a snapshot must have written it. ... Done. 1 run records this invocation (0 resumed); 1 in /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmp7t5oj0co/exp
+[1/3] S020/instance=1 solver=60000/model=PR1_HT1_EC1
+[2/3] S020/instance=1 solver=60000/model=PR1_HT1_EC0
+[3/3] S020/instance=1 solver=60000/model=PR0_HT1_EC1
+ok
+test_legacy_ablation_stores_an_environment_full_cannot_use (test_full_execution_validation.AblationExecutionEnvironmentTest.test_legacy_ablation_stores_an_environment_full_cannot_use) ... Done. Model ablation outputs written to /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmp2nl_ln_0/abl
+[1/2] S020/instance=1 solver=60000/model=PR1_HT1_EC1
+[2/2] S020/instance=1 solver=60000/model=PR1_HT1_EC0
+ok
+test_v2_ablation_stores_a_loadable_full_environment (test_full_execution_validation.AblationExecutionEnvironmentTest.test_v2_ablation_stores_a_loadable_full_environment) ... Done. Model ablation outputs written to /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmp0woxo78k/abl
+[1/3] S020/instance=1 solver=60000/model=PR1_HT1_EC1
+[2/3] S020/instance=1 solver=60000/model=PR1_HT1_EC0
+[3/3] S020/instance=1 solver=60000/model=PR0_HT1_EC1
+ok
+test_a_full_environment_loads (test_full_execution_validation.ExecutionSnapshotTest.test_a_full_environment_loads) ... ok
+test_a_reduced_environment_cannot_be_loaded_as_full (test_full_execution_validation.ExecutionSnapshotTest.test_a_reduced_environment_cannot_be_loaded_as_full) ... ok
+test_boolean_labels_alone_do_not_make_an_environment_full (test_full_execution_validation.ExecutionSnapshotTest.test_boolean_labels_alone_do_not_make_an_environment_full)
+A snapshot claiming Full is re-verified against its own factors. ... ok
+test_editing_the_instance_breaks_the_snapshot_integrity_check (test_full_execution_validation.ExecutionSnapshotTest.test_editing_the_instance_breaks_the_snapshot_integrity_check) ... ok
+test_one_physical_scenario_keeps_one_execution_model (test_full_execution_validation.ExecutionSnapshotTest.test_one_physical_scenario_keeps_one_execution_model)
+A different model under the same physical hash must not overwrite. ... ok
+test_a_v2_full_instance_has_no_problems (test_full_execution_validation.FullEnvironmentPredicateTest.test_a_v2_full_instance_has_no_problems) ... ok
+test_each_reduced_model_is_named (test_full_execution_validation.FullEnvironmentPredicateTest.test_each_reduced_model_is_named) ... ok
+test_unsupported_crew_settings_are_named (test_full_execution_validation.FullEnvironmentPredicateTest.test_unsupported_crew_settings_are_named) ... ok
+test_binary_curve_is_rejected_even_with_the_flag_on (test_full_execution_validation.FullProfileConsistencyTest.test_binary_curve_is_rejected_even_with_the_flag_on) ... ok
+test_binary_source_without_a_profile_cannot_be_relabelled (test_full_execution_validation.FullProfileConsistencyTest.test_binary_source_without_a_profile_cannot_be_relabelled) ... ok
+test_in_memory_invalid_config_is_rejected_across_save_and_load (test_full_execution_validation.FullProfileConsistencyTest.test_in_memory_invalid_config_is_rejected_across_save_and_load)
+Built in memory, saved, then loaded: the store must not bless it. ... ok
+test_profile_comparison_does_not_require_matching_vehicle_types (test_full_execution_validation.FullProfileConsistencyTest.test_profile_comparison_does_not_require_matching_vehicle_types)
+A scenario is free to carry a different set of vehicle types. ... ok
+test_profile_round_trips_through_the_snapshot (test_full_execution_validation.FullProfileConsistencyTest.test_profile_round_trips_through_the_snapshot) ... ok
+test_reenabling_heterogeneous_restores_the_declared_thresholds (test_full_execution_validation.FullProfileConsistencyTest.test_reenabling_heterogeneous_restores_the_declared_thresholds) ... ok
+test_reenabling_progressive_restores_the_declared_curve (test_full_execution_validation.FullProfileConsistencyTest.test_reenabling_progressive_restores_the_declared_curve)
+Re-labelling a reduced instance must not keep reduced data. ... ok
+test_thresholds_must_match_the_declared_profile (test_full_execution_validation.FullProfileConsistencyTest.test_thresholds_must_match_the_declared_profile) ... ok
+test_a_zero_dependency_edge_is_not_structural (test_ht_natural_corridor.CorridorClassifierTest.test_a_zero_dependency_edge_is_not_structural) ... ok
+test_bridge_and_non_bridge_are_both_admissible (test_ht_natural_corridor.CorridorClassifierTest.test_bridge_and_non_bridge_are_both_admissible)
+The classifier must not encode corridor = bridge. ... ok
+test_scenario_strata_partition_every_count (test_ht_natural_corridor.CorridorClassifierTest.test_scenario_strata_partition_every_count) ... ok
+test_damage_overlay_does_not_prefer_bridges (test_ht_natural_corridor.DamageOverlayIsNaturalTest.test_damage_overlay_does_not_prefer_bridges)
+Uniform draws, measured against the network's own bridge rate. ... ok
+test_damage_overlay_keeps_the_damage_count_and_repair_times (test_ht_natural_corridor.DamageOverlayIsNaturalTest.test_damage_overlay_keeps_the_damage_count_and_repair_times) ... ok
+test_role_overlay_keeps_counts_totals_and_damage (test_ht_natural_corridor.DamageOverlayIsNaturalTest.test_role_overlay_keeps_counts_totals_and_damage) ... ok
+test_a_bridge_reports_severed_flows_not_a_diluted_mean (test_ht_natural_corridor.DetourTest.test_a_bridge_reports_severed_flows_not_a_diluted_mean) ... ok
+test_dependency_fraction_is_a_fraction (test_ht_natural_corridor.DetourTest.test_dependency_fraction_is_a_fraction)
+Dependency over OD *pairs*, so it can never exceed 1. ... ok
+test_detour_ratio_matches_an_independent_removal (test_ht_natural_corridor.DetourTest.test_detour_ratio_matches_an_independent_removal)
+Recompute removal effects from scratch and compare. ... ok
+test_every_emitted_od_row_is_actually_sensitive (test_ht_natural_corridor.ExposureTest.test_every_emitted_od_row_is_actually_sensitive) ... ok
+test_od_feasibility_split_follows_the_feasible_subgraphs (test_ht_natural_corridor.ExposureTest.test_od_feasibility_split_follows_the_feasible_subgraphs)
+A pair is split exactly when some type can reach it and another not. ... ok
+test_od_travel_times_come_from_the_evaluator_graph (test_ht_natural_corridor.ExposureTest.test_od_travel_times_come_from_the_evaluator_graph)
+Times must be the evaluator's, not a raw free_time Dijkstra. ... ok
+test_partial_recovery_is_not_priced_at_free_flow_speed (test_ht_natural_corridor.ExposureTest.test_partial_recovery_is_not_priced_at_free_flow_speed)
+A damaged edge in a partial stage costs more than its free_time. ... ok
+test_summary_counts_match_the_emitted_rows (test_ht_natural_corridor.ExposureTest.test_summary_counts_match_the_emitted_rows) ... ok
+test_progress_bands_are_read_off_the_model_not_assumed (test_ht_natural_corridor.PassabilityTest.test_progress_bands_are_read_off_the_model_not_assumed)
+The allowed set changes at thresholds and at stage boundaries. ... ok
+test_threshold_sensitive_edge_uses_the_model_predicate (test_ht_natural_corridor.PassabilityTest.test_threshold_sensitive_edge_uses_the_model_predicate)
+Sensitivity is a strict non-empty proper subset, per the model. ... ok
+test_full_self_replay_is_exact_in_the_published_replay (test_ht_natural_corridor.PublishedAuditTest.test_full_self_replay_is_exact_in_the_published_replay) ... ok
+test_manifest_bridge_count_matches_the_edge_structure_table (test_ht_natural_corridor.PublishedAuditTest.test_manifest_bridge_count_matches_the_edge_structure_table)
+The manifest's damaged-bridge count must agree with the scan. ... ok
+test_manifest_records_one_physical_network (test_ht_natural_corridor.PublishedAuditTest.test_manifest_records_one_physical_network) ... ok
+test_overlay_bridge_counts_are_recomputable_and_not_all_zero (test_ht_natural_corridor.PublishedAuditTest.test_overlay_bridge_counts_are_recomputable_and_not_all_zero)
+Overlay counts come from the same helper, and sampling is uniform. ... ok
+test_overlay_manifest_agrees_with_the_summary (test_ht_natural_corridor.PublishedAuditTest.test_overlay_manifest_agrees_with_the_summary) ... ok
+test_summary_counts_match_the_per_decision_table (test_ht_natural_corridor.PublishedAuditTest.test_summary_counts_match_the_per_decision_table) ... ok
+test_the_chain_holds_in_both_directions_where_it_was_measured (test_ht_natural_corridor.PublishedAuditTest.test_the_chain_holds_in_both_directions_where_it_was_measured)
+Necessity and sufficiency both hold on WEN38 and its overlays. ... ok
+test_the_choice_is_invariant_to_input_permutations (test_ht_natural_corridor.RepresentativeSelectionTest.test_the_choice_is_invariant_to_input_permutations) ... ok
+test_the_lowest_seed_wins_before_the_type_tie_break (test_ht_natural_corridor.RepresentativeSelectionTest.test_the_lowest_seed_wins_before_the_type_tie_break)
+A lexically earlier type with a higher seed must not win. ... ok
+test_the_rule_string_matches_the_implemented_ordering (test_ht_natural_corridor.RepresentativeSelectionTest.test_the_rule_string_matches_the_implemented_ordering) ... ok
+test_ties_are_broken_by_overlay_type_not_by_input_order (test_ht_natural_corridor.RepresentativeSelectionTest.test_ties_are_broken_by_overlay_type_not_by_input_order) ... ok
+test_combined_overlay_is_damage_on_top_of_roles (test_ht_natural_corridor.ReproducibilityTest.test_combined_overlay_is_damage_on_top_of_roles) ... ok
+test_overlays_are_reproducible_from_their_seed (test_ht_natural_corridor.ReproducibilityTest.test_overlays_are_reproducible_from_their_seed) ... ok
+test_effect_reuses_the_canonical_allocation_comparison (test_ht_natural_corridor.SharedMachineryTest.test_effect_reuses_the_canonical_allocation_comparison)
+The dispatch comparison must be the shared one, not a copy. ... ok
+test_ht_off_admits_a_superset_of_vehicles (test_ht_natural_corridor.SharedMachineryTest.test_ht_off_admits_a_superset_of_vehicles)
+Uniform 0.30 admits every vehicle the declared thresholds do. ... ok
+test_ht_switch_leaves_pr_ec_and_the_base_instance_alone (test_ht_natural_corridor.SharedMachineryTest.test_ht_switch_leaves_pr_ec_and_the_base_instance_alone) ... ok
+test_objective_change_uses_the_quantized_key (test_ht_natural_corridor.SharedMachineryTest.test_objective_change_uses_the_quantized_key) ... ok
+test_every_overlay_keeps_the_wen38_network_exactly (test_ht_natural_corridor.TopologyInvarianceTest.test_every_overlay_keeps_the_wen38_network_exactly)
+The overlays re-sample roles and damage, never the road network. ... ok
+test_topology_fingerprint_ignores_the_instance_seed (test_ht_natural_corridor.TopologyInvarianceTest.test_topology_fingerprint_ignores_the_instance_seed)
+The seed only renames the instance; it must not change the hash. ... ok
+test_instance_generation_counts_and_seed_reproducibility (test_instance_generator.InstanceGeneratorTest.test_instance_generation_counts_and_seed_reproducibility) ... ok
+test_amount_change_is_detected (test_mechanism_applicability.AllocationComparisonTest.test_amount_change_is_detected) ... ok
+test_input_order_alone_is_not_a_change (test_mechanism_applicability.AllocationComparisonTest.test_input_order_alone_is_not_a_change) ... ok
+test_path_change_is_detected (test_mechanism_applicability.AllocationComparisonTest.test_path_change_is_detected) ... ok
+test_second_allocation_to_one_demand_is_not_dropped (test_mechanism_applicability.AllocationComparisonTest.test_second_allocation_to_one_demand_is_not_dropped)
+A dict keyed by (supplier, demand) would lose the second entry. ... ok
+test_sub_resolution_amount_jitter_is_not_a_change (test_mechanism_applicability.AllocationComparisonTest.test_sub_resolution_amount_jitter_is_not_a_change) ... ok
+test_supplier_change_alone_is_named (test_mechanism_applicability.AllocationComparisonTest.test_supplier_change_alone_is_named)
+Every tuple field must have a flag, or a change goes unexplained. ... ok
+test_trips_change_is_detected (test_mechanism_applicability.AllocationComparisonTest.test_trips_change_is_detected) ... ok
+test_vehicle_change_is_detected (test_mechanism_applicability.AllocationComparisonTest.test_vehicle_change_is_detected) ... ok
+test_vehicle_swap_between_allocations_is_a_pairing_change (test_mechanism_applicability.AllocationComparisonTest.test_vehicle_swap_between_allocations_is_a_pairing_change)
+A permutation moves no field's multiset but is still a change. ... ok
+test_each_switch_changes_only_its_own_mechanism (test_mechanism_applicability.BaseInstanceStateTest.test_each_switch_changes_only_its_own_mechanism) ... ok
+test_switching_a_mechanism_off_does_not_mutate_the_base (test_mechanism_applicability.BaseInstanceStateTest.test_switching_a_mechanism_off_does_not_mutate_the_base) ... ok
+test_a_corridor_label_without_a_corridor_is_refused (test_mechanism_applicability.CorridorTopologyTest.test_a_corridor_label_without_a_corridor_is_refused) ... ok
+test_corridor_scenario_really_has_a_damaged_bridge (test_mechanism_applicability.CorridorTopologyTest.test_corridor_scenario_really_has_a_damaged_bridge) ... ok
+test_generator_critical_strategy_produces_no_bridge_at_s025 (test_mechanism_applicability.CorridorTopologyTest.test_generator_critical_strategy_produces_no_bridge_at_s025)
+The reason a dedicated corridor topology is needed. ... ok
+test_removing_the_corridor_disconnects_a_supplier_from_demands (test_mechanism_applicability.CorridorTopologyTest.test_removing_the_corridor_disconnects_a_supplier_from_demands) ... ok
+test_identical_keys_are_unchanged (test_mechanism_applicability.ObjectiveChangedTest.test_identical_keys_are_unchanged) ... ok
+test_per_objective_flags (test_mechanism_applicability.ObjectiveChangedTest.test_per_objective_flags) ... ok
+test_uses_the_pinned_key_not_a_tolerance (test_mechanism_applicability.ObjectiveChangedTest.test_uses_the_pinned_key_not_a_tolerance)
+A scale test that disagrees with the key near a bin boundary. ... ok
+test_exposure_summary_is_a_pure_function_of_the_decision (test_mechanism_applicability.PeriodTraceTest.test_exposure_summary_is_a_pure_function_of_the_decision)
+Whichever order decisions are fed in, each summary must not move. ... ok
+test_trace_matches_the_shared_evaluator_on_all_three_objectives (test_mechanism_applicability.PeriodTraceTest.test_trace_matches_the_shared_evaluator_on_all_three_objectives) ... ok
+test_ec_band_rows_are_a_partition_of_the_grid (test_mechanism_applicability.PublishedAuditTest.test_ec_band_rows_are_a_partition_of_the_grid)
+Each scope's four utilization bands must re-add to its grid cells. ... ok
+test_every_dispatch_change_is_named_in_the_published_summary (test_mechanism_applicability.PublishedAuditTest.test_every_dispatch_change_is_named_in_the_published_summary)
+A change with no sub-flag set would be an unexplained row. ... ok
+test_manifest_records_the_identity_control_as_exact (test_mechanism_applicability.PublishedAuditTest.test_manifest_records_the_identity_control_as_exact) ... ok
+test_manifest_table_counts_match_the_files (test_mechanism_applicability.PublishedAuditTest.test_manifest_table_counts_match_the_files) ... ok
+test_no_audit_row_claims_bridge_damage_without_a_damaged_bridge (test_mechanism_applicability.PublishedAuditTest.test_no_audit_row_claims_bridge_damage_without_a_damaged_bridge) ... ok
+test_no_reroutes_means_no_binding_below_the_lower_edge (test_mechanism_applicability.PublishedAuditTest.test_no_reroutes_means_no_binding_below_the_lower_edge)
+0.85 held at every scale: below it EC never changed the objective. ... ok
+test_replay_summary_agrees_with_a_recount_on_the_quantized_key (test_mechanism_applicability.PublishedAuditTest.test_replay_summary_agrees_with_a_recount_on_the_quantized_key)
+The summary must count changes the same way the pipeline does. ... ok
+test_scale_summary_counts_both_directions_of_the_chain (test_mechanism_applicability.PublishedAuditTest.test_scale_summary_counts_both_directions_of_the_chain)
+Necessity and sufficiency must be counted, not conflated. ... ok
+test_topology_summary_is_a_recount_of_the_summary_table (test_mechanism_applicability.PublishedAuditTest.test_topology_summary_is_a_recount_of_the_summary_table) ... ok
+test_bottleneck_is_classified_by_relaxation (test_mechanism_applicability.SupplyAndBottleneckTest.test_bottleneck_is_classified_by_relaxation) ... ok
+test_bottleneck_refuses_an_axis_that_would_tighten (test_mechanism_applicability.SupplyAndBottleneckTest.test_bottleneck_refuses_an_axis_that_would_tighten) ... ok
+test_road_capacity_probe_loosens_rather_than_tightens (test_mechanism_applicability.SupplyAndBottleneckTest.test_road_capacity_probe_loosens_rather_than_tightens)
+A probe that tightened its resource would answer the wrong question. ... ok
+test_road_probe_is_sensitive_where_capacity_binds (test_mechanism_applicability.SupplyAndBottleneckTest.test_road_probe_is_sensitive_where_capacity_binds)
+A zero from the road probe must mean "not binding", not "broken". ... ok
+test_supply_relaxation_changes_only_supply (test_mechanism_applicability.SupplyAndBottleneckTest.test_supply_relaxation_changes_only_supply) ... ok
+test_calibration_lands_in_the_requested_band_or_says_it_did_not (test_mechanism_applicability.ZoneDecisionStoreTest.test_calibration_lands_in_the_requested_band_or_says_it_did_not)
+A zone is a measured placement, never a scale we assumed. ... ok
+test_zone_search_stores_rebuildable_decisions (test_mechanism_applicability.ZoneDecisionStoreTest.test_zone_search_stores_rebuildable_decisions)
+Every replayed decision must be reconstructible from the store. ... ok
+test_full_self_replay_is_exactly_zero (test_mechanism_applicability.ZoneReplayTest.test_full_self_replay_is_exactly_zero)
+A decision planned by the Full model must replay identically. ... ok
+test_formal_factorial_analysis_rejects_incomplete_blocks (test_model_ablation.ModelAblationTest.test_formal_factorial_analysis_rejects_incomplete_blocks) ... ok
+test_formal_factorial_analysis_uses_instance_means_and_known_effects (test_model_ablation.ModelAblationTest.test_formal_factorial_analysis_uses_instance_means_and_known_effects) ... ok
+test_model_ablation_runs_all_eight_paired_combinations (test_model_ablation.ModelAblationTest.test_model_ablation_runs_all_eight_paired_combinations) ... Done. Model ablation outputs written to /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmp9hg17ljj/abl
+[1/8] S020/instance=1 solver=60000/model=PR0_HT0_EC0
+[2/8] S020/instance=1 solver=60000/model=PR0_HT0_EC1
+[3/8] S020/instance=1 solver=60000/model=PR0_HT1_EC0
+[4/8] S020/instance=1 solver=60000/model=PR0_HT1_EC1
+[5/8] S020/instance=1 solver=60000/model=PR1_HT0_EC0
+[6/8] S020/instance=1 solver=60000/model=PR1_HT0_EC1
+[7/8] S020/instance=1 solver=60000/model=PR1_HT1_EC0
+[8/8] S020/instance=1 solver=60000/model=PR1_HT1_EC1
+ok
+test_shard_merge_recomputes_one_pooled_front_across_solver_repeats (test_model_ablation.ModelAblationTest.test_shard_merge_recomputes_one_pooled_front_across_solver_repeats) ... Done. Model ablation outputs written to /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmp_xei2ypv
+[1/8] S020/instance=1 solver=60000/model=PR0_HT0_EC0
+[2/8] S020/instance=1 solver=60000/model=PR0_HT0_EC1
+[3/8] S020/instance=1 solver=60000/model=PR0_HT1_EC0
+[4/8] S020/instance=1 solver=60000/model=PR0_HT1_EC1
+[5/8] S020/instance=1 solver=60000/model=PR1_HT0_EC0
+[6/8] S020/instance=1 solver=60000/model=PR1_HT0_EC1
+[7/8] S020/instance=1 solver=60000/model=PR1_HT1_EC0
+[8/8] S020/instance=1 solver=60000/model=PR1_HT1_EC1
+Done. Model ablation outputs written to /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmpdcwcla26/repeat_0
+[1/8] S020/instance=1 solver=60001/model=PR0_HT0_EC0
+[2/8] S020/instance=1 solver=60001/model=PR0_HT0_EC1
+[3/8] S020/instance=1 solver=60001/model=PR0_HT1_EC0
+[4/8] S020/instance=1 solver=60001/model=PR0_HT1_EC1
+[5/8] S020/instance=1 solver=60001/model=PR1_HT0_EC0
+[6/8] S020/instance=1 solver=60001/model=PR1_HT0_EC1
+[7/8] S020/instance=1 solver=60001/model=PR1_HT1_EC0
+[8/8] S020/instance=1 solver=60001/model=PR1_HT1_EC1
+ok
+test_m01_permanently_isolated_demand_does_not_strand_resources (test_model_contract.ModelContractTest.test_m01_permanently_isolated_demand_does_not_strand_resources)
+legacy caps the reachable point at 25 t, v2 delivers 50 t. ... ok
+test_m02_period_targets_are_not_double_subtracted (test_model_contract.ModelContractTest.test_m02_period_targets_are_not_double_subtracted)
+Both stages pass period-total targets and never over/under-allocate. ... ok
+test_m02_vehicle_quota_bounds_two_stage_allocation (test_model_contract.ModelContractTest.test_m02_vehicle_quota_bounds_two_stage_allocation)
+A binding fleet budget is respected without over-allocation. ... ok
+test_m03_cross_period_conservation (test_model_contract.ModelContractTest.test_m03_cross_period_conservation)
+Cumulative delivery never exceeds supply and stock never goes negative. ... ok
+test_m04_road_repaired_late_in_a_period_is_usable_only_next_period (test_model_contract.ModelContractTest.test_m04_road_repaired_late_in_a_period_is_usable_only_next_period)
+Binary recovery, 479-minute repair, 480-minute period. ... ok
+test_m05_edge_finished_exactly_on_the_period_boundary (test_model_contract.ModelContractTest.test_m05_edge_finished_exactly_on_the_period_boundary)
+A 480-minute repair is usable in period two and never backfills period one. ... ok
+test_m06_over_period_trip_consumes_nothing (test_model_contract.ModelContractTest.test_m06_over_period_trip_consumes_nothing)
+A 540-minute one-way trip cannot count as an arrival inside 480 minutes. ... ok
+test_m07_vehicle_threshold_boundary_uses_one_tolerance (test_model_contract.ModelContractTest.test_m07_vehicle_threshold_boundary_uses_one_tolerance) ... ok
+test_m08_fleet_quota_is_shared_and_edge_capacity_is_charged_per_trip (test_model_contract.ModelContractTest.test_m08_fleet_quota_is_shared_and_edge_capacity_is_charged_per_trip)
+Trips x PCU are charged to edges; the quota is not copied per supplier. ... ok
+test_m09_model_factor_variant_inherits_evaluation_config (test_model_contract.ModelContractTest.test_m09_model_factor_variant_inherits_evaluation_config) ... ok
+test_m10_illegal_configuration_is_rejected (test_model_contract.ModelContractTest.test_m10_illegal_configuration_is_rejected) ... ok
+test_m11_objective_units_and_signs (test_model_contract.ModelContractTest.test_m11_objective_units_and_signs) ... ok
+test_exact_rule_still_reproduces_the_old_behaviour (test_objective_precision.AuditedCounterexampleTest.test_exact_rule_still_reproduces_the_old_behaviour)
+The legacy rule is preserved, not silently rewritten. ... ok
+test_real_fairness_differences_survive (test_objective_precision.AuditedCounterexampleTest.test_real_fairness_differences_survive)
+F3 is not deleted, floored away or replaced by the supply ratio. ... ok
+test_representative_no_longer_follows_the_noise (test_objective_precision.AuditedCounterexampleTest.test_representative_no_longer_follows_the_noise) ... ok
+test_resolution_only_affects_the_fairness_scale_it_was_set_for (test_objective_precision.AuditedCounterexampleTest.test_resolution_only_affects_the_fairness_scale_it_was_set_for) ... ok
+test_resolution_treats_the_audited_pair_as_fairness_equivalent (test_objective_precision.AuditedCounterexampleTest.test_resolution_treats_the_audited_pair_as_fairness_equivalent) ... ok
+test_crowding_does_not_invent_endpoints_from_noise (test_objective_precision.NearConstantDimensionTest.test_crowding_does_not_invent_endpoints_from_noise)
+When only a noise dimension varies, nothing earns infinite crowding. ... ok
+test_crowding_ignores_a_sub_resolution_dimension (test_objective_precision.NearConstantDimensionTest.test_crowding_ignores_a_sub_resolution_dimension)
+A noise-only dimension contributes exactly nothing to crowding. ... ok
+test_crowding_still_uses_a_dimension_that_really_moves (test_objective_precision.NearConstantDimensionTest.test_crowding_still_uses_a_dimension_that_really_moves) ... ok
+test_degenerate_dimension_is_reported_and_floored (test_objective_precision.NearConstantDimensionTest.test_degenerate_dimension_is_reported_and_floored) ... ok
+test_hypervolume_does_not_move_with_noise_alone (test_objective_precision.NearConstantDimensionTest.test_hypervolume_does_not_move_with_noise_alone)
+Two fronts equal at the resolution score equal HV. ... ok
+test_quality_indicators_record_raw_ranges_and_effective_dimensions (test_objective_precision.NearConstantDimensionTest.test_quality_indicators_record_raw_ranges_and_effective_dimensions) ... ok
+test_dominance_is_irreflexive_and_antisymmetric (test_objective_precision.OrderingPropertyTest.test_dominance_is_irreflexive_and_antisymmetric) ... ok
+test_dominance_is_transitive (test_objective_precision.OrderingPropertyTest.test_dominance_is_transitive) ... ok
+test_equivalence_is_reflexive_symmetric_and_transitive (test_objective_precision.OrderingPropertyTest.test_equivalence_is_reflexive_symmetric_and_transitive) ... ok
+test_key_is_deterministic (test_objective_precision.OrderingPropertyTest.test_key_is_deterministic) ... ok
+test_a_real_front_is_invariant_to_key_preserving_jitter (test_objective_precision.PooledCoordinateTest.test_a_real_front_is_invariant_to_key_preserving_jitter)
+End-to-end on measured objectives, not a synthetic pair. ... ok
+test_adding_an_equivalent_point_does_not_reweigh_the_reference (test_objective_precision.PooledCoordinateTest.test_adding_an_equivalent_point_does_not_reweigh_the_reference) ... ok
+test_equivalence_holds_with_two_active_dimensions (test_objective_precision.PooledCoordinateTest.test_equivalence_holds_with_two_active_dimensions) ... ok
+test_key_identical_fronts_score_identically (test_objective_precision.PooledCoordinateTest.test_key_identical_fronts_score_identically) ... ok
+test_raw_values_are_never_rewritten (test_objective_precision.PooledCoordinateTest.test_raw_values_are_never_rewritten) ... ok
+test_precision_follows_the_model_version (test_objective_precision.PrecisionWiringTest.test_precision_follows_the_model_version) ... ok
+test_precision_is_part_of_the_model_fingerprint (test_objective_precision.PrecisionWiringTest.test_precision_is_part_of_the_model_fingerprint) ... ok
+test_a_long_run_does_not_outvote_a_short_one (test_replay_summary.ReplaySummaryTest.test_a_long_run_does_not_outvote_a_short_one)
+Two runs, one with 10 points and one with 1, weigh the same. ... ok
+test_groups_are_separated_and_ordered (test_replay_summary.ReplaySummaryTest.test_groups_are_separated_and_ordered) ... ok
+test_sub_resolution_changes_are_not_counted_as_changes (test_replay_summary.ReplaySummaryTest.test_sub_resolution_changes_are_not_counted_as_changes)
+The change tolerance is the pinned objective resolution. ... ok
+test_the_representative_is_reported_on_its_own (test_replay_summary.ReplaySummaryTest.test_the_representative_is_reported_on_its_own) ... ok
+test_the_worst_case_reports_where_it_came_from (test_replay_summary.ReplaySummaryTest.test_the_worst_case_reports_where_it_came_from) ... ok
+test_binary_curve_cannot_pass_just_because_pr_label_is_true (test_review_consistency.FullProfileConsistencyReviewTest.test_binary_curve_cannot_pass_just_because_pr_label_is_true) ... ok
+test_uniform_thresholds_do_not_match_the_declared_wenchuan_full_profile (test_review_consistency.FullProfileConsistencyReviewTest.test_uniform_thresholds_do_not_match_the_declared_wenchuan_full_profile) ... ok
+test_crowding_is_invariant_when_comparison_keys_are_unchanged (test_review_consistency.PrecisionConsistencyReviewTest.test_crowding_is_invariant_when_comparison_keys_are_unchanged) ... ok
+test_equal_fronts_with_two_active_dimensions_have_zero_igd (test_review_consistency.PrecisionConsistencyReviewTest.test_equal_fronts_with_two_active_dimensions_have_zero_igd) ... ok
+test_equivalent_singletons_have_equal_hv (test_review_consistency.PrecisionConsistencyReviewTest.test_equivalent_singletons_have_equal_hv) ... ok
+test_original_representative_counterexample_is_fixed (test_review_consistency.PrecisionConsistencyReviewTest.test_original_representative_counterexample_is_fixed) ... ok
+test_reference_front_deduplicates_equivalent_keys (test_review_consistency.PrecisionConsistencyReviewTest.test_reference_front_deduplicates_equivalent_keys) ... ok
+test_all_evaluated_candidates_enter_the_archive (test_search_contract.ArchiveTest.test_all_evaluated_candidates_enter_the_archive)
+A candidate the scalar score rejects still enters the archive. ... ok
+test_archive_holds_clones_not_live_references (test_search_contract.ArchiveTest.test_archive_holds_clones_not_live_references) ... ok
+test_archive_hypervolume_never_regresses_with_more_evaluations (test_search_contract.ArchiveTest.test_archive_hypervolume_never_regresses_with_more_evaluations) ... ok
+test_budget_is_never_exceeded (test_search_contract.BudgetAndTerminationTest.test_budget_is_never_exceeded) ... ok
+test_closed_local_search_matches_plain_nsga (test_search_contract.BudgetAndTerminationTest.test_closed_local_search_matches_plain_nsga)
+Local search off must not consume randomness or change the archive. ... ok
+test_no_progress_terminates_without_faking_the_budget (test_search_contract.BudgetAndTerminationTest.test_no_progress_terminates_without_faking_the_budget)
+crossover=0 with mutation=0 rebuilds only evaluated clones. ... ok
+test_enumeration_covers_subspace_and_matches_evaluation (test_search_contract.EnumeratedSubproblemTest.test_enumeration_covers_subspace_and_matches_evaluation) ... ok
+test_search_front_is_never_dominated_by_an_enumerated_decision (test_search_contract.EnumeratedSubproblemTest.test_search_front_is_never_dominated_by_an_enumerated_decision)
+NSGA-II may not return a point an enumerated encoding dominates. ... ok
+test_evaluator_counts_real_calls_hits_and_local_search (test_search_contract.EvaluatorAccountingTest.test_evaluator_counts_real_calls_hits_and_local_search) ... ok
+test_unique_decisions_is_not_the_evaluation_count (test_search_contract.EvaluatorAccountingTest.test_unique_decisions_is_not_the_evaluation_count)
+Evaluating one decision twice is two calls but one decision. ... ok
+test_legacy_keeps_its_original_weighted_score (test_search_contract.ScoringTest.test_legacy_keeps_its_original_weighted_score) ... ok
+test_normalized_score_depends_only_on_the_candidate_itself (test_search_contract.ScoringTest.test_normalized_score_depends_only_on_the_candidate_itself)
+The scale is fixed by physical magnitude, not by the run's own front. ... ok
+test_normalized_score_is_fixed_and_instance_level (test_search_contract.ScoringTest.test_normalized_score_is_fixed_and_instance_level) ... ok
+test_uniform_and_adaptive_selection_modes (test_search_contract.SelectorTest.test_uniform_and_adaptive_selection_modes) ... ok
+test_completed_runs_survive_an_interrupted_write (test_solution_io.SolutionIOTest.test_completed_runs_survive_an_interrupted_write) ... ok
+test_corrupt_artifacts_fail_loudly (test_solution_io.SolutionIOTest.test_corrupt_artifacts_fail_loudly) ... ok
+test_dispatch_priority_must_be_the_complete_product (test_solution_io.SolutionIOTest.test_dispatch_priority_must_be_the_complete_product) ... ok
+test_evaluation_profile_changes_the_model_fingerprint (test_solution_io.SolutionIOTest.test_evaluation_profile_changes_the_model_fingerprint) ... ok
+test_identifier_types_are_never_coerced (test_solution_io.SolutionIOTest.test_identifier_types_are_never_coerced)
+3.0 and true are not 3: the encoding uses integers. ... ok
+test_infinite_display_fields_are_written_as_null (test_solution_io.SolutionIOTest.test_infinite_display_fields_are_written_as_null) ... ok
+test_instance_snapshot_round_trip_reproduces_fingerprints (test_solution_io.SolutionIOTest.test_instance_snapshot_round_trip_reproduces_fingerprints) ... ok
+test_mixing_code_revisions_in_one_directory_is_refused (test_solution_io.SolutionIOTest.test_mixing_code_revisions_in_one_directory_is_refused) ... ok
+test_only_matching_complete_runs_are_skipped (test_solution_io.SolutionIOTest.test_only_matching_complete_runs_are_skipped) ... ok
+test_operator_contributions_are_reported (test_solution_io.SolutionIOTest.test_operator_contributions_are_reported) ... ok
+test_physical_hash_is_shared_across_model_factors (test_solution_io.SolutionIOTest.test_physical_hash_is_shared_across_model_factors) ... ok
+test_repeated_evaluation_is_stateless (test_solution_io.SolutionIOTest.test_repeated_evaluation_is_stateless) ... ok
+test_saved_run_replays_to_identical_objectives (test_solution_io.SolutionIOTest.test_saved_run_replays_to_identical_objectives) ... ok
+
+----------------------------------------------------------------------
+Ran 202 tests in 34.875s
+
+OK
+Done. Model ablation outputs written to /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmpdcwcla26/repeat_1

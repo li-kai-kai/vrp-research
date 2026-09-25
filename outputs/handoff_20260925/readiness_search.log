@@ -1,0 +1,5 @@
+[1/2] WEN38/instance=1 algorithm=nsga2/solver=60000
+  front=18 evals=500 unmet=2.6443 min_sat=0.4349 runtime=8.849s stop=budget_exhausted
+[2/2] WEN38/instance=1 algorithm=nsga2/solver=60001
+  front=27 evals=500 unmet=2.6287 min_sat=0.4430 runtime=8.647s stop=budget_exhausted
+Done. 2 run records this invocation (0 resumed); 2 in outputs/handoff_20260925/readiness/wen38_search

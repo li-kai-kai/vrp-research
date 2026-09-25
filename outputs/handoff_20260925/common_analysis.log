@@ -1,0 +1,11 @@
+{
+  "execution_runs": 56,
+  "execution_fronts": 1127,
+  "execution_pairs": 42,
+  "prediction_bias": 1475,
+  "instance_summary": 21,
+  "group_summary": 12,
+  "replay_results": 1475,
+  "representative_periods": 504,
+  "representative_demand_periods": 5112
+}

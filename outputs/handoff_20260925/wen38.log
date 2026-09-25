@@ -1,0 +1,9 @@
+[1/8] WEN38/instance=1 solver=60000/model=PR1_HT1_EC1
+[2/8] WEN38/instance=1 solver=60000/model=PR0_HT1_EC1
+[3/8] WEN38/instance=1 solver=60000/model=PR1_HT0_EC1
+[4/8] WEN38/instance=1 solver=60000/model=PR1_HT1_EC0
+[5/8] WEN38/instance=1 solver=60001/model=PR1_HT1_EC1
+[6/8] WEN38/instance=1 solver=60001/model=PR0_HT1_EC1
+[7/8] WEN38/instance=1 solver=60001/model=PR1_HT0_EC1
+[8/8] WEN38/instance=1 solver=60001/model=PR1_HT1_EC0
+Done. Model ablation outputs written to outputs/handoff_20260925/pilot/wen38

@@ -1,0 +1,6 @@
+variant,n_representatives,n_changed_objectives,n_F1_lower,n_F1_higher,n_F2_lower,n_F2_higher,n_min_satisfaction_lower,n_min_satisfaction_higher,median_delta_F1,median_delta_F2_weighted_min,median_delta_min_pct
+baseline,15,0,0,0,0,0,0,0,0.0,0.0,-0.0
+no_ec,15,0,0,0,0,0,0,0,0.0,0.0,-0.0
+fleet_x2,15,15,15,0,15,0,11,0,-0.35791462227552717,-37222.0,-79.73068745568526
+supply_x1_5,15,15,15,0,0,15,0,15,-1.3603787691572364,37396.33333333334,20.2693125442595
+road_capacity_x2,15,0,0,0,0,0,0,0,0.0,0.0,-0.0

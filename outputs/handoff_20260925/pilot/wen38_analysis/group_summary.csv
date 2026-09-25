@@ -1,0 +1,4 @@
+case_id,scenario_family,zone,model_id,model,members,delta_hv,delta_igd,representative_delta_F1,representative_delta_F2,representative_delta_F3
+WEN38,benchmark,original,PR0_HT1_EC1,No-PR,1,0.4885068598990991,0.17109134190609704,0.08023119455770233,26374.583333333314,0.34769748791950406
+WEN38,benchmark,original,PR1_HT0_EC1,No-HT,1,0.07077223459368542,0.015263256970682482,-0.02266087467711775,12297.666666666657,0.049639521005246934
+WEN38,benchmark,original,PR1_HT1_EC0,No-EC,1,0.0,0.0,0.0,0.0,0.0

@@ -1,0 +1,24 @@
+{
+  "scope": "All 15 planning-selected Full representatives; fixed decisions, no reoptimization",
+  "variants": [
+    "baseline",
+    "no_ec",
+    "fleet_x2",
+    "supply_x1_5",
+    "road_capacity_x2"
+  ],
+  "hypothetical_resource_multipliers": {
+    "fleet": 2.0,
+    "supply": 1.5,
+    "road_capacity": 2.0
+  },
+  "precision": {
+    "label": "v2_service_resolution",
+    "resolutions": [
+      1e-08,
+      1e-06,
+      1e-08
+    ],
+    "exact": false
+  }
+}

@@ -1,0 +1,2 @@
+case_id,size_group,num_nodes,gamma,damage_ratio,eta_hours,capacity_scale,supply_ratio,source,fleet_capacity_ratio,instance_seed,instance,physical_instance_hash,edges,damaged_edges,suppliers,demands,repair_crews,vehicles,nominal_fleet_capacity_per_period,realized_fleet_capacity_ratio
+WEN38,case_study,38,0,0.3137254901960784,8,1.0,0.7973068745570517,wenchuan,,1,WEN38_seed1,cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7,51,16,3,35,3,370,3700.0,0.32778171509567683

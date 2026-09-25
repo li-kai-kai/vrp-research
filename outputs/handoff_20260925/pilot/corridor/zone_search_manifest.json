@@ -1,0 +1,133 @@
+{
+  "scope": "stage 2/3 mechanism diagnostic; scenarios are stress configurations whose zones are measured, not assumed",
+  "case_id": "S025",
+  "suite": "benchmark",
+  "instance_seeds": [
+    101,
+    102
+  ],
+  "zone_targets": [
+    {
+      "zone": "inactive",
+      "target_utilization": 0.2
+    },
+    {
+      "zone": "transition",
+      "target_utilization": 0.91
+    },
+    {
+      "zone": "binding",
+      "target_utilization": 0.99
+    }
+  ],
+  "bottleneck_axes": {
+    "fleet_multiplier": 2.0,
+    "supply_multiplier": 1.5,
+    "capacity_multiplier": 2.0
+  },
+  "zone_calibration": {
+    "method": "capacity_scale bisected per (scenario, instance seed) until the measured maximum edge utilization reaches the target",
+    "scale_bounds": [
+      1e-05,
+      0.5
+    ],
+    "utilization_tolerance": 0.01,
+    "zones_are_measured": true
+  },
+  "zone_landing": [
+    {
+      "zone": "inactive",
+      "instance_seed": 101,
+      "capacity_scale": 0.0025544869401794576,
+      "measured_utilization": 0.19851382163815334,
+      "in_target_band": true
+    },
+    {
+      "zone": "transition",
+      "instance_seed": 101,
+      "capacity_scale": 0.00022938722595187606,
+      "measured_utilization": 0.9029629416315711,
+      "in_target_band": true
+    },
+    {
+      "zone": "binding",
+      "instance_seed": 101,
+      "capacity_scale": 0.00014953487812212205,
+      "measured_utilization": 0.9893925126811962,
+      "in_target_band": true
+    },
+    {
+      "zone": "inactive",
+      "instance_seed": 102,
+      "capacity_scale": 0.007862340528634104,
+      "measured_utilization": 0.19466439615167863,
+      "in_target_band": true
+    },
+    {
+      "zone": "transition",
+      "instance_seed": 102,
+      "capacity_scale": 0.0016781874534517343,
+      "measured_utilization": 0.9120064437363202,
+      "in_target_band": true
+    },
+    {
+      "zone": "binding",
+      "instance_seed": 102,
+      "capacity_scale": 0.0005782474837716209,
+      "measured_utilization": 0.9742961207316502,
+      "in_target_band": false
+    }
+  ],
+  "scenario": "corridor",
+  "damage_strategy": "critical",
+  "node_role_strategy": "separated",
+  "network_strategy": {
+    "scenario": "corridor",
+    "damage_strategy": "corridor",
+    "node_role_strategy": "corridor"
+  },
+  "bridge_diagnostics": {
+    "graph_bridge_count": 1,
+    "damaged_bridge_count": 1,
+    "bridge_gated_demand_count": 4
+  },
+  "algorithm": "nsga2",
+  "budget": {
+    "max_evaluations": 500,
+    "pop_size": 32,
+    "crossover_probability": 0.9,
+    "mutation_probability": 0.2,
+    "alns_probability": 0.35,
+    "alns_iterations": 4
+  },
+  "solver_repeats": 2,
+  "solver_seed_start": 50000,
+  "execution_model": "PR1_HT1_EC1",
+  "decisions_file": "zone_decisions.json",
+  "decisions_are_complete": true,
+  "decision_encoding": "repair_order + team_assignment + dispatch_priority; rebuildable with solution_io.decision_from_json and validated per instance",
+  "replayed_decisions": 1272,
+  "distinct_decisions": 705,
+  "code": {
+    "git_sha": "7ee2cec074def4235d25ebb95d27434d1edcdf93",
+    "git_dirty": true,
+    "python": "3.12.11 (main, Sep  2 2025, 14:12:30) [Clang 20.1.4 ]",
+    "python_version": "3.12.11",
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "created_at_utc": "2026-09-24T17:49:35.726588+00:00"
+  },
+  "source_hashes": {
+    "scripts/reproduce/run_benchmark.py": "88eeb420247e8a675156422d3a3c0751d4ff5b6ff31bbb79134e33c8263e18a5",
+    "scripts/reproduce/benchmark_suite.py": "2477265e0943ae24100fbd4b093fbda5e12fc2e3f0ba38c3544d5886aba175e5",
+    "scripts/reproduce/benchmark_algorithms.py": "b5b686e955da0dbea46d78d0d94376af7aac791ec0dc56f3d9200c9b1743e034",
+    "scripts/reproduce/capacity_recovery.py": "5a016c1d7c0acab2e681b6d49c02a40e3d3e0d24c5d90b2b7cdf6b671a4fc817",
+    "scripts/reproduce/instance_generator.py": "f121ea469e6bc7f547abc1b241c0baa35792960e465bdca0ea90098307712021",
+    "scripts/reproduce/model.py": "ca01ca70a94751139e2e082c99e13d23b09bfcbf6088061e1a09dbdce43528e2",
+    "scripts/reproduce/solution_io.py": "4f4bcae51716fee0f066fb48cc9c8bdc137822682f1c0733f2ebf66684e710c1",
+    "scripts/reproduce/objective_precision.py": "2db2a9b81c4e6a5d099a686a51bb312420cabc9d30dea8cb73ad8bd44522c84f",
+    "pyproject.toml": "27788f5f0293c62cc6e6cde8b1de425210ad4ba56523795aeecd5688aa979bdb",
+    "uv.lock": "5b0cf64796c740d6c261a36e44622a83bb92c9e1886ca5a0fc233c56911fac5c",
+    "scripts/reproduce/mechanism_applicability.py": "7f90ab192cfe7174035c50d74ba4c5364ee593e94bc3b2dfe6050a422563e1bc",
+    "scripts/reproduce/mechanism_zone_search.py": "4e0fc5de922a09daaa770e893b733d59f0f623a5b964139eb1db6eb79fa36b12"
+  }
+}

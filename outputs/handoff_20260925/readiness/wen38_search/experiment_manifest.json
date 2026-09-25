@@ -1,0 +1,115 @@
+{
+  "created_at_utc": "2026-09-24T17:42:42.344787+00:00",
+  "model_version": "v2",
+  "evaluation": {
+    "model_version": "v2",
+    "fair_share_cap": false,
+    "dispatch_timing": "period_start",
+    "enforce_within_period_arrival": true,
+    "fleet_semantics": "exogenous_period_trip_budget"
+  },
+  "evaluation_fingerprint": "a94798a40d5036ec",
+  "source_fingerprint": "5818a0f9a415dbede5356352feb3efe1df486c16a95a43e61626a6713c8fe8dc",
+  "planned_runs": 2,
+  "runs_in_directory": 2,
+  "runs_this_invocation": 2,
+  "resumed_runs": 0,
+  "git_sha": "7ee2cec074def4235d25ebb95d27434d1edcdf93",
+  "git_dirty": true,
+  "source_files_sha256": {
+    "scripts/reproduce/run_benchmark.py": "88eeb420247e8a675156422d3a3c0751d4ff5b6ff31bbb79134e33c8263e18a5",
+    "scripts/reproduce/benchmark_suite.py": "2477265e0943ae24100fbd4b093fbda5e12fc2e3f0ba38c3544d5886aba175e5",
+    "scripts/reproduce/benchmark_algorithms.py": "b5b686e955da0dbea46d78d0d94376af7aac791ec0dc56f3d9200c9b1743e034",
+    "scripts/reproduce/capacity_recovery.py": "5a016c1d7c0acab2e681b6d49c02a40e3d3e0d24c5d90b2b7cdf6b671a4fc817",
+    "scripts/reproduce/instance_generator.py": "f121ea469e6bc7f547abc1b241c0baa35792960e465bdca0ea90098307712021",
+    "scripts/reproduce/model.py": "ca01ca70a94751139e2e082c99e13d23b09bfcbf6088061e1a09dbdce43528e2",
+    "scripts/reproduce/solution_io.py": "4f4bcae51716fee0f066fb48cc9c8bdc137822682f1c0733f2ebf66684e710c1",
+    "scripts/reproduce/objective_precision.py": "2db2a9b81c4e6a5d099a686a51bb312420cabc9d30dea8cb73ad8bd44522c84f",
+    "pyproject.toml": "27788f5f0293c62cc6e6cde8b1de425210ad4ba56523795aeecd5688aa979bdb",
+    "uv.lock": "5b0cf64796c740d6c261a36e44622a83bb92c9e1886ca5a0fc233c56911fac5c"
+  },
+  "python": "3.12.11 (main, Sep  2 2025, 14:12:30) [Clang 20.1.4 ]",
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "suite": "benchmark",
+  "cases": [
+    {
+      "case_id": "WEN38",
+      "size_group": "case_study",
+      "num_nodes": 38,
+      "gamma": 0,
+      "damage_ratio": 0.3137254901960784,
+      "eta_hours": 8,
+      "capacity_scale": 1.0,
+      "supply_ratio": 0.7973068745570517,
+      "source": "wenchuan",
+      "fleet_capacity_ratio": null
+    }
+  ],
+  "instance_seeds": [
+    1
+  ],
+  "solver_seed_start": 50000,
+  "solver_repeats_stochastic": 2,
+  "deterministic_repeats": 1,
+  "algorithms": [
+    "nsga2"
+  ],
+  "budget": {
+    "max_evaluations": 500,
+    "pop_size": 32,
+    "crossover_probability": 0.9,
+    "mutation_probability": 0.2,
+    "alns_probability": 0.35,
+    "alns_iterations": 4
+  },
+  "objectives": [
+    "min_unmet_area",
+    "min_time_cost",
+    "min_neg_min_satisfaction"
+  ],
+  "pooled_quality": [
+    {
+      "case_id": "WEN38",
+      "instance_seed": 1,
+      "size": 23,
+      "degenerate_dimensions": [],
+      "effective_dimensions": 3,
+      "raw_ranges": [
+        0.40447621636820674,
+        82731.66666666667,
+        0.4430379746845574
+      ],
+      "key_spans": [
+        40447622,
+        82731666666,
+        44303797
+      ],
+      "ideal": [
+        2.460869941929812,
+        81636.66666666667,
+        -0.4430379746845574
+      ],
+      "nadir": [
+        2.865346158298019,
+        164368.33333333334,
+        -0.0
+      ],
+      "coordinate_space": "quantized comparison keys",
+      "precision": {
+        "label": "v2_service_resolution",
+        "resolutions": [
+          1e-08,
+          1e-06,
+          1e-08
+        ],
+        "exact": false
+      },
+      "precision_fingerprint": "ec44b6c6bd6ced4c"
+    }
+  ],
+  "representative_rule": "lexicographic min of (F3, F1, F2), applied before any replay and recorded per solution as representative_selected_before_replay",
+  "quality_indicators": {
+    "hypervolume": "exact normalized 3D HV; pooled reference point (1.1, 1.1, 1.1)",
+    "igd": "normalized Euclidean IGD to pooled non-dominated front per instance"
+  }
+}

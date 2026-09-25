@@ -1,0 +1,94 @@
+{
+  "environment": {
+    "git_sha": "7ee2cec074def4235d25ebb95d27434d1edcdf93",
+    "git_dirty": true,
+    "python": "3.12.11 (main, Sep  2 2025, 14:12:30) [Clang 20.1.4 ]",
+    "python_version": "3.12.11",
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "created_at_utc": "2026-09-24T17:46:15.497191+00:00"
+  },
+  "input_record_hashes": {
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38/experiment_contract.json": "4ecd8d21371cf02e99350a5c6ad8777cbab72b3cb121cb47a46c1961e9f44222",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38/runs/WEN38_i1_nsga2_s60000_r0_PR0_HT1_EC1_b9f998d6cc5d.json": "e9956137d2de7058139c4168f4c81886952c740dac38d68939a82327e8a4963f",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT0_EC1_ed89f90c2cee.json": "9adf47f778f5533bb24251b7847e0d425dec4948ad3d94b2208167c55f29d09c",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT1_EC0_233634bab1fc.json": "2dfa17bfd72b7ab616f3877fad0e0b872c9acc8d6661d476d67942fdc09e5cd2",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT1_EC1_ac79a73486e1.json": "44e24b83616b8d9adc5f38cd85fa0f29579830347eaef910c0555da46a2ece10",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38/runs/WEN38_i1_nsga2_s60001_r1_PR0_HT1_EC1_2aca52bb3fb1.json": "efb5be01c541e9da823424092a3589c6089f9e7f250263b46dd9fa66009e096c",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT0_EC1_810cc032fd7d.json": "52d4df97fb434ee60c6a54bf01de8147f756fc3874e6860ac749e684364524e9",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT1_EC0_f2ee064e9de3.json": "b7eed5313c60724bbfc1273b7da9f938f0c26c134c2a33e6db978461d56ec18a",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT1_EC1_ceb9ada93d38.json": "0ecd2b76dee90fa28ca65c5c08d19f013da49d36f6294047505d5290e0cf7287"
+  },
+  "source_hashes": {
+    "scripts/reproduce/model_ablation_analysis.py": "4844f24796f7da72171e5e6d50226d65185b334c122d6bec0bffcc0c79d3ae07",
+    "scripts/reproduce/dynamic_interaction_experiments.py": "f5283eac1a33163a322b0af63a3e83ceb2385318b01dc723797d4e2cd0e09634",
+    "scripts/reproduce/common_execution_analysis.py": "a2db88a0cd62ae7ad97c51d09193b03bc47248f7c048cb71708623ed3201d948",
+    "scripts/reproduce/run_benchmark.py": "88eeb420247e8a675156422d3a3c0751d4ff5b6ff31bbb79134e33c8263e18a5",
+    "scripts/reproduce/run_model_ablation.py": "c901ab05f128e0e9c68f779ec1d0726a125895d18551c9789fdcb713061c7e64",
+    "scripts/reproduce/service_diagnostics.py": "522da541b5e51e983e183ee1640357eaf3e7c1d1ede84b1d51cb61fe357af622",
+    "scripts/reproduce/plot_wen38_key_corridors.py": "1e0fee25cd2d0044462a00826c1ed899514662ee4f76811bcbb02af70d3f2af0",
+    "scripts/reproduce/replay_solutions.py": "dc6db301687c1f918d4311fd8f928a46bcf1092b5d2168db6e0085343cded6af",
+    "scripts/reproduce/objective_precision.py": "2db2a9b81c4e6a5d099a686a51bb312420cabc9d30dea8cb73ad8bd44522c84f",
+    "scripts/reproduce/solution_io.py": "4f4bcae51716fee0f066fb48cc9c8bdc137822682f1c0733f2ebf66684e710c1",
+    "scripts/reproduce/research_readiness.py": "b346a233b52e7c859f64d8fc34bc56fe0dfef2230b26606b4a7180efe5137073",
+    "scripts/reproduce/benchmark_suite.py": "2477265e0943ae24100fbd4b093fbda5e12fc2e3f0ba38c3544d5886aba175e5",
+    "scripts/reproduce/__init__.py": "76c6346522bdda6b67bfb95472dffd5a7d88faa0c6371b8631d30681789e26d9",
+    "scripts/reproduce/capacity_recovery.py": "5a016c1d7c0acab2e681b6d49c02a40e3d3e0d24c5d90b2b7cdf6b671a4fc817",
+    "scripts/reproduce/summarize_replay.py": "1df5de6d8749cf982cd4d01a051bf6fc9c83d5967b51093e3250cdb779a72e75",
+    "scripts/reproduce/model.py": "ca01ca70a94751139e2e082c99e13d23b09bfcbf6088061e1a09dbdce43528e2",
+    "scripts/reproduce/build_mechanism_audit.py": "556a654bc0b643f81b57e3801f26f8b81ff49fde8e88a48c58910ee0854e4d1a",
+    "scripts/reproduce/benchmark_algorithms.py": "b5b686e955da0dbea46d78d0d94376af7aac791ec0dc56f3d9200c9b1743e034",
+    "scripts/reproduce/ht_natural_corridor.py": "f59a4c48f8049eb6692122d72ec3003e9b8aad6e2797ef7ab6c15f14a9d4cf47",
+    "scripts/reproduce/mechanism_applicability.py": "7f90ab192cfe7174035c50d74ba4c5364ee593e94bc3b2dfe6050a422563e1bc",
+    "scripts/reproduce/instance_generator.py": "f121ea469e6bc7f547abc1b241c0baa35792960e465bdca0ea90098307712021",
+    "scripts/reproduce/dynamic_interaction_grid.py": "107b301f9cb5e5229ff080e1eb3d3c367ceb4b18a7df209ab04f8348c91a31da",
+    "scripts/reproduce/compare_representatives.py": "2df6a9bd55a33798a0b011280ed7ae60158199e71e1a3875333ba5bb9b0169a2",
+    "scripts/reproduce/stage_visualization.py": "4efcd79bc1c7294e531a2df4b4a569fc8e8d45d7a787a0663d65f80f0c98fb65",
+    "scripts/reproduce/mechanism_zone_search.py": "4e0fc5de922a09daaa770e893b733d59f0f623a5b964139eb1db6eb79fa36b12",
+    "scripts/reproduce/plot_pilot_diagnostics.py": "220954447b58d3b91997f4f35d51e6343ecfae143c1827014d873d6f5af72073"
+  },
+  "counts": {
+    "execution_runs": 8,
+    "execution_fronts": 142,
+    "execution_pairs": 6,
+    "prediction_bias": 203,
+    "instance_summary": 3,
+    "group_summary": 3,
+    "replay_results": 203,
+    "representative_periods": 72,
+    "representative_demand_periods": 2520
+  },
+  "self_replay_count": 203,
+  "self_replay_max_abs_error": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "full_identity_count": 45,
+  "full_identity_max_abs_error": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "failures": 0,
+  "search_evaluations": 4000,
+  "budgets": [
+    {
+      "alns_iterations": 4,
+      "alns_probability": 0.35,
+      "crossover_probability": 0.9,
+      "max_evaluations": 500,
+      "mutation_probability": 0.2,
+      "pop_size": 32
+    }
+  ],
+  "precision": {
+    "label": "v2_service_resolution",
+    "resolutions": [
+      1e-08,
+      1e-06,
+      1e-08
+    ],
+    "exact": false
+  },
+  "analysis": "Descriptive only. Average paired repeats within each instance, then weight instances equally. Per-physical-instance pooled reference; normalized HV is not absolute benefit across configurations. Representatives fixed before replay. Prediction bias is not decision benefit."
+}

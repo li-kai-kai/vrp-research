@@ -1,0 +1,82 @@
+{
+  "created_at_utc": "2026-09-25T08:15:45.238583+00:00",
+  "scope": "WEN38 report reproduction: eight verified searches reused; 52 additional searches",
+  "case_id": "WEN38",
+  "instance_seed": 1,
+  "model_version": "v2",
+  "algorithm": "nsga2",
+  "model_ids": [
+    "PR1_HT1_EC1",
+    "PR0_HT1_EC1",
+    "PR1_HT0_EC1",
+    "PR1_HT1_EC0"
+  ],
+  "initial_budgets": [
+    500,
+    2000,
+    5000
+  ],
+  "pop_size": 32,
+  "solver_seeds": [
+    60000,
+    60001,
+    60002,
+    60003,
+    60004
+  ],
+  "solver_repeats": 5,
+  "solver_repeat_start": 0,
+  "source_fingerprint": "f55a7149bd59620bd631830851313445335557f646fc7e4e21160e48496a419e",
+  "initial_planned_runs": 60,
+  "initial_planned_evaluations": 150000,
+  "reused_runs": [
+    {
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR0_HT1_EC1:b9f998d6cc5d",
+      "record_sha256": "e9956137d2de7058139c4168f4c81886952c740dac38d68939a82327e8a4963f",
+      "source_root": "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT0_EC1:ed89f90c2cee",
+      "record_sha256": "9adf47f778f5533bb24251b7847e0d425dec4948ad3d94b2208167c55f29d09c",
+      "source_root": "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC0:233634bab1fc",
+      "record_sha256": "2dfa17bfd72b7ab616f3877fad0e0b872c9acc8d6661d476d67942fdc09e5cd2",
+      "source_root": "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC1:ac79a73486e1",
+      "record_sha256": "44e24b83616b8d9adc5f38cd85fa0f29579830347eaef910c0555da46a2ece10",
+      "source_root": "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR0_HT1_EC1:2aca52bb3fb1",
+      "record_sha256": "efb5be01c541e9da823424092a3589c6089f9e7f250263b46dd9fa66009e096c",
+      "source_root": "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT0_EC1:810cc032fd7d",
+      "record_sha256": "52d4df97fb434ee60c6a54bf01de8147f756fc3874e6860ac749e684364524e9",
+      "source_root": "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC0:f2ee064e9de3",
+      "record_sha256": "b7eed5313c60724bbfc1273b7da9f938f0c26c134c2a33e6db978461d56ec18a",
+      "source_root": "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC1:ceb9ada93d38",
+      "record_sha256": "0ecd2b76dee90fa28ca65c5c08d19f013da49d36f6294047505d5290e0cf7287",
+      "source_root": "/Users/kaikai/Documents/projects/vrp-research/outputs/handoff_20260925/pilot/wen38"
+    }
+  ],
+  "runtime_scope": "Eight 500-budget runs reused from the verified pilot. New searches use up to four concurrent subprocesses, each with a disjoint RunStore. Runtime is descriptive, not a solver-speed benchmark.",
+  "plateau_screen": {
+    "hv_relative_change_tolerance": 0.01,
+    "igd_absolute_change_tolerance": 0.01,
+    "minimum_small_change_pairs": 4,
+    "pairs_per_model": 5,
+    "confirmation_budget": 10000
+  }
+}

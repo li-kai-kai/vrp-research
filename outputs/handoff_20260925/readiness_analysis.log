@@ -1,0 +1,26 @@
+{
+  "historical_S025": {
+    "decisions": 86,
+    "F3_keys": 1,
+    "min_satisfaction_range": [
+      0.8999999999994448,
+      0.8999999999999876
+    ]
+  },
+  "new_WEN38_search": {
+    "decisions": 45,
+    "F3_keys": 14,
+    "min_satisfaction_range": [
+      0.0,
+      0.4430379746845574
+    ]
+  },
+  "fixed_WEN38": {
+    "decisions": 20,
+    "F3_keys": 1,
+    "min_satisfaction_range": [
+      0.0,
+      0.0
+    ]
+  }
+}

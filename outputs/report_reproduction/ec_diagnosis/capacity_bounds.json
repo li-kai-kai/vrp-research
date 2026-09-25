@@ -1,0 +1,7 @@
+{
+  "fleet_single_edge_upper_pcu": 555.0,
+  "open_edge_lower_pcu": 960.0,
+  "baseline_capacity_scale": 1.0,
+  "sufficient_nonbinding_scale": 0.578125,
+  "conditions": "8 h periods; global shared trip quotas; outbound relief only; simple routes; no background traffic; default PR/HT."
+}

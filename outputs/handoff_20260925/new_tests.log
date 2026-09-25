@@ -1,0 +1,62 @@
+[1/4] S025/instance=101 solver=1060000/model=PR1_HT1_EC1
+[2/4] S025/instance=101 solver=1060000/model=PR0_HT1_EC1
+[3/4] S025/instance=101 solver=1060000/model=PR1_HT0_EC1
+[4/4] S025/instance=101 solver=1060000/model=PR1_HT1_EC0
+...................Done. Model ablation outputs written to /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmpo_s0waxz/input
+Solve S025@corridor@inactive:i101:nsga2:s1060000:r0:PR1_HT1_EC1:409793556268
+Solve S025@corridor@inactive:i101:nsga2:s1060000:r0:PR0_HT1_EC1:344493ecca1d
+Solve S025@corridor@inactive:i101:nsga2:s1060000:r0:PR1_HT0_EC1:050e69c6ada4
+Solve S025@corridor@inactive:i101:nsga2:s1060000:r0:PR1_HT1_EC0:87943fa060a0
+Solve S025@corridor@transition:i101:nsga2:s1060000:r0:PR1_HT1_EC1:b9ba6e8bf2d6
+Solve S025@corridor@transition:i101:nsga2:s1060000:r0:PR0_HT1_EC1:87778283441e
+Solve S025@corridor@transition:i101:nsga2:s1060000:r0:PR1_HT0_EC1:667390c1854b
+Solve S025@corridor@transition:i101:nsga2:s1060000:r0:PR1_HT1_EC0:49e32f290af8
+Solve S025@corridor@binding:i101:nsga2:s1060000:r0:PR1_HT1_EC1:e3fcc7a4ad3d
+Solve S025@corridor@binding:i101:nsga2:s1060000:r0:PR0_HT1_EC1:7fe770eec266
+Solve S025@corridor@binding:i101:nsga2:s1060000:r0:PR1_HT0_EC1:9f00d5697451
+Solve S025@corridor@binding:i101:nsga2:s1060000:r0:PR1_HT1_EC0:2ebf4ee19444
+.Wrote 3 zone rows, 12 runs, 12 replayed decisions (1 distinct, stored in full) to /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmpuzygftum
+Solve S025@corridor@inactive:i101:nsga2:s1060000:r0:PR1_HT1_EC1:409793556268
+Solve S025@corridor@inactive:i101:nsga2:s1060000:r0:PR0_HT1_EC1:344493ecca1d
+Solve S025@corridor@inactive:i101:nsga2:s1060000:r0:PR1_HT0_EC1:050e69c6ada4
+Solve S025@corridor@inactive:i101:nsga2:s1060000:r0:PR1_HT1_EC0:87943fa060a0
+Solve S025@corridor@transition:i101:nsga2:s1060000:r0:PR1_HT1_EC1:b9ba6e8bf2d6
+Solve S025@corridor@transition:i101:nsga2:s1060000:r0:PR0_HT1_EC1:87778283441e
+Solve S025@corridor@transition:i101:nsga2:s1060000:r0:PR1_HT0_EC1:667390c1854b
+Solve S025@corridor@transition:i101:nsga2:s1060000:r0:PR1_HT1_EC0:49e32f290af8
+Solve S025@corridor@binding:i101:nsga2:s1060000:r0:PR1_HT1_EC1:e3fcc7a4ad3d
+Solve S025@corridor@binding:i101:nsga2:s1060000:r0:PR0_HT1_EC1:7fe770eec266
+Solve S025@corridor@binding:i101:nsga2:s1060000:r0:PR1_HT0_EC1:9f00d5697451
+Solve S025@corridor@binding:i101:nsga2:s1060000:r0:PR1_HT1_EC0:2ebf4ee19444
+.Wrote 3 zone rows, 12 runs, 12 replayed decisions (1 distinct, stored in full) to /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmp72pwuu9_
+Solve S025@corridor@inactive:i101:nsga2:s1060000:r0:PR1_HT1_EC1:409793556268
+Solve S025@corridor@inactive:i101:nsga2:s1060000:r0:PR0_HT1_EC1:344493ecca1d
+Solve S025@corridor@inactive:i101:nsga2:s1060000:r0:PR1_HT0_EC1:050e69c6ada4
+Solve S025@corridor@inactive:i101:nsga2:s1060000:r0:PR1_HT1_EC0:87943fa060a0
+Solve S025@corridor@transition:i101:nsga2:s1060000:r0:PR1_HT1_EC1:b9ba6e8bf2d6
+Solve S025@corridor@transition:i101:nsga2:s1060000:r0:PR0_HT1_EC1:87778283441e
+Solve S025@corridor@transition:i101:nsga2:s1060000:r0:PR1_HT0_EC1:667390c1854b
+Solve S025@corridor@transition:i101:nsga2:s1060000:r0:PR1_HT1_EC0:49e32f290af8
+Solve S025@corridor@binding:i101:nsga2:s1060000:r0:PR1_HT1_EC1:e3fcc7a4ad3d
+Solve S025@corridor@binding:i101:nsga2:s1060000:r0:PR0_HT1_EC1:7fe770eec266
+Solve S025@corridor@binding:i101:nsga2:s1060000:r0:PR1_HT0_EC1:9f00d5697451
+Solve S025@corridor@binding:i101:nsga2:s1060000:r0:PR1_HT1_EC0:2ebf4ee19444
+Wrote 3 zone rows, 12 runs, 12 replayed decisions (1 distinct, stored in full) to /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmpd72grf4c
+Resume S025@corridor@inactive:i101:nsga2:s1060000:r0:PR1_HT1_EC1:409793556268
+Resume S025@corridor@inactive:i101:nsga2:s1060000:r0:PR0_HT1_EC1:344493ecca1d
+Resume S025@corridor@inactive:i101:nsga2:s1060000:r0:PR1_HT0_EC1:050e69c6ada4
+Resume S025@corridor@inactive:i101:nsga2:s1060000:r0:PR1_HT1_EC0:87943fa060a0
+Resume S025@corridor@transition:i101:nsga2:s1060000:r0:PR1_HT1_EC1:b9ba6e8bf2d6
+Resume S025@corridor@transition:i101:nsga2:s1060000:r0:PR0_HT1_EC1:87778283441e
+Resume S025@corridor@transition:i101:nsga2:s1060000:r0:PR1_HT0_EC1:667390c1854b
+Resume S025@corridor@transition:i101:nsga2:s1060000:r0:PR1_HT1_EC0:49e32f290af8
+Resume S025@corridor@binding:i101:nsga2:s1060000:r0:PR1_HT1_EC1:e3fcc7a4ad3d
+Resume S025@corridor@binding:i101:nsga2:s1060000:r0:PR0_HT1_EC1:7fe770eec266
+Resume S025@corridor@binding:i101:nsga2:s1060000:r0:PR1_HT0_EC1:9f00d5697451
+Resume S025@corridor@binding:i101:nsga2:s1060000:r0:PR1_HT1_EC0:2ebf4ee19444
+.
+----------------------------------------------------------------------
+Ran 22 tests in 2.428s
+
+OK
+Wrote 3 zone rows, 12 runs, 12 replayed decisions (1 distinct, stored in full) to /var/folders/fm/x29gzk3s7dn3lyrq9sb9nv980000gn/T/tmpd72grf4c

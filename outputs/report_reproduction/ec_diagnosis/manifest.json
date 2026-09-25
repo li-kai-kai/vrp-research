@@ -1,0 +1,86 @@
+{
+  "evaluations": 75,
+  "representatives": 15,
+  "saved_full_entries": 694,
+  "max_abs_self_replay_error": 0.0,
+  "input_roots": [
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/reused_pilot",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60000",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60001",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60002",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60003",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_5000/seed_60004",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60000",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60001",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60002",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60003",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_2000/seed_60004",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60002",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60003",
+    "/Users/kaikai/Documents/projects/vrp-research/outputs/report_reproduction/budget_500/seed_60004"
+  ],
+  "source_fingerprint": "f55a7149bd59620bd631830851313445335557f646fc7e4e21160e48496a419e",
+  "script_sha256": "87ddc3e828e5ef23893fb20b0e655f77ed765c549a1cab0d011271470b4f5bb6",
+  "input_records": [
+    {
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC1:ac79a73486e1",
+      "record_sha256": "44e24b83616b8d9adc5f38cd85fa0f29579830347eaef910c0555da46a2ece10"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC1:ceb9ada93d38",
+      "record_sha256": "0ecd2b76dee90fa28ca65c5c08d19f013da49d36f6294047505d5290e0cf7287"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC1:ee51f2059906",
+      "record_sha256": "711d2c6301e45f43a3fd9c94a00ad7bbd5077fabd1b72faa90edfcf18fdf1fb4"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC1:23ae88380adf",
+      "record_sha256": "552f3704d3d22ff632d6424a0e64a970f95f678ac093beb41ade434b5eea0f28"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT1_EC1:fcbd0dabd7d4",
+      "record_sha256": "c07ba5056d90683c9b20c279698bde36df704bb694d900386ffeb70fd999a721"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT1_EC1:e6fe7a604964",
+      "record_sha256": "6c310589c1357a7d88855d555d181c3eed5feaa96bd8ff636ad8674dab64d74c"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT1_EC1:412ad82c5ece",
+      "record_sha256": "b61f4d2f1878cb56bddd7c284423d6ab872a5a5397821ddf1f831b1e1b57efac"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC1:ed30a9d4a9ff",
+      "record_sha256": "2c97f8d0484f1dabf592fb0347068521ccca9db0f47d8892c0a2221678b29384"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC1:742a07617751",
+      "record_sha256": "e746a202693dfbb1ca9d8b899ecc27954660fd8e14d9b63d7f30d96adafc385a"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT1_EC1:073244d3b9aa",
+      "record_sha256": "2d6ce1b7ae3cf43bcba7e2460ef1f436200e6385a059969cbac653fa0a44b2a7"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT1_EC1:af1912c5b598",
+      "record_sha256": "7fc411f85a7c61214f82d819e3684b962b9ac20ad6d4922a8605dbf0519d9655"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT1_EC1:a8804fc163b2",
+      "record_sha256": "63510bd74f548cd5b44e077792c2d1df3f3c145f83c0451df88463c0a67d9ecd"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT1_EC1:6bf81821659d",
+      "record_sha256": "cebedafd979a0bfb91b6f75eadd6d7de505446b0a456bf58700883faf25a920c"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT1_EC1:0c451e3d1f0d",
+      "record_sha256": "55db9d923c83cf66fb4ed367feff4db402ba087b8a67fe80c57e573adf573485"
+    },
+    {
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT1_EC1:f55fe0988612",
+      "record_sha256": "b79f82a921358effb4b53f69628eb4cd175dad15e45a833ff18da0cea4e013fa"
+    }
+  ]
+}
