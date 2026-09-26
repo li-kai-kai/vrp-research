@@ -89,3 +89,6 @@ figures/
 !outputs/handoff_20260925/pilot/figures/
 !outputs/handoff_20260925/pilot/figures/*.pdf
 !outputs/handoff_20260925/pilot/figures/*.png
+
+# Claude Code worktrees are per-session working directories, not repo content
+.claude/worktrees/

@@ -25,8 +25,11 @@ DEFAULT_RESULTS = REPO / "exp" / "full_budget" / "results.csv"
 # Scale ladder, smallest to largest; the RQ4 table reports one row per case.
 SCALE_ORDER = ["S025", "WEN38", "S050", "M100"]
 NODE_COUNT = {"S025": 25, "WEN38": 38, "S050": 50, "M100": 100}
-RQ3_SEEDS = (11, 22, 33)
-RQ4_SEEDS = (11, 22)
+
+
+def seeds_of(rows: list[dict], case: str) -> tuple[int, ...]:
+    """Seeds actually present for a case, so the tables follow the data."""
+    return tuple(sorted({r["solver_seed"] for r in rows if r["case_id"] == case}))
 
 
 def load(path: Path) -> list[dict]:
@@ -56,7 +59,7 @@ def fmt(x: float, digits: int = 1) -> str:
 
 def rq3_table(rows: list[dict]) -> str:
     """WEN38 full matrix, W in {0,1,2,4,8}, seeds 11/22/33."""
-    cells = [r for r in rows if r["case_id"] == "WEN38" and r["solver_seed"] in RQ3_SEEDS]
+    cells = [r for r in rows if r["case_id"] == "WEN38"]
     if not cells:
         raise SystemExit("no WEN38 RQ3 rows found")
     budgets = {r["max_evaluations"] for r in cells}
@@ -97,7 +100,8 @@ def rq3_table(rows: list[dict]) -> str:
     evals = {r["evaluations"] for r in cells}
     hits = sorted({r["cache_hits"] for r in cells})
     notes = [
-        f"% budget={budget} pop=32 seeds={list(RQ3_SEEDS)} nodes={NODE_COUNT['WEN38']}",
+        f"% budget={budget} pop=32 seeds={list(seeds_of(rows, 'WEN38'))} "
+        f"nodes={NODE_COUNT['WEN38']}",
         f"% non-identical fronts: {len(bad)}/{len(cells)}",
         f"% evaluations consumed: {sorted(evals)}  cache hits: {hits}",
     ]
@@ -125,7 +129,7 @@ def rq4_table(rows: list[dict]) -> str:
     notes = []
     speedup_rows = []
     for case in SCALE_ORDER:
-        cells = [r for r in rows if r["case_id"] == case and r["solver_seed"] in RQ4_SEEDS]
+        cells = [r for r in rows if r["case_id"] == case]
         if not cells:
             continue
         by_w: dict[int, list[dict]] = {}
@@ -135,8 +139,8 @@ def rq4_table(rows: list[dict]) -> str:
 
         times, speeds = [], []
         for w in (1, 2, 4, 8):
-            t = mean_sd([r["runtime_seconds"] for r in by_w[w]])[0]
-            times.append(fmt(t))
+            t, sd = mean_sd([r["runtime_seconds"] for r in by_w[w]])
+            times.append(f"{fmt(t)}$\\pm${fmt(sd)}")
             speeds.append(f"{base / t:.2f}$\\times$")
         lines.append(f"{case} ({NODE_COUNT[case]}) & " + " & ".join(times) + " \\\\")
         speedup_rows.append(
@@ -172,7 +176,7 @@ def rq4_speedup_summary(rows: list[dict]) -> str:
     """
     out = []
     for case in SCALE_ORDER:
-        cells = [r for r in rows if r["case_id"] == case and r["solver_seed"] in RQ4_SEEDS]
+        cells = [r for r in rows if r["case_id"] == case]
         if not cells:
             continue
         by_w: dict[int, list[dict]] = {}

@@ -254,24 +254,50 @@ def validate_fidelity() -> None:
     )
 
 
-def run_matrix() -> list[dict]:
+# Eight solver seeds per instance. Eleven/twenty-two/thirty-three reproduce
+# the earlier 39-run matrix bit-for-bit, so a resumed run reuses them.
+SEEDS = (11, 22, 33, 44, 55, 66, 77, 88)
+
+
+def save_raw(results: list[dict]) -> None:
+    """Write raw results after every run so a crash cannot lose the sweep."""
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    with open(OUT_DIR / "results.json", "w") as f:
+        json.dump(results, f, indent=1)
+
+
+def run_matrix(resume: bool = True) -> list[dict]:
     results: list[dict] = []
+    if resume and (OUT_DIR / "results.json").exists():
+        with open(OUT_DIR / "results.json") as f:
+            results = json.load(f)
+        print(f"[resume] reusing {len(results)} completed runs", flush=True)
+    done = {(r["case_id"], r["solver_seed"], r["workers"]) for r in results}
     # Union of configs; RQ3/RQ4 tables slice from this.
     # (case_id, max_evaluations, seeds, workers)
     configs = [
-        ("WEN38", 1600, (11, 22, 33), (0, 1, 2, 4, 8)),  # RQ3 full matrix
-        ("S025", 1600, (11, 22), (1, 2, 4, 8)),
-        ("S050", 800, (11, 22), (1, 2, 4, 8)),
-        ("M100", 400, (11, 22), (1, 2, 4, 8)),
+        ("WEN38", 1600, SEEDS, (0, 1, 2, 4, 8)),  # RQ3 full matrix
+        ("S025", 1600, SEEDS, (1, 2, 4, 8)),
+        ("S050", 800, SEEDS, (1, 2, 4, 8)),
+        ("M100", 400, SEEDS, (1, 2, 4, 8)),
     ]
+    total = sum(len(s) * len(w) for _, _, s, w in configs)
     for case_id, max_evals, seeds, workers_list in configs:
         tag = "RQ3" if case_id == "WEN38" else "RQ4"
         for seed in seeds:
             for workers in workers_list:
-                print(f"[{tag}] {case_id} seed={seed} workers={workers} ...", flush=True)
+                if (case_id, seed, workers) in done:
+                    continue
+                print(
+                    f"[{tag}] {case_id} seed={seed} workers={workers} "
+                    f"({len(results) + 1}/{total}) ...",
+                    flush=True,
+                )
                 results.append(
                     _solve_parallel_nsga2(case_id, 1, seed, max_evals, 32, workers)
                 )
+                done.add((case_id, seed, workers))
+                save_raw(results)
                 print(
                     f"      -> {results[-1]['runtime_seconds']:.1f}s "
                     f"evals={results[-1]['evaluations']} "
@@ -351,16 +377,21 @@ def save(results: list[dict]) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--validate-only", action="store_true")
+    parser.add_argument(
+        "--no-resume",
+        action="store_true",
+        help="ignore an existing results.json and re-run the whole matrix",
+    )
     args = parser.parse_args()
     validate_fidelity()
     if args.validate_only:
         return
-    results = run_matrix()
+    results = run_matrix(resume=not args.no_resume)
     results = analyze(results)
     save(results)
     # Console summary tables for the paper.
     print("\n=== RQ3 (WEN38, budget=1600, pop=32) ===")
-    rq3 = [r for r in results if r["case_id"] == "WEN38" and r["solver_seed"] in (11, 22, 33) and r["max_evaluations"] == 1600]
+    rq3 = [r for r in results if r["case_id"] == "WEN38"]
     for r in sorted(rq3, key=lambda x: (x["solver_seed"], x["workers"])):
         print(
             f"seed={r['solver_seed']} W={r['workers']:>2} "
@@ -369,12 +400,12 @@ def main() -> None:
             f"identical={r['front_identical_to_serial']}",
             flush=True,
         )
-    print("\n=== RQ4 (speedup vs W=1, mean over seeds 11,22) ===")
+    print("\n=== RQ4 (speedup vs W=1, mean over all seeds) ===")
     from collections import defaultdict
     import statistics
     groups: dict[tuple[str, int], list[float]] = defaultdict(list)
     for r in results:
-        if r["workers"] < 1 or r["solver_seed"] not in (11, 22):
+        if r["workers"] < 1:
             continue
         groups[(r["case_id"], r["workers"])].append(r["runtime_seconds"])
     base = {c: statistics.fmean(groups[(c, 1)]) for c in ("WEN38", "S025", "S050", "M100")}
