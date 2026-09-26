@@ -75,6 +75,10 @@ figures/
 *.svg
 *.pdf
 !references/*.pdf
+# The paper PDF is versioned so the current build can be previewed without a
+# TeX toolchain. It is a build artifact: re-run pdflatex (twice, for the
+# bibliography) after editing main.tex, or it will be stale.
+!paper/ispa2026/main.pdf
 
 # Must come after the extension rules above, which would otherwise exclude
 # the diagnostic figures. The handoff report figures need their directory
