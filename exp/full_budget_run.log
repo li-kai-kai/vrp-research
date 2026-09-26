@@ -1,64 +1,110 @@
 [validate] OK: serial path bit-identical to repo NSGA-II (front=19, evals=320)
 [RQ3] WEN38 seed=11 workers=0 ...
-      -> 95.9s evals=1600 front=56
+      -> 68.5s evals=1600 front=56
 [RQ3] WEN38 seed=11 workers=1 ...
-      -> 96.9s evals=1600 front=56
+      -> 70.3s evals=1600 front=56
 [RQ3] WEN38 seed=11 workers=2 ...
-      -> 64.5s evals=1600 front=56
+      -> 37.0s evals=1600 front=56
 [RQ3] WEN38 seed=11 workers=4 ...
-      -> 65.5s evals=1600 front=56
+      -> 23.1s evals=1600 front=56
 [RQ3] WEN38 seed=11 workers=8 ...
-      -> 67.1s evals=1600 front=56
+      -> 20.5s evals=1600 front=56
 [RQ3] WEN38 seed=22 workers=0 ...
-      -> 96.3s evals=1600 front=41
+      -> 69.5s evals=1600 front=41
 [RQ3] WEN38 seed=22 workers=1 ...
-      -> 95.9s evals=1600 front=41
+      -> 71.4s evals=1600 front=41
 [RQ3] WEN38 seed=22 workers=2 ...
-      -> 65.3s evals=1600 front=41
+      -> 39.3s evals=1600 front=41
 [RQ3] WEN38 seed=22 workers=4 ...
-      -> 68.7s evals=1600 front=41
+      -> 22.2s evals=1600 front=41
 [RQ3] WEN38 seed=22 workers=8 ...
-      -> 69.7s evals=1600 front=41
+      -> 21.7s evals=1600 front=41
 [RQ3] WEN38 seed=33 workers=0 ...
-      -> 96.9s evals=1600 front=35
+      -> 71.0s evals=1600 front=35
 [RQ3] WEN38 seed=33 workers=1 ...
-      -> 97.3s evals=1600 front=35
+      -> 70.5s evals=1600 front=35
 [RQ3] WEN38 seed=33 workers=2 ...
-      -> 65.7s evals=1600 front=35
+      -> 38.9s evals=1600 front=35
 [RQ3] WEN38 seed=33 workers=4 ...
-      -> 66.7s evals=1600 front=35
+      -> 22.6s evals=1600 front=35
 [RQ3] WEN38 seed=33 workers=8 ...
-      -> 69.1s evals=1600 front=35
+      -> 20.5s evals=1600 front=35
 [RQ4] S025 seed=11 workers=1 ...
-      -> 105.4s evals=1600 front=2
+      -> 77.3s evals=1600 front=2
 [RQ4] S025 seed=11 workers=2 ...
-      -> 71.9s evals=1600 front=2
+      -> 42.2s evals=1600 front=2
 [RQ4] S025 seed=11 workers=4 ...
-      -> 72.9s evals=1600 front=2
+      -> 23.2s evals=1600 front=2
 [RQ4] S025 seed=11 workers=8 ...
-      -> 73.5s evals=1600 front=2
+      -> 23.4s evals=1600 front=2
 [RQ4] S025 seed=22 workers=1 ...
-      -> 106.8s evals=1600 front=6
+      -> 77.9s evals=1600 front=6
 [RQ4] S025 seed=22 workers=2 ...
-      -> 73.0s evals=1600 front=6
+      -> 42.0s evals=1600 front=6
 [RQ4] S025 seed=22 workers=4 ...
-      -> 73.4s evals=1600 front=6
+      -> 22.7s evals=1600 front=6
 [RQ4] S025 seed=22 workers=8 ...
-      -> 73.6s evals=1600 front=6
+      -> 23.0s evals=1600 front=6
 [RQ4] S050 seed=11 workers=1 ...
-      -> 217.7s evals=800 front=10
+      -> 155.0s evals=800 front=10
 [RQ4] S050 seed=11 workers=2 ...
-      -> 147.0s evals=800 front=10
+      -> 80.8s evals=800 front=10
 [RQ4] S050 seed=11 workers=4 ...
-      -> 152.5s evals=800 front=10
+      -> 42.9s evals=800 front=10
 [RQ4] S050 seed=11 workers=8 ...
-      -> 150.8s evals=800 front=10
+      -> 34.8s evals=800 front=10
 [RQ4] S050 seed=22 workers=1 ...
-      -> 223.1s evals=800 front=10
+      -> 158.8s evals=800 front=10
 [RQ4] S050 seed=22 workers=2 ...
-      -> 151.7s evals=800 front=10
+      -> 83.7s evals=800 front=10
 [RQ4] S050 seed=22 workers=4 ...
-      -> 155.5s evals=800 front=10
+      -> 43.7s evals=800 front=10
 [RQ4] S050 seed=22 workers=8 ...
-      -> 156.3s evals=800 front=10
+      -> 35.6s evals=800 front=10
 [RQ4] M100 seed=11 workers=1 ...
+      -> 247.5s evals=400 front=24
+[RQ4] M100 seed=11 workers=2 ...
+      -> 124.6s evals=400 front=24
+[RQ4] M100 seed=11 workers=4 ...
+      -> 64.7s evals=400 front=24
+[RQ4] M100 seed=11 workers=8 ...
+      -> 50.3s evals=400 front=24
+[RQ4] M100 seed=22 workers=1 ...
+      -> 245.7s evals=400 front=23
+[RQ4] M100 seed=22 workers=2 ...
+      -> 126.3s evals=400 front=23
+[RQ4] M100 seed=22 workers=4 ...
+      -> 66.5s evals=400 front=23
+[RQ4] M100 seed=22 workers=8 ...
+      -> 50.8s evals=400 front=23
+[pooled] WEN38: reference_front=68 ideal=[2.459, 73015.333, -0.765] nadir=[3.114, 171174.333, -0.0]
+[pooled] S025: reference_front=8 ideal=[3.631, 2547.765, -0.9] nadir=[3.653, 2883.813, -0.9]
+[pooled] S050: reference_front=10 ideal=[4.044, 5255.911, -0.9] nadir=[4.189, 6467.846, -0.9]
+[pooled] M100: reference_front=29 ideal=[4.304, 15775.549, -0.9] nadir=[4.65, 18839.297, -0.0]
+[save] /SimCLR/vrp-research/exp/full_budget/results.json
+
+=== RQ3 (WEN38, budget=1600, pop=32) ===
+seed=11 W= 0 t=   68.5s evals=1600 front=56 HV=0.9947 IGD=0.0187 identical=True
+seed=11 W= 1 t=   70.3s evals=1600 front=56 HV=0.9947 IGD=0.0187 identical=True
+seed=11 W= 2 t=   37.0s evals=1600 front=56 HV=0.9947 IGD=0.0187 identical=True
+seed=11 W= 4 t=   23.1s evals=1600 front=56 HV=0.9947 IGD=0.0187 identical=True
+seed=11 W= 8 t=   20.5s evals=1600 front=56 HV=0.9947 IGD=0.0187 identical=True
+seed=22 W= 0 t=   69.5s evals=1600 front=41 HV=0.6537 IGD=0.1467 identical=True
+seed=22 W= 1 t=   71.4s evals=1600 front=41 HV=0.6537 IGD=0.1467 identical=True
+seed=22 W= 2 t=   39.3s evals=1600 front=41 HV=0.6537 IGD=0.1467 identical=True
+seed=22 W= 4 t=   22.2s evals=1600 front=41 HV=0.6537 IGD=0.1467 identical=True
+seed=22 W= 8 t=   21.7s evals=1600 front=41 HV=0.6537 IGD=0.1467 identical=True
+seed=33 W= 0 t=   71.0s evals=1600 front=35 HV=0.7185 IGD=0.1066 identical=True
+seed=33 W= 1 t=   70.5s evals=1600 front=35 HV=0.7185 IGD=0.1066 identical=True
+seed=33 W= 2 t=   38.9s evals=1600 front=35 HV=0.7185 IGD=0.1066 identical=True
+seed=33 W= 4 t=   22.6s evals=1600 front=35 HV=0.7185 IGD=0.1066 identical=True
+seed=33 W= 8 t=   20.5s evals=1600 front=35 HV=0.7185 IGD=0.1066 identical=True
+
+=== RQ4 (speedup vs W=1, mean over seeds 11,22) ===
+ WEN38: W=1:    70.8s (1.00x)  W=2:    38.2s (1.86x)  W=4:    22.6s (3.13x)  W=8:    21.1s (3.36x)  
+  S025: W=1:    77.6s (1.00x)  W=2:    42.1s (1.85x)  W=4:    23.0s (3.38x)  W=8:    23.2s (3.34x)  
+  S050: W=1:   156.9s (1.00x)  W=2:    82.2s (1.91x)  W=4:    43.3s (3.62x)  W=8:    35.2s (4.46x)  
+  M100: W=1:   246.6s (1.00x)  W=2:   125.5s (1.97x)  W=4:    65.6s (3.76x)  W=8:    50.5s (4.88x)  
+
+=== invariance ===
+non-identical fronts: 0 / 39

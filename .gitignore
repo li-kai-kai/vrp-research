@@ -8,6 +8,11 @@ wheels/
 # OS metadata
 .DS_Store
 
+# LaTeX build artifacts (paper/ispa2026/main.pdf is covered by *.pdf below)
+paper/ispa2026/*.aux
+paper/ispa2026/*.log
+paper/ispa2026/*.out
+
 # Virtual environments
 .venv
 
