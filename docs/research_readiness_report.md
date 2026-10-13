@@ -4,7 +4,7 @@
 
 不修改 F3 或配送政策，检查公平目标是否有辨别力，并把零服务节点的路径时间与库存时序拆开。正式入口：`scripts/reproduce/research_readiness.py`；共享轨迹由 `period_trace()` 产生，并经 `assert_matches_evaluator()` 核对。
 
-结果：`outputs/handoff_20260925/readiness/analysis/`。输入的历史算法运行来自 `outputs/claude_v2_reviewfix2/pilot_algorithm/`，本次没有重做这些历史搜索，仅对完整保存决策进行当前代码回放。`pilot_planning/` 和 `ht_natural_corridor_audit/` 本地存在，但不加入本报告的 151 条准备样本。WEN38 固定决策和两次搜索为本地本轮新执行。
+结果：`outputs/handoff_20260925/readiness/analysis/`。输入的历史算法运行来自 `outputs/claude_v2_reviewfix2/pilot_algorithm/`，本次没有重做这些历史搜索，仅对完整保存决策进行当前代码回放。通行走廊证据不加入本报告的151条准备样本。WEN38 固定决策和两次搜索为本地本轮新执行。
 
 | 样本 | 条数 | F3 比较键数量 | 来源 |
 |---|---:|---:|---|

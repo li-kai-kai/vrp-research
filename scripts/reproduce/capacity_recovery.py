@@ -1,19 +1,13 @@
 from __future__ import annotations
 
-import argparse
-import csv
 import hashlib
 import json
 import math
-import platform
 import random
-import subprocess
 import sys
-import time
-from dataclasses import asdict, dataclass, field, replace
-from datetime import datetime, timezone
+from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 import networkx as nx
 
@@ -55,16 +49,11 @@ class RecoveryStage:
 PROGRESS_TOLERANCE = 1e-9
 
 
-MODEL_VERSIONS = ("legacy", "v2")
+MODEL_VERSIONS = ("v2",)
 
 FLEET_SEMANTICS_EXOGENOUS_PERIOD_TRIP_BUDGET = "exogenous_period_trip_budget"
 
 _MODEL_PROFILES: dict[str, dict[str, Any]] = {
-    "legacy": {
-        "fair_share_cap": True,
-        "dispatch_timing": "period_end_legacy",
-        "enforce_within_period_arrival": False,
-    },
     "v2": {
         "fair_share_cap": False,
         "dispatch_timing": "period_start",
@@ -75,19 +64,15 @@ _MODEL_PROFILES: dict[str, dict[str, Any]] = {
 
 @dataclass(frozen=True)
 class EvaluationConfig:
-    """Versioned evaluation semantics shared by every entry point.
+    """Frozen v2 semantics. Fields remain serialized for evidence fingerprints.
 
-    ``legacy`` keeps the original global supply/demand ratio cap and the
-    end-of-period state semantics for historical regression. ``v2`` uses the
-    semantics frozen in ``docs/model_v2_contract.md``. The flags that differ
-    between versions cannot be mixed: a half-migrated configuration is rejected
-    instead of being silently evaluated.
+    Unsupported versions and inconsistent flags are rejected on construction.
     """
 
-    model_version: str = "legacy"
-    fair_share_cap: bool = True
-    dispatch_timing: str = "period_end_legacy"
-    enforce_within_period_arrival: bool = False
+    model_version: str = "v2"
+    fair_share_cap: bool = False
+    dispatch_timing: str = "period_start"
+    enforce_within_period_arrival: bool = True
     fleet_semantics: str = FLEET_SEMANTICS_EXOGENOUS_PERIOD_TRIP_BUDGET
 
     def __post_init__(self) -> None:
@@ -150,8 +135,6 @@ class EvaluationConfig:
         simplifications, both pinned to zero. A non-zero value must be reported
         instead of being accepted and silently ignored.
         """
-        if self.model_version != "v2":
-            return
         unsupported: list[str] = []
         if instance.crew_transfer_time_scale != 0.0:
             unsupported.append("crew_transfer_time_scale")
@@ -216,119 +199,6 @@ class CapacityIndividual:
             rank=self.rank,
             crowding=self.crowding,
         )
-
-
-@dataclass(frozen=True)
-class CapacityNSGAConfig:
-    pop_size: int = 32
-    generations: int = 30
-    crossover_probability: float = 0.9
-    mutation_probability: float = 0.2
-    alns_probability: float = 0.35
-    alns_iterations: int = 12
-
-
-@dataclass
-class ParetoSolution:
-    solution_id: str
-    objectives: tuple[float, float, float]
-    metrics: dict[str, float]
-    repair_order: list[int]
-    team_assignment: list[int]
-    dispatch_priority: list[tuple[int, int]]
-    crowding_distance: float
-    decision_hash: str
-
-    def row(self) -> dict[str, Any]:
-        return {
-            "solution_id": self.solution_id,
-            "decision_hash": self.decision_hash,
-            "pareto_rank": 0,
-            "crowding_distance": (
-                self.crowding_distance
-                if math.isfinite(self.crowding_distance)
-                else None
-            ),
-            "unmet_area": self.objectives[0],
-            "time_cost": self.objectives[1],
-            "neg_min_satisfaction": self.objectives[2],
-            "final_min_satisfaction": self.metrics["final_min_satisfaction"],
-            "final_total_satisfaction": self.metrics["final_total_satisfaction"],
-            "average_reachable_ratio": self.metrics["average_reachable_ratio"],
-            "final_repaired_ratio": self.metrics["final_repaired_ratio"],
-            "partial_recovery_edge_periods": self.metrics["partial_recovery_edge_periods"],
-            "small_vehicle_share": self.metrics["small_vehicle_share"],
-            "max_edge_utilization": self.metrics["max_edge_utilization"],
-            "high_utilization_edge_periods": self.metrics["high_utilization_edge_periods"],
-            "capacity_blocked_tons": self.metrics["capacity_blocked_tons"],
-            "total_vehicle_trips": self.metrics["total_vehicle_trips"],
-        }
-
-    def to_jsonable(self) -> dict[str, Any]:
-        return {
-            **self.row(),
-            "objectives": self.objectives,
-            "metrics": self.metrics,
-            "repair_order": self.repair_order,
-            "team_assignment": self.team_assignment,
-            "dispatch_priority": [
-                {"supplier": supplier, "demand": demand}
-                for supplier, demand in self.dispatch_priority
-            ],
-        }
-
-
-@dataclass
-class CapacityExperimentResult:
-    instance_name: str
-    scenario: str
-    seed: int
-    algorithm: str
-    objectives: tuple[float, float, float]
-    metrics: dict[str, float]
-    repair_order: list[int]
-    team_assignment: list[int]
-    runtime_seconds: float
-    pareto_front: list[ParetoSolution] = field(default_factory=list)
-    parameters: dict[str, Any] = field(default_factory=dict)
-    convergence: list[dict[str, float]] = field(default_factory=list)
-
-    def summary_row(self) -> dict[str, Any]:
-        return {
-            "instance": self.instance_name,
-            "scenario": self.scenario,
-            "seed": self.seed,
-            "algorithm": self.algorithm,
-            "capacity_scale": self.metrics["capacity_scale"],
-            "repair_time_weight": self.metrics["repair_time_weight"],
-            "unmet_area": self.objectives[0],
-            "time_cost": self.objectives[1],
-            "neg_min_satisfaction": self.objectives[2],
-            "final_total_satisfaction": self.metrics["final_total_satisfaction"],
-            "final_min_satisfaction": self.metrics["final_min_satisfaction"],
-            "average_reachable_ratio": self.metrics["average_reachable_ratio"],
-            "final_repaired_ratio": self.metrics["final_repaired_ratio"],
-            "partial_recovery_edge_periods": self.metrics["partial_recovery_edge_periods"],
-            "small_vehicle_share": self.metrics["small_vehicle_share"],
-            "max_edge_utilization": self.metrics["max_edge_utilization"],
-            "high_utilization_edge_periods": self.metrics["high_utilization_edge_periods"],
-            "capacity_blocked_tons": self.metrics["capacity_blocked_tons"],
-            "total_vehicle_trips": self.metrics["total_vehicle_trips"],
-            "pareto_solution_count": len(self.pareto_front),
-            "runtime_seconds": self.runtime_seconds,
-        }
-
-    def to_jsonable(self) -> dict[str, Any]:
-        return {
-            "summary": self.summary_row(),
-            "repair_order": self.repair_order,
-            "team_assignment": self.team_assignment,
-            "objectives": self.objectives,
-            "metrics": self.metrics,
-            "parameters": self.parameters,
-            "pareto_front": [solution.to_jsonable() for solution in self.pareto_front],
-            "convergence": self.convergence,
-        }
 
 
 DEFAULT_RECOVERY_STAGES = [
@@ -421,7 +291,7 @@ def full_execution_problems(
     ``physical_instance_hash`` deliberately excludes the planning-model
     factors, so two scenarios with the same physical hash can carry different
     recovery curves, vehicle thresholds or evaluation semantics. Checking that
-    hash alone would let a legacy or reduced model be replayed while being
+    hash alone would let an unsupported or reduced model be replayed while being
     labelled Full, so the factors themselves are checked here.
 
     Returns an empty list when the instance is a valid Full environment.
@@ -621,7 +491,7 @@ def build_simulation_instance(
     seed: int,
     *,
     num_nodes: int = 25,
-    model_version: str = "legacy",
+    model_version: str = "v2",
 ) -> CapacityExperimentInstance:
     base = generate_random_instance(
         num_nodes=num_nodes,
@@ -647,7 +517,7 @@ def build_simulation_instance(
 def build_wenchuan_instance(
     seed: int = 0,
     *,
-    model_version: str = "legacy",
+    model_version: str = "v2",
 ) -> CapacityExperimentInstance:
     nodes = {
         1: ("Dujiangyan", "S", 3000), 2: ("Pengzhou", "S", 3000), 3: ("Shifang", "S", 3000),
@@ -742,82 +612,6 @@ def build_wenchuan_instance(
     return instance
 
 
-def solve_capacity_instance(
-    instance: CapacityExperimentInstance,
-    config: CapacityNSGAConfig,
-    *,
-    seed: int,
-    scenario: str,
-) -> CapacityExperimentResult:
-    rng = random.Random(seed)
-    precision = precision_for(instance)
-    start = time.perf_counter()
-    population = [_create_individual(instance, rng) for _ in range(config.pop_size)]
-    pareto_archive: list[CapacityIndividual] = []
-    convergence: list[dict[str, float]] = []
-
-    for generation in range(config.generations):
-        _evaluate_population(instance, population)
-        pareto_archive = update_pareto_archive(pareto_archive, population, precision)
-        fronts = _assign_rank_and_crowding(population, precision)
-        best_front = fronts[0] if fronts else []
-        if best_front:
-            best = min(best_front, key=_representative_key)
-            convergence.append(_convergence_row(generation, best))
-
-        offspring: list[CapacityIndividual] = []
-        while len(offspring) < config.pop_size:
-            parent_a = _tournament(population, rng)
-            parent_b = _tournament(population, rng)
-            if rng.random() < config.crossover_probability:
-                child_a, child_b = _crossover(instance, parent_a, parent_b, rng)
-            else:
-                child_a, child_b = parent_a.clone(), parent_b.clone()
-            _mutate(instance, child_a, config.mutation_probability, rng)
-            _mutate(instance, child_b, config.mutation_probability, rng)
-            if rng.random() < config.alns_probability:
-                child_a = _alns_improve(instance, child_a, config.alns_iterations, rng)
-            if rng.random() < config.alns_probability:
-                child_b = _alns_improve(instance, child_b, config.alns_iterations, rng)
-            offspring.append(child_a)
-            if len(offspring) < config.pop_size:
-                offspring.append(child_b)
-
-        _evaluate_population(instance, offspring)
-        pareto_archive = update_pareto_archive(
-            pareto_archive,
-            population + offspring,
-            precision,
-        )
-        population = _select_next_generation(
-            population + offspring,
-            config.pop_size,
-            precision,
-        )
-
-    _evaluate_population(instance, population)
-    pareto_archive = update_pareto_archive(pareto_archive, population, precision)
-    best_front = pareto_archive
-    _assign_crowding(best_front, precision)
-    best = min(best_front, key=lambda item: _representative_key(item, precision))
-    pareto_front = _serialize_pareto_front(best_front)
-    runtime = time.perf_counter() - start
-    return CapacityExperimentResult(
-        instance_name=instance.base.name,
-        scenario=scenario,
-        seed=seed,
-        algorithm="NSGA-II-ALNS-prototype",
-        objectives=best.objectives or (math.inf, math.inf, math.inf),
-        metrics=best.metrics or {},
-        repair_order=best.repair_order,
-        team_assignment=best.team_assignment,
-        runtime_seconds=runtime,
-        pareto_front=pareto_front,
-        parameters=_experiment_parameters(instance, config),
-        convergence=convergence,
-    )
-
-
 @dataclass
 class EvaluationOutcome:
     """Full result of one shared-model evaluation."""
@@ -881,14 +675,8 @@ def evaluate_capacity_solution_detailed(
     allocations: list[dict[str, Any]] = []
 
     for period in range(1, base.periods + 1):
-        # v2 samples the state at the start of the period, so capacity built
-        # during this period is only usable next period. legacy keeps the
-        # original end-of-period sampling for historical regression.
-        progress_time = (
-            (period - 1) * base.eta_minutes
-            if config.period_start_dispatch
-            else period * base.eta_minutes
-        )
+        # Repair completed this period becomes usable next period.
+        progress_time = (period - 1) * base.eta_minutes
         progress = _repair_progress_by_damage(base, schedule, progress_time)
         for value in progress.values():
             if 1e-9 < value < 1.0 - 1e-9:
@@ -1218,16 +1006,8 @@ def _dispatch_with_vehicle_types(
         demand: max(0.0, base.demand_amounts[demand] - remaining_demand.get(demand, 0.0))
         for demand in base.demands
     }
-    # legacy caps every demand point by the global supply/demand ratio. v2
-    # drops that cap: a demand point is limited only by its own requirement, so
-    # a permanently unreachable demand no longer strands the rest of the
-    # resources. Both rounds keep the fleet, passability and edge-capacity
-    # constraints below.
-    fair_ceiling = (
-        min(1.0, base.total_supply / max(base.total_demand, 1e-9))
-        if config.fair_share_cap
-        else 1.0
-    )
+    # Each demand is capped only by its own requirement.
+    fair_ceiling = 1.0
     target_level = min(
         fair_ceiling,
         _max_min_satisfaction_target(
@@ -1237,7 +1017,7 @@ def _dispatch_with_vehicle_types(
             fair_resource,
         ),
     )
-    # Both rounds pass period-total targets: _allocate_vehicle_aware subtracts
+    # Both allocation stages pass period-total targets: _allocate_vehicle_aware subtracts
     # this period's delivered amount itself, so pre-subtracting here would
     # double-count the reduction.
     fair_targets = {
@@ -1682,15 +1462,6 @@ def _create_individual(
     return CapacityIndividual(repair_order, team_assignment, dispatch_priority)
 
 
-def _evaluate_population(
-    instance: CapacityExperimentInstance,
-    population: list[CapacityIndividual],
-) -> None:
-    for individual in population:
-        if individual.objectives is None:
-            individual.objectives, individual.metrics = evaluate_capacity_solution(instance, individual)
-
-
 def _dominates(
     left: tuple[float, float, float],
     right: tuple[float, float, float],
@@ -1698,7 +1469,7 @@ def _dominates(
 ) -> bool:
     """Dominance under a pinned resolution.
 
-    Defaults to the historical exact rule so legacy callers are unchanged; v2
+    Raw comparison is available as a numerical control; production callers
     callers pass the instance's precision.
     """
     return precision.dominates(left, right)
@@ -1829,13 +1600,6 @@ def _decision_signature(individual: CapacityIndividual) -> tuple[Any, ...]:
     )
 
 
-def _update_pareto_archive(
-    archive: list[CapacityIndividual],
-    candidates: list[CapacityIndividual],
-) -> list[CapacityIndividual]:
-    return update_pareto_archive(archive, candidates, EXACT_PRECISION)
-
-
 def update_pareto_archive(
     archive: list[CapacityIndividual],
     candidates: list[CapacityIndividual],
@@ -1880,29 +1644,6 @@ def update_pareto_archive(
         )
     )
     return non_dominated
-
-
-def _serialize_pareto_front(front: list[CapacityIndividual]) -> list[ParetoSolution]:
-    solutions: list[ParetoSolution] = []
-    for idx, individual in enumerate(front, start=1):
-        objectives = individual.objectives or (math.inf, math.inf, math.inf)
-        metrics = individual.metrics or {}
-        signature = repr(_decision_signature(individual)).encode("utf-8")
-        solutions.append(
-            ParetoSolution(
-                solution_id=f"p{idx:04d}",
-                objectives=objectives,
-                metrics=dict(metrics),
-                repair_order=list(individual.repair_order),
-                team_assignment=list(individual.team_assignment),
-                dispatch_priority=list(individual.dispatch_priority),
-                crowding_distance=(
-                    individual.crowding if math.isfinite(individual.crowding) else math.inf
-                ),
-                decision_hash=hashlib.sha256(signature).hexdigest()[:16],
-            )
-        )
-    return solutions
 
 
 def _select_next_generation(
@@ -1993,51 +1734,6 @@ def _mutate(
         individual.metrics = None
 
 
-def _alns_improve(
-    instance: CapacityExperimentInstance,
-    individual: CapacityIndividual,
-    iterations: int,
-    rng: random.Random,
-) -> CapacityIndividual:
-    _ensure_evaluated(instance, individual)
-    current = individual.clone()
-    current_score = _weighted_score(current)
-    for _ in range(iterations):
-        candidate = current.clone()
-        operator = rng.choice([
-            _swap_two_repairs,
-            _insert_repair,
-            _rebalance_team,
-            _swap_two_dispatches,
-            _move_high_demand_priority,
-        ])
-        operator(instance, candidate, rng)
-        candidate.objectives = None
-        candidate.metrics = None
-        _ensure_evaluated(instance, candidate)
-        candidate_score = _weighted_score(candidate)
-        if _dominates(candidate.objectives, current.objectives) or candidate_score < current_score:
-            current = candidate
-            current_score = candidate_score
-        elif rng.random() < 0.05:
-            current = candidate
-            current_score = candidate_score
-    return current
-
-
-def _ensure_evaluated(
-    instance: CapacityExperimentInstance,
-    individual: CapacityIndividual,
-) -> None:
-    if individual.objectives is None:
-        individual.objectives, individual.metrics = evaluate_capacity_solution(instance, individual)
-
-
-def _weighted_score(individual: CapacityIndividual) -> float:
-    objectives = individual.objectives or (math.inf, math.inf, math.inf)
-    return objectives[0] + 0.001 * objectives[1] + objectives[2]
-
-
 def _swap_two_repairs(
     _instance: CapacityExperimentInstance,
     individual: CapacityIndividual,
@@ -2103,369 +1799,3 @@ def _swap_two(values: list[Any], rng: random.Random) -> None:
         return
     left, right = rng.sample(range(len(values)), 2)
     values[left], values[right] = values[right], values[left]
-
-
-def _convergence_row(generation: int, individual: CapacityIndividual) -> dict[str, float]:
-    objectives = individual.objectives or (math.inf, math.inf, math.inf)
-    metrics = individual.metrics or {}
-    return {
-        "generation": float(generation),
-        "unmet_area": objectives[0],
-        "time_cost": objectives[1],
-        "neg_min_satisfaction": objectives[2],
-        "final_total_satisfaction": metrics.get("final_total_satisfaction", 0.0),
-        "final_min_satisfaction": metrics.get("final_min_satisfaction", 0.0),
-    }
-
-
-def _experiment_parameters(
-    instance: CapacityExperimentInstance,
-    config: CapacityNSGAConfig,
-) -> dict[str, Any]:
-    base = instance.base
-    return {
-        "algorithm": asdict(config),
-        "instance": {
-            "name": base.name,
-            "instance_seed": base.seed,
-            "nodes": base.num_nodes,
-            "edges": base.graph.number_of_edges(),
-            "damaged_edges": len(base.damaged_edges),
-            "repair_crews": base.repair_crews,
-            "eta_hours": base.eta_hours,
-            "horizon_hours": base.horizon_hours,
-            "periods": base.periods,
-            "total_supply_ton": base.total_supply,
-            "total_demand_ton": base.total_demand,
-            "theoretical_supply_ceiling": base.total_supply / max(base.total_demand, 1e-9),
-        },
-        "model": {
-            "capacity_scale": instance.capacity_scale,
-            "repair_time_weight": instance.repair_time_weight,
-            "crew_transfer_time_scale": instance.crew_transfer_time_scale,
-            "crew_min_access_progress": instance.crew_min_access_progress,
-            "progressive_recovery": instance.progressive_recovery,
-            "heterogeneous_vehicle_thresholds": (
-                instance.heterogeneous_vehicle_thresholds
-            ),
-            "edge_capacity_constraint": instance.edge_capacity_constraint,
-            "evaluation": instance.evaluation.as_dict(),
-            "evaluation_fingerprint": instance.evaluation.fingerprint(),
-            "vehicles": [asdict(vehicle) for vehicle in instance.vehicles],
-            "recovery_stages": [asdict(stage) for stage in instance.recovery_stages],
-        },
-    }
-
-
-def run_cli() -> None:
-    args = _parse_args()
-    if args.capacity_scale <= 0:
-        raise SystemExit("--capacity-scale must be greater than zero")
-    if args.repair_time_weight < 0:
-        raise SystemExit("--repair-time-weight must be non-negative")
-    if args.crew_transfer_time_scale < 0:
-        raise SystemExit("--crew-transfer-time-scale must be non-negative")
-    if not 0.0 <= args.crew_min_access_progress <= 1.0:
-        raise SystemExit("--crew-min-access-progress must be in [0, 1]")
-    if args.pop_size < 2:
-        raise SystemExit("--pop-size must be at least 2")
-    if args.generations <= 0:
-        raise SystemExit("--generations must be greater than zero")
-    if args.alns_iterations < 0:
-        raise SystemExit("--alns-iterations must be non-negative")
-    for name in (
-        "crossover_probability",
-        "mutation_probability",
-        "alns_probability",
-    ):
-        if not 0.0 <= getattr(args, name) <= 1.0:
-            raise SystemExit(f"--{name.replace('_', '-')} must be in [0, 1]")
-    output_dir = Path(args.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    config = CapacityNSGAConfig(
-        pop_size=args.pop_size,
-        generations=args.generations,
-        crossover_probability=args.crossover_probability,
-        mutation_probability=args.mutation_probability,
-        alns_iterations=args.alns_iterations,
-        alns_probability=args.alns_probability,
-    )
-    results: list[CapacityExperimentResult] = []
-    scenarios = ["simulation", "wenchuan"] if args.scenario == "both" else [args.scenario]
-    for scenario in scenarios:
-        for seed in range(args.seed_start, args.seed_start + args.seeds):
-            if scenario == "simulation":
-                instance = build_simulation_instance(seed, num_nodes=args.sim_nodes)
-            else:
-                instance = build_wenchuan_instance(seed)
-            instance.capacity_scale = args.capacity_scale
-            instance.repair_time_weight = args.repair_time_weight
-            instance.crew_transfer_time_scale = args.crew_transfer_time_scale
-            instance.crew_min_access_progress = args.crew_min_access_progress
-            print(
-                f"Solving {scenario} seed={seed} "
-                f"nodes={instance.base.num_nodes} damaged={len(instance.base.damaged_edges)}"
-            )
-            result = solve_capacity_instance(instance, config, seed=seed + 30_000, scenario=scenario)
-            results.append(result)
-            summary = result.summary_row()
-            print(
-                "  "
-                f"sat={summary['final_total_satisfaction']:.3f}, "
-                f"min_sat={summary['final_min_satisfaction']:.3f}, "
-                f"repair={summary['final_repaired_ratio']:.3f}, "
-                f"partial={summary['partial_recovery_edge_periods']:.0f}, "
-                f"max_util={summary['max_edge_utilization']:.3f}, "
-                f"time={summary['runtime_seconds']:.2f}s"
-            )
-    _write_outputs(results, output_dir, config)
-    _plot_pareto_front(results, output_dir / "pareto_front.png")
-    print(f"Done. Results written to {output_dir}")
-
-
-def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Run capacity-recovery NSGA-II + ALNS prototype experiments.",
-    )
-    parser.add_argument("--scenario", choices=["simulation", "wenchuan", "both"], default="both")
-    parser.add_argument("--seeds", type=int, default=1)
-    parser.add_argument("--seed-start", type=int, default=1)
-    parser.add_argument("--sim-nodes", type=int, default=25)
-    parser.add_argument("--pop-size", type=int, default=32)
-    parser.add_argument("--generations", type=int, default=30)
-    parser.add_argument("--crossover-probability", type=float, default=0.9)
-    parser.add_argument("--mutation-probability", type=float, default=0.2)
-    parser.add_argument("--alns-iterations", type=int, default=12)
-    parser.add_argument("--alns-probability", type=float, default=0.35)
-    parser.add_argument(
-        "--capacity-scale",
-        type=float,
-        default=1.0,
-        help="Multiplier applied to every edge-period throughput capacity.",
-    )
-    parser.add_argument(
-        "--repair-time-weight",
-        type=float,
-        default=0.05,
-        help="Weight lambda_R applied to repair work in the time objective.",
-    )
-    parser.add_argument(
-        "--crew-transfer-time-scale",
-        type=float,
-        default=0.0,
-        help=(
-            "Multiplier for midpoint-to-midpoint repair-crew transfer time; "
-            "0 preserves the original no-transfer assumption."
-        ),
-    )
-    parser.add_argument(
-        "--crew-min-access-progress",
-        type=float,
-        default=0.0,
-        help="Minimum recovery progress usable by a moving repair crew.",
-    )
-    parser.add_argument(
-        "--output-dir",
-        default="outputs/capacity_recovery",
-        help="Directory for CSV and JSON outputs.",
-    )
-    return parser.parse_args()
-
-
-def _write_outputs(
-    results: list[CapacityExperimentResult],
-    output_dir: Path,
-    config: CapacityNSGAConfig,
-) -> None:
-    _write_csv(output_dir / "runs.csv", [result.summary_row() for result in results])
-    with (output_dir / "solutions.json").open("w", encoding="utf-8") as fh:
-        json.dump([result.to_jsonable() for result in results], fh, indent=2, ensure_ascii=False)
-    convergence_rows = [
-        {"instance": result.instance_name, "scenario": result.scenario, "seed": result.seed, **row}
-        for result in results
-        for row in result.convergence
-    ]
-    _write_csv(output_dir / "convergence.csv", convergence_rows)
-    run_pareto_rows = [
-        {
-            "instance": result.instance_name,
-            "scenario": result.scenario,
-            "solver_seed": result.seed,
-            **solution.row(),
-        }
-        for result in results
-        for solution in result.pareto_front
-    ]
-    _write_csv(output_dir / "pareto_front_runs.csv", run_pareto_rows)
-    global_points = _global_pareto_points(results)
-    global_rows = [
-        {
-            "instance": result.instance_name,
-            "scenario": result.scenario,
-            "solver_seed": result.seed,
-            **solution.row(),
-        }
-        for result, solution in global_points
-    ]
-    _write_csv(output_dir / "pareto_front.csv", global_rows)
-    with (output_dir / "pareto_solutions.json").open("w", encoding="utf-8") as fh:
-        json.dump(
-            [
-                {
-                    "instance": result.instance_name,
-                    "scenario": result.scenario,
-                    "solver_seed": result.seed,
-                    "solutions": [
-                        solution.to_jsonable() for solution in result.pareto_front
-                    ],
-                }
-                for result in results
-            ],
-            fh,
-            indent=2,
-            ensure_ascii=False,
-        )
-    manifest = {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "command": [sys.executable, *sys.argv],
-        "python_version": sys.version,
-        "platform": platform.platform(),
-        "git_sha": _git_sha(),
-        "git_dirty": _git_dirty(),
-        "source_file": str(Path(__file__).resolve()),
-        "source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-        "algorithm_config": asdict(config),
-        "runs": [
-            {
-                "scenario": result.scenario,
-                "instance": result.instance_name,
-                "solver_seed": result.seed,
-                "parameters": result.parameters,
-            }
-            for result in results
-        ],
-    }
-    with (output_dir / "experiment_manifest.json").open("w", encoding="utf-8") as fh:
-        json.dump(manifest, fh, indent=2, ensure_ascii=False)
-
-
-def _git_sha() -> str | None:
-    try:
-        completed = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    except (OSError, subprocess.CalledProcessError):
-        return None
-    return completed.stdout.strip()
-
-
-def _git_dirty() -> bool | None:
-    try:
-        completed = subprocess.run(
-            ["git", "status", "--porcelain"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    except (OSError, subprocess.CalledProcessError):
-        return None
-    return bool(completed.stdout.strip())
-
-
-def _global_pareto_points(
-    results: list[CapacityExperimentResult],
-) -> list[tuple[CapacityExperimentResult, ParetoSolution]]:
-    unique: dict[
-        tuple[str, tuple[float, float, float]],
-        tuple[CapacityExperimentResult, ParetoSolution],
-    ] = {}
-    for result in results:
-        for solution in result.pareto_front:
-            key = (solution.decision_hash, solution.objectives)
-            unique.setdefault(key, (result, solution))
-
-    points = list(unique.values())
-    non_dominated = [
-        point
-        for idx, point in enumerate(points)
-        if not any(
-            _dominates(other[1].objectives, point[1].objectives)
-            for other_idx, other in enumerate(points)
-            if idx != other_idx
-        )
-    ]
-    non_dominated.sort(
-        key=lambda point: (
-            point[1].objectives,
-            point[1].decision_hash,
-            point[0].seed,
-        )
-    )
-    return non_dominated
-
-
-def _plot_pareto_front(
-    results: list[CapacityExperimentResult],
-    output_path: Path,
-) -> None:
-    import matplotlib
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-
-    points = _global_pareto_points(results)
-    if not points:
-        return
-
-    figure, axes = plt.subplots(1, 3, figsize=(16, 4.8), constrained_layout=True)
-    unmet = [solution.objectives[0] for _, solution in points]
-    time_cost = [solution.objectives[1] for _, solution in points]
-    min_sat = [solution.metrics["final_min_satisfaction"] for _, solution in points]
-    colors = min_sat
-
-    first = axes[0].scatter(unmet, time_cost, c=colors, cmap="viridis", s=42, alpha=0.85)
-    axes[0].set_xlabel("F1: cumulative unmet fraction-period")
-    axes[0].set_ylabel("F2: weighted time cost (minutes)")
-    axes[0].set_title("Efficiency trade-off")
-    colorbar = figure.colorbar(first, ax=axes[0])
-    colorbar.set_label("Final minimum satisfaction")
-
-    axes[1].scatter(unmet, min_sat, c=time_cost, cmap="plasma", s=42, alpha=0.85)
-    axes[1].set_xlabel("F1: cumulative unmet fraction-period")
-    axes[1].set_ylabel("Final minimum satisfaction")
-    axes[1].set_title("Service versus fairness")
-
-    axes[2].scatter(time_cost, min_sat, c=unmet, cmap="cividis", s=42, alpha=0.85)
-    axes[2].set_xlabel("F2: weighted time cost (minutes)")
-    axes[2].set_ylabel("Final minimum satisfaction")
-    axes[2].set_title("Cost versus fairness")
-
-    for axis in axes:
-        axis.grid(alpha=0.22, linewidth=0.7)
-    run_text = ", ".join(
-        f"{result.scenario}/seed={result.seed}: n={len(result.pareto_front)}"
-        for result in results
-    )
-    figure.suptitle(
-        f"Global approximate Pareto front: n={len(points)} | {run_text}",
-        fontsize=11,
-    )
-    figure.savefig(output_path, dpi=180)
-    plt.close(figure)
-
-
-def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
-    if not rows:
-        path.write_text("", encoding="utf-8")
-        return
-    with path.open("w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=list(rows[0]))
-        writer.writeheader()
-        writer.writerows(rows)
-
-
-if __name__ == "__main__":
-    run_cli()

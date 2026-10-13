@@ -2,8 +2,7 @@
 
 These build minimal, fully explicit instances instead of sampling the random
 generator, so each acceptance criterion pins one mechanism at a time. They are
-the acceptance cases named in the v2 task book; they are not a substitute for
-the historical legacy regression suite in tests/test_capacity_recovery.py.
+the acceptance cases for the current v2 model.
 """
 
 from __future__ import annotations
@@ -53,7 +52,7 @@ FIXTURE_FULL_STAGES = [
 
 def _make_instance(
     *,
-    model_version: str = "legacy",
+    model_version: str = "v2",
     suppliers: list[int],
     demands: list[int],
     supply_amounts: dict[int, float],
@@ -154,9 +153,9 @@ def _decision(
 
 class ModelContractTest(unittest.TestCase):
     def test_m01_permanently_isolated_demand_does_not_strand_resources(self):
-        """legacy caps the reachable point at 25 t, v2 delivers 50 t."""
+        """All 50 t can reach the serviceable point while conserving supply."""
         observation: dict[str, dict[str, float]] = {}
-        for version in ("legacy", "v2"):
+        for version in ("v2",):
             instance = _make_instance(
                 model_version=version,
                 suppliers=[0],
@@ -181,10 +180,8 @@ class ModelContractTest(unittest.TestCase):
                 places=6,
             )
 
-        self.assertAlmostEqual(observation["legacy"]["total_delivered"], 25.0, places=6)
         self.assertAlmostEqual(observation["v2"]["total_delivered"], 50.0, places=6)
         self.assertAlmostEqual(observation["v2"]["remaining_supply"], 0.0, places=6)
-        self.assertAlmostEqual(observation["legacy"]["remaining_supply"], 25.0, places=6)
 
     def test_m02_period_targets_are_not_double_subtracted(self):
         """Both stages pass period-total targets and never over/under-allocate."""
@@ -321,7 +318,7 @@ class ModelContractTest(unittest.TestCase):
     def test_m04_road_repaired_late_in_a_period_is_usable_only_next_period(self):
         """Binary recovery, 479-minute repair, 480-minute period."""
         outcomes = {}
-        for version in ("legacy", "v2"):
+        for version in ("v2",):
             instance = _make_instance(
                 model_version=version,
                 suppliers=[0],
@@ -351,8 +348,6 @@ class ModelContractTest(unittest.TestCase):
         # is still blocked and the first delivery can only happen in period two.
         self.assertAlmostEqual(outcomes["v2"].period_delivered[0], 0.0, places=9)
         self.assertGreater(outcomes["v2"].period_delivered[1], 0.0)
-        # legacy keeps its historical end-of-period sampling and delivers early.
-        self.assertGreater(outcomes["legacy"].period_delivered[0], 0.0)
 
     def test_m05_edge_finished_exactly_on_the_period_boundary(self):
         """A 480-minute repair is usable in period two and never backfills period one."""
@@ -405,15 +400,6 @@ class ModelContractTest(unittest.TestCase):
         self.assertAlmostEqual(v2_outcome.metrics["max_edge_utilization"], 0.0)
         self.assertGreater(v2_outcome.metrics["time_infeasible_candidates"], 0.0)
 
-        # legacy keeps its historical behaviour: the trip is dispatched even
-        # though it cannot arrive inside one period.
-        legacy_instance = _make_instance(model_version="legacy", **kwargs)
-        _objectives, legacy_metrics = evaluate_capacity_solution(
-            legacy_instance,
-            _decision(legacy_instance),
-        )
-        self.assertGreater(legacy_metrics["total_delivered"], 0.0)
-        self.assertGreater(legacy_metrics["total_vehicle_trips"], 0.0)
 
     def test_m07_vehicle_threshold_boundary_uses_one_tolerance(self):
         stages = [
@@ -528,10 +514,7 @@ class ModelContractTest(unittest.TestCase):
         self.assertFalse(variant.evaluation.fair_share_cap)
         self.assertEqual(variant.evaluation.dispatch_timing, "period_start")
         self.assertTrue(variant.evaluation.enforce_within_period_arrival)
-        self.assertNotEqual(
-            variant.evaluation.fingerprint(),
-            EvaluationConfig.for_version("legacy").fingerprint(),
-        )
+        self.assertEqual(variant.evaluation.fingerprint(), EvaluationConfig().fingerprint())
 
         # Only the requested model factors moved, and the base is untouched.
         self.assertFalse(variant.progressive_recovery)
@@ -573,17 +556,6 @@ class ModelContractTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 evaluate_capacity_solution(instance, _decision(instance))
 
-        # legacy is unaffected: it still accepts these settings.
-        legacy = _make_instance(
-            model_version="legacy",
-            suppliers=[0],
-            demands=[1],
-            supply_amounts={0: 100.0},
-            demand_amounts={1: 50.0},
-            edges=[(0, 1, 10.0, 1000.0)],
-            crew_transfer_time_scale=0.5,
-        )
-        evaluate_capacity_solution(legacy, _decision(legacy))
 
     def test_m11_objective_units_and_signs(self):
         instance = _make_instance(

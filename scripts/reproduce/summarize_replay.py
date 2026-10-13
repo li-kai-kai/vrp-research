@@ -210,11 +210,11 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--replay-results",
-        default="outputs/claude_v2/pilot_common_execution/replay_results.csv",
+        default="outputs/claude_v2_reviewfix2/pilot_algorithm_roundtrip/replay_results.csv",
     )
     parser.add_argument(
         "--output-dir",
-        default="outputs/claude_v2/pilot_common_execution/summary",
+        default="outputs/claude_v2_reviewfix2/pilot_algorithm_roundtrip/summary",
     )
     return parser.parse_args()
 

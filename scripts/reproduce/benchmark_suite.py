@@ -81,7 +81,7 @@ def build_benchmark_instance(
     spec: BenchmarkSpec,
     *,
     instance_seed: int,
-    model_version: str = "legacy",
+    model_version: str = "v2",
 ) -> CapacityExperimentInstance:
     evaluation = EvaluationConfig.for_version(model_version)
     if spec.source == "wenchuan":

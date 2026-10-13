@@ -148,17 +148,6 @@ class SolutionIOTest(unittest.TestCase):
         self.assertGreater(len({model_fingerprint(v) for v in variants}), 1)
         self.assertNotIn(model_fingerprint(source), {model_fingerprint(v) for v in variants if not v.progressive_recovery})
 
-    def test_evaluation_profile_changes_the_model_fingerprint(self):
-        legacy_variant = model_factor_variant(
-            _instance(model_version="legacy"),
-            progressive_recovery=True,
-            heterogeneous_vehicle_thresholds=True,
-            edge_capacity_constraint=True,
-        )
-        self.assertNotEqual(
-            model_fingerprint(legacy_variant),
-            model_fingerprint(_instance(model_version="v2")),
-        )
 
     def test_only_matching_complete_runs_are_skipped(self):
         instance = _instance()

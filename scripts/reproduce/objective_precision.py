@@ -47,7 +47,7 @@ class ObjectivePrecision:
     """Per-objective resolution and the comparison key derived from it.
 
     A resolution of exactly 0.0 means "compare raw values", which is the
-    historical legacy rule and is kept for regression.
+    raw numerical control used by precision tests.
     """
 
     label: str
@@ -99,8 +99,8 @@ class ObjectivePrecision:
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
 
 
-# Historical rule: raw comparison, no resolution. Kept for legacy regression.
-EXACT_PRECISION = ObjectivePrecision("legacy_exact", (0.0, 0.0, 0.0))
+# Raw numerical control; research instances always use V2_PRECISION.
+EXACT_PRECISION = ObjectivePrecision("exact_reference", (0.0, 0.0, 0.0))
 
 # Frozen v2 rule. The order is (F1, F2, F3).
 V2_PRECISION = ObjectivePrecision(
@@ -111,8 +111,10 @@ V2_PRECISION = ObjectivePrecision(
 
 def precision_for(instance: Any) -> ObjectivePrecision:
     """Precision implied by an instance's evaluation profile."""
-    version = getattr(getattr(instance, "evaluation", None), "model_version", "legacy")
-    return V2_PRECISION if version == "v2" else EXACT_PRECISION
+    version = getattr(getattr(instance, "evaluation", None), "model_version", None)
+    if version != "v2":
+        raise ValueError(f"unsupported evaluation version: {version!r}")
+    return V2_PRECISION
 
 
 def key_front(points: Sequence[Sequence[float]], precision: ObjectivePrecision) -> list[tuple]:

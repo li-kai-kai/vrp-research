@@ -25,7 +25,6 @@ from scripts.reproduce.capacity_recovery import (
     _swap_two_repairs,
     _decision_signature,
     _tournament,
-    _weighted_score,
     evaluate_capacity_solution,
     update_pareto_archive,
 )
@@ -519,9 +518,7 @@ def _score(instance: CapacityExperimentInstance, individual: CapacityIndividual)
 
     Outer NSGA-II still ranks by non-dominance and crowding distance.
     """
-    if instance.evaluation.model_version == "v2":
-        return _normalized_score(instance, individual)
-    return _weighted_score(individual)
+    return _normalized_score(instance, individual)
 
 
 def _normalized_score(

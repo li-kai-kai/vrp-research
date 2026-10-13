@@ -45,7 +45,6 @@ class FullEnvironmentPredicateTest(unittest.TestCase):
 
     def test_each_reduced_model_is_named(self):
         cases = {
-            "legacy": (_source(model_version="legacy"), "model_version"),
             "binary": (
                 model_factor_variant(
                     _source(),
@@ -91,20 +90,20 @@ class ExecutionSnapshotTest(unittest.TestCase):
     def test_a_reduced_environment_cannot_be_loaded_as_full(self):
         with TemporaryDirectory() as directory:
             store = RunStore(Path(directory))
-            legacy = _source(model_version="legacy")
-            physical = physical_instance_hash(legacy)
-            store.save_execution_instance(legacy)
+            reduced = model_factor_variant(_source(), progressive_recovery=True, heterogeneous_vehicle_thresholds=True, edge_capacity_constraint=False)
+            physical = physical_instance_hash(reduced)
+            store.save_execution_instance(reduced)
 
             # It is stored, and readable when Full is explicitly not required.
             stored = store.load_execution_instance(physical, require_full=False)
-            self.assertEqual(stored.evaluation.model_version, "legacy")
+            self.assertFalse(stored.edge_capacity_constraint)
 
             # But the Full entry point refuses it rather than mislabelling it.
             with self.assertRaises(SolutionIOError) as caught:
                 store.load_execution_instance(physical)
             message = str(caught.exception)
             self.assertIn("not the agreed Full environment", message)
-            self.assertIn("model_version", message)
+            self.assertIn("edge-capacity", message)
 
     def test_a_full_environment_loads(self):
         with TemporaryDirectory() as directory:
@@ -405,29 +404,6 @@ class AblationExecutionEnvironmentTest(unittest.TestCase):
                     physical_instance_hash(rebuilt), record["physical_instance_hash"]
                 )
 
-    def test_legacy_ablation_stores_an_environment_full_cannot_use(self):
-        budget = BenchmarkBudget(max_evaluations=8, pop_size=4, alns_iterations=1)
-        with TemporaryDirectory() as directory:
-            output_dir = Path(directory) / "abl"
-            run_model_ablation(
-                suite="smoke",
-                cases=["S020"],
-                instance_seeds=[1],
-                solver_repeats=1,
-                output_dir=output_dir,
-                budget=budget,
-                model_version="legacy",
-                algorithm="nsga2",
-                model_ids=["PR1_HT1_EC1", "PR1_HT1_EC0"],
-            )
-            store = RunStore(output_dir)
-            records = store.load_runs_for_experiment()
-            physical = physical_instance_hash(
-                store.load_instance(records[0]["instance_file"])
-            )
-            with self.assertRaises(SolutionIOError) as caught:
-                store.load_execution_instance(physical)
-            self.assertIn("model_version", str(caught.exception))
 
 
 if __name__ == "__main__":

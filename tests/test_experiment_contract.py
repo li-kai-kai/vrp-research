@@ -57,14 +57,13 @@ class ExperimentContractTest(unittest.TestCase):
     def test_switching_model_version_in_one_directory_is_refused(self):
         with TemporaryDirectory() as directory:
             output_dir = Path(directory) / "exp"
-            _run_benchmark(_benchmark_argv(output_dir, model_version="legacy"))
+            _run_benchmark(_benchmark_argv(output_dir, model_version="v2"))
 
             runs_before = sorted(path.name for path in (output_dir / "runs").glob("*.json"))
             contract_before = (output_dir / "experiment_contract.json").read_text()
 
-            with self.assertRaises(SolutionIOError) as caught:
-                _run_benchmark(_benchmark_argv(output_dir, model_version="v2"))
-            self.assertIn("model_version", str(caught.exception))
+            with self.assertRaises(SystemExit):
+                _run_benchmark(_benchmark_argv(output_dir, model_version="legacy"))
 
             # The rejected run must not have touched anything.
             self.assertEqual(

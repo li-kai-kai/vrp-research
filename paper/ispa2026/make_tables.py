@@ -58,7 +58,7 @@ def fmt(x: float, digits: int = 1) -> str:
 
 
 def rq3_table(rows: list[dict]) -> str:
-    """WEN38 full matrix, W in {0,1,2,4,8}, seeds 11/22/33."""
+    """WEN38 full matrix, W in {0,1,2,4,8}, eight solver seeds."""
     cells = [r for r in rows if r["case_id"] == "WEN38"]
     if not cells:
         raise SystemExit("no WEN38 RQ3 rows found")

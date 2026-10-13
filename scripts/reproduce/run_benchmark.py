@@ -285,12 +285,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--model-version",
         choices=list(MODEL_VERSIONS),
-        default="legacy",
-        help=(
-            "Evaluation semantics. legacy keeps the historical global "
-            "supply/demand cap and end-of-period dispatch; v2 uses the frozen "
-            "period-start semantics in docs/model_v2_contract.md."
-        ),
+        default="v2",
+        help="Frozen v2 evaluation semantics (the only supported model version).",
     )
     parser.add_argument("--cases", nargs="*", help="Optional case IDs, e.g. S025 M100 L400.")
     parser.add_argument("--instance-seeds", type=int, nargs="*")
@@ -381,13 +377,13 @@ def _attach_pooled_quality(
             (records[index].get("evaluation") or {}).get("model_version")
             for index in indices
         }
-        if len(versions) != 1:
+        if versions != {"v2"}:
             raise SolutionIOError(
                 f"cannot pool quality indicators across model versions {sorted(versions)} "
                 f"for {key}"
             )
         precision = (
-            V2_PRECISION if versions == {"v2"} else EXACT_PRECISION
+            V2_PRECISION
         )
         quality_rows, metadata = pooled_quality_indicators(fronts, precision)
         for index, quality in zip(indices, quality_rows):

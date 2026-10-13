@@ -221,14 +221,14 @@ def merge_model_ablation_shards(
         # comparison coordinates the runs were searched under, never the
         # exact-float default.
         versions = {
-            (run_rows[index].get("model_version") or "legacy") for index in indices
+            run_rows[index].get("model_version") for index in indices
         }
-        if len(versions) != 1:
+        if versions != {"v2"}:
             raise ValueError(
                 f"cannot pool quality indicators across model versions "
                 f"{sorted(versions)} for {case_id}/instance={instance_seed}"
             )
-        precision = V2_PRECISION if versions == {"v2"} else EXACT_PRECISION
+        precision = V2_PRECISION
         qualities, metadata = pooled_quality_indicators(fronts, precision)
         ideal = metadata["ideal"]
         nadir = metadata["nadir"]

@@ -11,6 +11,8 @@
 \documentclass[10pt,conference,letterpaper]{IEEEtran}
 
 \usepackage[utf8]{inputenc}
+% Preserve IEEE Times text metrics with both pdfLaTeX and Tectonic.
+\usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{booktabs}
@@ -825,9 +827,9 @@ per-evaluation cost, which RQ4 tests directly.
 \begin{table}[t]
 \centering
 \caption{Full-budget parallel NSGA-II, WEN38 (pop.~32, 1{,}600
-evaluations); mean $\pm$ s.d.\ over solver seeds 11/22/33.
+evaluations); mean $\pm$ s.d.\ over eight solver seeds (11,22,33,44,55,66,77,88).
 $S_0=T_0/T_W$ and $S_1=T_1/T_W$ are speedups against the in-process
-serial path and the single-worker path; $E(W)=S_1/W$. All 15 fronts are
+serial path and the single-worker path; $E(W)=S_1/W$. All 40 fronts are
 bit-identical to their serial run.}
 \label{tab:parallel}
 \small
@@ -928,7 +930,7 @@ fidelity selection from guesswork into verifiable conditions;
 expensive multi-period fitness evaluation without changing the
 optimization protocol---over 136 full-budget NSGA-II runs spanning 25 to
 100 nodes, every worker count returned a Pareto front bit-identical to
-the serial run, with speedups up to $4.9\times$; and (4)~the resulting
+its reference run (in-process serial on WEN38, one worker on synthetic instances), with speedups up to $4.9\times$; and (4)~the resulting
 efficiency is governed by evaluation granularity rather than network
 size, so fidelity reduction and parallel evaluation substitute for one
 another and should be deployed in opposite regimes.

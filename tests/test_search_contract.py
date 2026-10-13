@@ -253,7 +253,7 @@ class BudgetAndTerminationTest(unittest.TestCase):
 
     def test_closed_local_search_matches_plain_nsga(self):
         """Local search off must not consume randomness or change the archive."""
-        for model_version in ("legacy", "v2"):
+        for model_version in ("v2",):
             instance = build_benchmark_instance(
                 benchmark_specs("smoke")[0],
                 instance_seed=1,
@@ -341,20 +341,6 @@ class ScoringTest(unittest.TestCase):
         self.assertNotAlmostEqual(_normalized_score(instance, other), score)
         self.assertEqual(_normalized_score(instance, individual), score)
 
-    def test_legacy_keeps_its_original_weighted_score(self):
-        from scripts.reproduce.benchmark_algorithms import _score
-        from scripts.reproduce.capacity_recovery import _weighted_score
-
-        instance = _tiny_instance(model_version="legacy")
-        individual = _decision(instance, [0, 1, 2], [0, 0, 0], [(0, 1), (0, 2)])
-        individual.objectives = (2.0, 500.0, -0.25)
-
-        # The scalar used for acceptance follows the instance's own profile.
-        self.assertEqual(_score(instance, individual), _weighted_score(individual))
-        self.assertNotEqual(
-            _normalized_score(_tiny_instance(model_version="v2"), individual),
-            _weighted_score(individual),
-        )
 
 
 class SelectorTest(unittest.TestCase):
@@ -446,7 +432,7 @@ class EnumeratedSubproblemTest(unittest.TestCase):
             ),
         )
 
-        # Under the exact legacy rule the same enumeration keeps more points:
+        # Under the exact numerical control the same enumeration keeps more points:
         # the quantized archive only ever removes sub-resolution distinctions,
         # never real ones.
         exact_archive = update_pareto_archive(

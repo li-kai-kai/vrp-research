@@ -1,42 +1,18 @@
 # Repository Guidelines
 
-## Project Structure & Module Organization
+This branch contains only the current v2 post-disaster road-recovery research and parallel NSGA-II paper.
 
-This Python research repository studies post-disaster road repair and relief logistics using the Wenchuan case, capacity recovery, and NSGA-II/ALNS optimization.
+- `scripts/reproduce/`: shared model, instances, solvers, replay, mechanism and budget analysis. Extend shared modules; do not duplicate evaluators.
+- `exp/`: parallel evaluation and frozen 136-run evidence.
+- `outputs/`: final evidence sets listed in `docs/experiments.md`. Preserve measured values and original provenance.
+- `paper/ispa2026/`: editable paper and data-generated tables.
+- `docs/`: current scope, contracts, reports and consolidation record.
+- `tests/`: current model and reproducibility regressions.
 
-- `scripts/reproduce/`: shared models, scheduling, dispatch, solvers, benchmarks, and experiment entry points. Extend these modules instead of duplicating data or solver logic.
-- `scripts/legacy/`: maintained ordinary-GA reference chain; shared instance/model modules remain in `scripts/reproduce/`.
-- `scripts/plot_*.py`: network and experiment visualizations based on shared instances and measured outputs.
-- `tests/`: regression tests for reproduction, benchmarks, and ablations.
-- `docs/`: current `research.md`, `experiments.md`, and maintenance records; `background/` holds source notes and `archive/` historical documents.
-- `references/`: retained source literature.
-- `outputs/`: generated experiment artifacts, ignored by Git.
+Use Python 3.12+ and `uv sync --frozen`. Run `uv run python -m unittest discover -s tests -v` after code changes, plus relevant smoke or replay checks. Use fixed seeds and small budgets for regression tests. Parallel experiments require Linux/WSL fork.
 
-## Build, Test, and Development Commands
+Only v2 semantics are supported. Do not reintroduce retired GA, dynamic or evaluation paths. Raw numerical comparison may be used as a precision-test control only. Keep v2 serialization and fingerprints stable unless changing the research protocol explicitly.
 
-Run commands from the repository root with Python 3.12+ and `uv`:
+Use four-space indentation, snake_case functions and PascalCase classes. Keep paired budgets, instance seeds and solver seeds explicit. Do not alter historical manifests or replace saved results with new measurements. New experiments use new directories.
 
-```bash
-uv sync
-uv run python -m unittest discover -s tests
-uv run python scripts/legacy/run_random_experiments.py --config quick
-uv run python scripts/reproduce/run_model_ablation.py --suite smoke --output-dir outputs/model_ablation_smoke
-```
-
-These install locked dependencies, run the test suite, execute a quick GA baseline, and exercise model-factor ablations, respectively. See `scripts/README.md` for capacity-recovery, dynamic-interaction, visualization, and publication experiment commands. There is no central application build step.
-
-## Coding Style & Naming Conventions
-
-Use four-space indentation, `snake_case` for modules/functions/variables, `PascalCase` for classes, and `UPPER_CASE` for constants. Follow existing type annotations and dataclass-based model definitions. Keep shared evaluation logic in `scripts/reproduce/`. No formatter or linter is currently configured; match nearby code and avoid unrelated formatting changes.
-
-## Testing Guidelines
-
-Use standard-library `unittest`, with files named `test_*.py`, `unittest.TestCase` subclasses, and methods named `test_*`. Add regression coverage for changed model constraints, objective calculations, or experiment aggregation. Use fixed seeds, small evaluation budgets, and temporary directories for generated files. Run the full suite before submitting code changes; no numerical coverage threshold is configured.
-
-## Commit & Pull Request Guidelines
-
-History mixes imperative subjects with `feat:` and `docs:` prefixes. Write concise, action-oriented subjects describing one coherent change. PRs should explain the research or implementation change, relevant assumptions, commands run, and results. Link related issues when applicable; include representative figures for visualization changes.
-
-## Experiment Reproducibility
-
-Preserve seeds, parameter manifests, and paired comparison budgets. Distinguish measured inputs from hypothetical stress parameters. Keep generated artifacts under `outputs/`, and update relevant documentation when model assumptions or reported conclusions change.
+Commit messages should describe the concrete change. Report validation and distinguish implementation, diagnostic evidence, measured timing, convergence and statistical claims.

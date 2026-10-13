@@ -32,9 +32,10 @@ import random
 import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
+from multiprocessing import get_context
 from pathlib import Path
 
-REPO = Path(os.environ.get("VRP_RESEARCH_REPO", "/tmp/vrp-research"))
+REPO = Path(os.environ.get("VRP_RESEARCH_REPO", str(Path(__file__).resolve().parents[1])))
 sys.path.insert(0, str(REPO))
 
 from scripts.reproduce.benchmark_algorithms import (
@@ -57,7 +58,7 @@ from scripts.reproduce.capacity_recovery import (
 from scripts.reproduce.objective_precision import V2_PRECISION
 from scripts.reproduce.run_benchmark import pooled_quality_indicators
 
-OUT_DIR = Path(__file__).resolve().parent / "full_budget"
+OUT_DIR = REPO / "outputs" / "parallel_nsga2"
 
 # ---------------------------------------------------------------- worker side
 # Forked workers inherit this from the parent (copy-on-write); the instance is
@@ -141,7 +142,7 @@ def _solve_parallel_nsga2(
         evaluated.extend(individuals)
 
     executor = (
-        ProcessPoolExecutor(max_workers=workers) if workers and workers > 0 else None
+        ProcessPoolExecutor(max_workers=workers, mp_context=get_context("fork")) if workers and workers > 0 else None
     )
     start = time.perf_counter()
     try:
@@ -376,6 +377,8 @@ def save(results: list[dict]) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    global OUT_DIR
+    parser.add_argument("--output-dir", type=Path, default=OUT_DIR)
     parser.add_argument("--validate-only", action="store_true")
     parser.add_argument(
         "--no-resume",
@@ -383,6 +386,9 @@ def main() -> None:
         help="ignore an existing results.json and re-run the whole matrix",
     )
     args = parser.parse_args()
+    OUT_DIR = args.output_dir.resolve()
+    if OUT_DIR == (REPO / "exp" / "full_budget").resolve():
+        parser.error("choose a new output directory; exp/full_budget is frozen evidence")
     validate_fidelity()
     if args.validate_only:
         return

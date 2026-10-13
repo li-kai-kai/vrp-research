@@ -3,49 +3,23 @@
 本文件冻结第一轮 v2 评价语义。它只描述**已决定并已实现**的模型约定，不是实验结果页，也不证明模型能刻画真实现场。
 基准提交：`1a1a5d5`（2026-09-07）。状态与验收记录见[执行状态表](execution_status_v2.md)。
 
-## 1. 为什么需要 v2
+## 1. 当前唯一评价档案
 
-legacy 口径保留了三处与研究问题不一致的隐性约定，它们会让搜索算法的比较被模型缺陷污染：
+所有入口默认并仅支持 v2。`EvaluationConfig` 保留以下序列化字段，使已保存v2实例的模型指纹保持稳定；不接受旧模型或混合语义。
 
-1. **全局供需比硬上限**。每个需求点的本期目标被 `min(1, total_supply / total_demand)` 压制，即使某个点永久不可达、其余可配送资源闲置，可达点也拿不到超过该比例的量。
-2. **期末状态发货**。第 t 期按 `time = t*eta` 的期末路况计算配送，本期施工形成的能力被提前用于本期配送。
-3. **没有当期到货的时间可行性检查**。单程时间超过一个周期时长的路径仍然扣减库存、车辆额度与边容量并计入本期到货。
+| 字段 | 固定值 |
+|---|---|
+| model_version | v2 |
+| fair_share_cap | False |
+| dispatch_timing | period_start |
+| enforce_within_period_arrival | True |
+| fleet_semantics | exogenous_period_trip_budget |
 
-v2 修正这三处。它**不是**"更真实的物理仿真"，而是在同一套粗离散近似下的时间语义一致性修正。
+## 2. 配给政策
 
-## 2. 版本与配置
+每个需求点只受自身剩余需求上限约束；第一阶段按最大化最低满足率分配，第二阶段继续分配剩余资源。两阶段均受车辆趟次、通行阈值、道路容量和供应库存约束。不可达需求不应造成其余资源闲置。
 
-单一共享评价实现，不复制 `capacity_recovery.py`，也不引入第二套配送器。评价行为由 `EvaluationConfig` 决定：
-
-| 字段 | 取值 | legacy | v2 |
-|---|---|---|---|
-| `model_version` | `legacy` / `v2` | `legacy` | `v2` |
-| `fair_share_cap` | 是否按全局供需比限制每点目标 | `True` | `False` |
-| `dispatch_timing` | `period_end_legacy` / `period_start` | `period_end_legacy` | `period_start` |
-| `enforce_within_period_arrival` | 超期运输不得计入本期到货 | `False` | `True` |
-| `fleet_semantics` | 第一轮固定 | `exogenous_period_trip_budget` | `exogenous_period_trip_budget` |
-
-`fleet_semantics` 在第一轮是不可切换的常量，写入合同以便 manifest 与报告显式记录。
-
-**入口默认值**：`run_benchmark.py`、`run_model_ablation.py`、`replay_solutions.py` 的默认 `--model-version` 为 `legacy`，新诊断命令一律显式传 `--model-version v2`。
-动态入口（`dynamic_interaction_experiments.py`）在第一轮显式沿用 legacy，不静默迁移；其旧结果不得与 v2 结果汇总。
-
-## 3. 配给政策
-
-### 3.1 legacy
-
-保留原实现：`fair_ceiling = min(1, total_supply / total_demand)`，两轮分配都用它作为逐点上限。
-
-### 3.2 v2
-
-1. **取消逐点全局供需比硬上限**。每个需求点的上限只由**自身需求**决定（`remaining_demand`）。
-2. **保留公平优先阶段**：第一阶段仍按最大化最小满足率求解 `target_level`，但 `target_level` 不再被 `fair_ceiling` 截断。
-3. **第二阶段对剩余可服务需求继续分配**：目标为 `remaining_demand`，仍受车辆趟次、车型通行阈值、边容量、供应点剩余库存约束。
-4. **不因某点永久不可达而静默停机**：只要仍有可配送资源与可达需求点，分配器继续工作。
-
-**两轮 targets 语义（关键不变式）**：`_allocate_vehicle_aware()` 内部用**本期 `delivered`** 扣减目标，因此两轮传入的 `targets` 都是"**本期总目标**"（累计口径），不是"本轮增量"。第二轮不能先减一次本期配送再由分配器重复扣减。
-
-> 该政策是**新的明确配给政策**，不是"修好了一个 bug"。它需要独立诊断；不能把政策变化带来的收益全部归功于搜索算法。
+两阶段传入的目标都是本期总目标；分配器内部扣减本期已配送量，不能预先再扣一次。该配给政策与公平评价应独立解释，不能将政策差异计为搜索算法收益。
 
 ## 4. 时间轴与当期到货
 
@@ -98,7 +72,7 @@ v2 因此显式固定每个目标的**服务分辨率**（`scripts/reproduce/obj
 
 v2 的代表方案规则仍为字典序 `(F3, F1, F2)`，但**在量化键上比较**。
 
-`legacy` 保留原有的精确比较规则（`EXACT_PRECISION`），作为明确版本用于历史回归，不随 v2 改动。
+`EXACT_PRECISION` 仅作为数值单元测试的原始浮点对照，不对应可运行研究模型。
 
 精度策略进入 `model_fingerprint`：只差数值策略的两次运行不是同一个模型，不得共用指纹。
 分辨率是**预先固定**的，不随算法胜负调整。
@@ -152,7 +126,7 @@ v2 在接收到**非零**上述设置时**显式报错**，不静默忽略。后
   否则"把标签改回 True"会被当成恢复了 Full 配置。
 - manifest 记录**实际生效的配置**，不只记录字符串 `v2`。
 - 任何研究性覆盖都需要独立配置指纹；默认不启用组合自由覆盖。
-- 合法研究性覆盖**不得**跨版本混用或与 legacy 结果汇总。
+- 合法研究性覆盖**不得**与不同评价语义的结果汇总。
 
 ## 8. 指纹
 

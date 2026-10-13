@@ -171,7 +171,7 @@ def run_model_ablation(
     bootstrap_samples: int = 5_000,
     permutation_samples: int = 20_000,
     analysis_seed: int = 202_608_31,
-    model_version: str = "legacy",
+    model_version: str = "v2",
     algorithm: str = ALGORITHM,
     model_ids: list[str] | None = None,
     resume: bool = False,
@@ -648,12 +648,12 @@ def _attach_pooled_quality(records: list[dict]) -> list[dict[str, object]]:
             (records[index].get("evaluation") or {}).get("model_version")
             for index in indices
         }
-        if len(versions) != 1:
+        if versions != {"v2"}:
             raise ValueError(
                 f"cannot pool quality indicators across model versions "
                 f"{sorted(versions)} for {case_id}/instance={instance_seed}"
             )
-        precision = V2_PRECISION if versions == {"v2"} else EXACT_PRECISION
+        precision = V2_PRECISION
         quality_rows, metadata = pooled_quality_indicators(fronts, precision)
         ideal = metadata["ideal"]
         nadir = metadata["nadir"]
@@ -750,12 +750,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--model-version",
         choices=list(MODEL_VERSIONS),
-        default="legacy",
-        help=(
-            "Evaluation semantics shared by all planning groups. legacy keeps "
-            "the historical cap and end-of-period dispatch; v2 uses the frozen "
-            "semantics in docs/model_v2_contract.md."
-        ),
+        default="v2",
+        help="Frozen v2 evaluation semantics (the only supported model version).",
     )
     parser.add_argument(
         "--algorithm",

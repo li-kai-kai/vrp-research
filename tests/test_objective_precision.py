@@ -60,7 +60,7 @@ class AuditedCounterexampleTest(unittest.TestCase):
         self.assertTrue(V2_PRECISION.dominates(AUDITED_P0012, AUDITED_P0001))
 
     def test_exact_rule_still_reproduces_the_old_behaviour(self):
-        """The legacy rule is preserved, not silently rewritten."""
+        """The exact numerical control remains available."""
         self.assertFalse(EXACT_PRECISION.dominates(AUDITED_P0012, AUDITED_P0001))
         self.assertFalse(EXACT_PRECISION.equivalent(AUDITED_P0001, AUDITED_P0012))
 
@@ -214,14 +214,14 @@ class NearConstantDimensionTest(unittest.TestCase):
         )
 
         # The historical exact rule still marks endpoints, unchanged.
-        legacy_front = _front(
+        exact_front = _front(
             (4.0, 3000.0, -0.9),
             (4.0, 3000.0, -0.9 + 1e-13),
             (4.0, 3000.0, -0.9 - 1e-13),
         )
-        _assign_crowding(legacy_front, EXACT_PRECISION)
-        self.assertEqual(legacy_front[0].crowding, float("inf"))
-        self.assertEqual(legacy_front[-1].crowding, float("inf"))
+        _assign_crowding(exact_front, EXACT_PRECISION)
+        self.assertEqual(exact_front[0].crowding, float("inf"))
+        self.assertEqual(exact_front[-1].crowding, float("inf"))
 
     def test_crowding_still_uses_a_dimension_that_really_moves(self):
         front = _front(
@@ -388,12 +388,6 @@ class PrecisionWiringTest(unittest.TestCase):
                                                    demand_amounts={1: 10.0},
                                                    edges=[(0, 1, 10.0, 1000.0)])),
                       V2_PRECISION)
-        self.assertIs(precision_for(_make_instance(model_version="legacy",
-                                                   suppliers=[0], demands=[1],
-                                                   supply_amounts={0: 10.0},
-                                                   demand_amounts={1: 10.0},
-                                                   edges=[(0, 1, 10.0, 1000.0)])),
-                      EXACT_PRECISION)
 
     def test_precision_is_part_of_the_model_fingerprint(self):
         from scripts.reproduce.solution_io import model_fingerprint
