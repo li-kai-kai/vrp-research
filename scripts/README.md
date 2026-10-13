@@ -39,7 +39,7 @@ uv run python exp/parallel_nsga2.py --output-dir outputs/parallel_new
 | solution_io、replay_solutions、summarize_replay | 完整方案保存、恢复和回放汇总 |
 | mechanism_applicability、mechanism_zone_search、build_mechanism_audit | 暴露/参与/目标诊断、分区标定、证据投影 |
 | ht_natural_corridor | WEN38天然通行走廊与半真实场景 |
-| research_readiness、service_diagnostics、common_execution_analysis | 公平准备、服务轨迹与共同执行 |
+| service_diagnostics、common_execution_analysis | 服务轨迹与共同执行 |
 | budget_convergence_analysis | 预算稳定性及资源审计 |
 | plot_initial_network、plot_benchmark_results、plot_common_execution、plot_budget_convergence、plot_wen38_key_corridors | 从实际结果绘图 |
 
