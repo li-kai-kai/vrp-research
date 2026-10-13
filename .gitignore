@@ -8,11 +8,6 @@ wheels/
 # OS metadata
 .DS_Store
 
-# LaTeX build artifacts (paper/ispa2026/main.pdf is covered by *.pdf below)
-paper/ispa2026/*.aux
-paper/ispa2026/*.log
-paper/ispa2026/*.out
-
 # Virtual environments
 .venv
 
@@ -27,7 +22,6 @@ outputs/claude_v2_reviewfix2/*
 !outputs/claude_v2_reviewfix2/pilot_algorithm_roundtrip/
 !outputs/mechanism_probe_audit/
 !outputs/ht_natural_corridor_audit/
-!outputs/handoff_20260925/
 !outputs/report_reproduction/
 outputs/report_reproduction/*
 !outputs/report_reproduction/analysis/
@@ -42,17 +36,6 @@ figures/
 *.svg
 *.pdf
 !references/*.pdf
-# The paper PDF is versioned so the current build can be previewed without a
-# TeX toolchain. It is a build artifact: re-run pdflatex (twice, for the
-# bibliography) after editing main.tex, or it will be stale.
-!paper/ispa2026/main.pdf
-
-# Must come after the extension rules above, which would otherwise exclude
-# the diagnostic figures. The handoff report figures need their directory
-# re-included as well, since "figures/" matches it.
-!outputs/handoff_20260925/pilot/figures/
-!outputs/handoff_20260925/pilot/figures/*.pdf
-!outputs/handoff_20260925/pilot/figures/*.png
 
 # Claude Code worktrees are per-session working directories, not repo content
 .claude/worktrees/

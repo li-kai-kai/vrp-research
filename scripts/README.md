@@ -16,23 +16,18 @@ SPT、VND、NSGA-II、均匀/自适应局部搜索共用评价器与预算。四
 
 ```bash
 uv run python scripts/reproduce/replay_solutions.py --input-root outputs/claude_v2_reviewfix2/pilot_algorithm --execution-model saved --output-dir outputs/check_algorithm
-uv run python scripts/reproduce/common_execution_analysis.py --input-roots outputs/handoff_20260925/pilot/wen38 outputs/handoff_20260925/pilot/corridor --output-dir outputs/check_common --representative-traces
-uv run python scripts/reproduce/research_readiness.py --historical-root outputs/claude_v2_reviewfix2/pilot_algorithm --search-root outputs/handoff_20260925/readiness/wen38_search --output-dir outputs/check_readiness
 ```
 
 共享RunStore记录完整三段决策、实例/执行快照、参数、种子和指纹。`--resume`只接受同一合同下的完整运行。源码变化后，新搜索必须选择新目录；冻结档案仍可回放。报告中的原机器绝对路径是来源记录，不是当前运行路径。
 
-## 并行实验与论文
+## 并行实验
 
 ```bash
 uv run python exp/parallel_nsga2.py --validate-only
 uv run python exp/parallel_nsga2.py --output-dir outputs/parallel_new
-uv run python paper/ispa2026/make_tables.py
 ```
 
 并行入口使用Linux/WSL的fork；进程内串行与多个worker共用随机数、预算和缓存规则。`exp/full_budget/`是冻结的136次计时与目标前沿；脚本拒绝将新实验写入此目录。新输出默认在 `outputs/parallel_nsga2/`。
-
-论文需标准LaTeX环境，进入 `paper/ispa2026/` 执行两遍 `pdflatex main.tex`。表格来自冻结数据；作者信息仍待填写。
 
 ## 诊断与分析模块
 
