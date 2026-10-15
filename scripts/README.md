@@ -10,7 +10,7 @@ uv run python scripts/reproduce/run_model_ablation.py --suite smoke --cases S020
 uv run python scripts/reproduce/replay_solutions.py --input-root outputs/local_ablation --execution-model full --output-dir outputs/local_replay
 ```
 
-SPT、VND、NSGA-II、均匀/自适应局部搜索共用评价器与预算。四模型诊断使用NSGA-II。正式完整三因素统计要求既定的八组合及NSGA-II+ALNS协议；子集只出描述性结果。
+SPT、VND、NSGA-II、均匀/自适应局部搜索共用评价器与预算。四模型诊断使用NSGA-II。正式完整三因素统计要求既定的八组合与NSGA-II协议（`FORMAL_ALGORITHM = "nsga2"`，冻结于[正式实验协议](../docs/formal_experiment_protocol.md)）；子集只出描述性结果。
 
 ## 当前证据复核
 
@@ -40,6 +40,7 @@ uv run python exp/parallel_nsga2.py --output-dir outputs/parallel_new
 | mechanism_applicability、mechanism_zone_search、build_mechanism_audit | 暴露/参与/目标诊断、分区标定、证据投影 |
 | ht_natural_corridor | WEN38天然通行走廊与半真实场景 |
 | service_diagnostics、common_execution_analysis | 服务轨迹与共同执行 |
+| execution_side_analysis | 执行侧配对检验（家族预声明 + Holm 校正；正式实验用） |
 | budget_convergence_analysis | 预算稳定性及资源审计 |
 | plot_initial_network、plot_benchmark_results、plot_common_execution、plot_budget_convergence、plot_wen38_key_corridors | 从实际结果绘图 |
 
