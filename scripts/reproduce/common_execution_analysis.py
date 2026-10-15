@@ -27,7 +27,38 @@ from scripts.reproduce.solution_io import (
 
 GROUP = ("case_id", "scenario_family", "zone")
 LABELS = {FULL_MODEL: "Full", "PR0_HT1_EC1": "No-PR", "PR1_HT0_EC1": "No-HT", "PR1_HT1_EC0": "No-EC"}
+
+# The formal 2^3 factorial adds the four combinations that switch off more than
+# one mechanism. Their labels and factor flags follow the same PRp_HTh_ECe
+# convention; the four-model screen above keeps its labels and remains the
+# default so existing analyses are unaffected.
+FACTORIAL_LABELS = dict(LABELS)
 FACTORS = dict(PLANNING_MODELS)
+for _progressive in (0, 1):
+    for _heterogeneous in (0, 1):
+        for _capacity in (0, 1):
+            _model_id = f"PR{_progressive}_HT{_heterogeneous}_EC{_capacity}"
+            _off = [
+                _name
+                for _flag, _name in (
+                    (_progressive, "PR"),
+                    (_heterogeneous, "HT"),
+                    (_capacity, "EC"),
+                )
+                if not _flag
+            ]
+            FACTORIAL_LABELS.setdefault(
+                _model_id, "Full" if not _off else "No-" + "-No-".join(_off)
+            )
+            FACTORS.setdefault(
+                _model_id,
+                dict(
+                    progressive_recovery=bool(_progressive),
+                    heterogeneous_vehicle_thresholds=bool(_heterogeneous),
+                    edge_capacity_constraint=bool(_capacity),
+                ),
+            )
+del _progressive, _heterogeneous, _capacity, _model_id, _off
 PAIR_METRICS = ("delta_hv", "delta_igd", "representative_delta_F1", "representative_delta_F2", "representative_delta_F3")
 
 
@@ -99,7 +130,8 @@ def _check_contract(record, contract):
                 "solver seed outside contract")
 
 
-def analyze(input_roots, output_dir, representative_traces=False):
+def analyze(input_roots, output_dir, representative_traces=False, factorial=False):
+    labels = FACTORIAL_LABELS if factorial else LABELS
     runs, fronts, replay, bias, periods, demands = [], [], [], [], [], []
     units = defaultdict(list)
     seen_runs, seen_slots = set(), set()
@@ -120,7 +152,7 @@ def analyze(input_roots, output_dir, representative_traces=False):
             require(key not in seen_runs, "duplicate input run")
             seen_runs.add(key)
             input_hashes[str(store.run_path(key).resolve())] = record["record_sha256"]
-            require(record.get("model_id") in LABELS, "unexpected planning model")
+            require(record.get("model_id") in labels, "unexpected planning model")
             require(record.get("objective_precision") == V2_PRECISION.as_dict() and
                     record.get("objective_precision_fingerprint") == V2_PRECISION.fingerprint(), "incompatible precision")
             require(record.get("evaluation") == EvaluationConfig.for_version("v2").as_dict(), "incompatible evaluation")
@@ -139,7 +171,7 @@ def analyze(input_roots, output_dir, representative_traces=False):
             identity = {"case_id": record["case_id"], "scenario_family": record.get("scenario_family", "benchmark"),
                         "zone": record.get("zone", "original"), "instance_seed": record["instance_seed"],
                         "solver_seed": record["solver_seed"], "solver_repeat": record["solver_repeat"],
-                        "model_id": record["model_id"], "model": LABELS[record["model_id"]], "run_key": key,
+                        "model_id": record["model_id"], "model": labels[record["model_id"]], "run_key": key,
                         "physical_instance_hash": record["physical_instance_hash"]}
             group = tuple(identity[k] for k in GROUP)
             unit = group + (record["instance_seed"],)
@@ -212,7 +244,7 @@ def analyze(input_roots, output_dir, representative_traces=False):
             row.update(quality)
             paired[(row["solver_seed"], row["solver_repeat"])][row["model_id"]] = row
         for _, models in sorted(paired.items()):
-            require(set(models) == set(LABELS), "missing model in paired run")
+            require(set(models) == set(labels), "missing model in paired run")
             full = models[FULL_MODEL]
             for model_id, other in models.items():
                 if model_id == FULL_MODEL:
@@ -254,8 +286,15 @@ def main():
     parser.add_argument("--input-roots", nargs="+", required=True)
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--representative-traces", action="store_true")
+    parser.add_argument(
+        "--factorial",
+        action="store_true",
+        help="Accept the full 2^3 combination set instead of the four-model screen.",
+    )
     args = parser.parse_args()
-    manifest = analyze(args.input_roots, args.output_dir, args.representative_traces)
+    manifest = analyze(
+        args.input_roots, args.output_dir, args.representative_traces, args.factorial
+    )
     print(json.dumps(manifest["counts"], indent=2))
 
 

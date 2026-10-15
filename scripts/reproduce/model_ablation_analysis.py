@@ -106,6 +106,10 @@ EXPECTED_MODEL_IDS = frozenset(
     for progressive, heterogeneous, capacity in product((0, 1), repeat=3)
 )
 
+# The formal factorial design runs with this algorithm; frozen in
+# docs/formal_experiment_protocol.md. This module is the single source of truth.
+FORMAL_ALGORITHM = "nsga2"
+
 POOLED_QUALITY_COLUMNS = frozenset(
     {
         "hypervolume",
@@ -312,7 +316,7 @@ def _validate_complete_blocks(
             and len(evaluation_counts) == 1
             and len(evaluation_budgets) == 1
             and len(algorithms) == 1
-            and algorithms == {"nsga2_alns"}
+            and algorithms == {FORMAL_ALGORITHM}
         )
         completeness_rows.append(
             {

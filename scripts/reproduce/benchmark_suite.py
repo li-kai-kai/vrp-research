@@ -82,9 +82,14 @@ def build_benchmark_instance(
     *,
     instance_seed: int,
     model_version: str = "v2",
+    node_role_strategy: str | None = None,
 ) -> CapacityExperimentInstance:
     evaluation = EvaluationConfig.for_version(model_version)
     if spec.source == "wenchuan":
+        if node_role_strategy is not None:
+            raise ValueError(
+                "node_role_strategy override is not supported for the wenchuan case"
+            )
         instance = build_wenchuan_instance(seed=instance_seed)
         instance.base.name = f"{spec.case_id}_seed{instance_seed}"
         instance.capacity_scale = spec.capacity_scale
@@ -105,7 +110,7 @@ def build_benchmark_instance(
         supply_ratio=spec.supply_ratio,
         topology="random",
         damage_strategy="random",
-        node_role_strategy="random",
+        node_role_strategy=node_role_strategy or "random",
     )
     base.name = f"{spec.case_id}_seed{instance_seed}"
 

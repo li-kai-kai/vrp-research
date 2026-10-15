@@ -7,7 +7,7 @@ import platform
 import subprocess
 import sys
 from collections import defaultdict
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import datetime, timezone
 from itertools import product
 from pathlib import Path
@@ -30,9 +30,13 @@ from scripts.reproduce.capacity_recovery import (
     MODEL_VERSIONS,
     UNIFORM_VEHICLE_RECOVERY_THRESHOLD,
     EvaluationConfig,
+    FullExecutionProfile,
     model_factor_variant,
 )
-from scripts.reproduce.model_ablation_analysis import analyze_model_ablation
+from scripts.reproduce.model_ablation_analysis import (
+    FORMAL_ALGORITHM,
+    analyze_model_ablation,
+)
 from scripts.reproduce.run_benchmark import (
     SOURCE_FILES,
     _default_evaluations,
@@ -59,10 +63,11 @@ from scripts.reproduce.solution_io import (
 )
 
 
-ALGORITHM = "nsga2_alns"
+ALGORITHM = FORMAL_ALGORITHM
 
-# The formal factorial design is the paired 2^3 block run with this algorithm.
-FORMAL_ALGORITHM = "nsga2_alns"
+# The formal factorial design is the paired 2^3 block run with FORMAL_ALGORITHM
+# (imported from the analysis module, which is the single source of truth;
+# frozen in docs/formal_experiment_protocol.md).
 
 # The entry point and its analysis also determine a run's numbers, so they are
 # part of this experiment's source fingerprint.
@@ -154,8 +159,107 @@ def main() -> None:
         model_version=args.model_version,
         algorithm=args.algorithm,
         model_ids=args.model_ids,
+        capacity_scale=args.capacity_scale,
+        node_role_strategy=args.node_role_strategy,
+        threshold_scale=args.threshold_scale,
+        repair_crews=args.repair_crews,
+        repair_duration_scale=args.repair_duration_scale,
+        fleet_scale=args.fleet_scale,
+        supply_scale=args.supply_scale,
         resume=args.resume,
     )
+
+
+def _apply_instance_overrides(
+    instance: CapacityExperimentInstance,
+    *,
+    threshold_scale: float | None = None,
+    repair_crews: int | None = None,
+    repair_duration_scale: float | None = None,
+    fleet_scale: float | None = None,
+    supply_scale: float | None = None,
+) -> CapacityExperimentInstance:
+    """Stress-level instance overrides for the frozen sensitivity scheme.
+
+    These are mechanism-activation levels, not calibration claims. The declared
+    Full profile is re-derived afterwards so re-enabled factors restore the
+    overridden thresholds and the Full variant equals the overridden model.
+    """
+    if threshold_scale is not None:
+        if threshold_scale <= 0:
+            raise ValueError("threshold_scale must be positive")
+        vehicles = [
+            replace(
+                vehicle,
+                min_recovery_progress=min(
+                    1.0, float(vehicle.min_recovery_progress) * threshold_scale
+                ),
+            )
+            for vehicle in instance.vehicles
+        ]
+        instance = replace(instance, vehicles=vehicles)
+    if repair_crews is not None:
+        if repair_crews < 1:
+            raise ValueError("repair_crews must be a positive integer")
+        instance = replace(
+            instance, base=replace(instance.base, repair_crews=repair_crews)
+        )
+    if repair_duration_scale is not None:
+        if repair_duration_scale <= 0:
+            raise ValueError("repair_duration_scale must be positive")
+        graph = instance.base.graph.copy()
+        damaged_edges = {}
+        for damage_id, edge in instance.base.damaged_edges.items():
+            scaled = float(edge.repair_time) * repair_duration_scale
+            damaged_edges[damage_id] = replace(edge, repair_time=scaled)
+            graph[edge.u][edge.v]["repair_time"] = scaled
+        instance = replace(
+            instance,
+            base=replace(
+                instance.base, graph=graph, damaged_edges=damaged_edges
+            ),
+        )
+    if fleet_scale is not None:
+        if fleet_scale <= 0:
+            raise ValueError("fleet_scale must be positive")
+        vehicles = [
+            replace(vehicle, count=max(1, round(vehicle.count * fleet_scale)))
+            for vehicle in instance.vehicles
+        ]
+        instance = replace(instance, vehicles=vehicles)
+    if supply_scale is not None:
+        if supply_scale <= 0:
+            raise ValueError("supply_scale must be positive")
+        instance = replace(
+            instance,
+            base=replace(
+                instance.base,
+                supply_amounts={
+                    key: value * supply_scale
+                    for key, value in instance.base.supply_amounts.items()
+                },
+            ),
+        )
+    if any(
+        value is not None
+        for value in (
+            threshold_scale,
+            repair_crews,
+            repair_duration_scale,
+            fleet_scale,
+            supply_scale,
+        )
+    ):
+        label = (
+            instance.full_profile.label
+            if instance.full_profile is not None
+            else "synthetic_full"
+        )
+        instance = replace(
+            instance,
+            full_profile=FullExecutionProfile.from_instance(instance, label),
+        )
+    return instance
 
 
 def run_model_ablation(
@@ -174,6 +278,13 @@ def run_model_ablation(
     model_version: str = "v2",
     algorithm: str = ALGORITHM,
     model_ids: list[str] | None = None,
+    capacity_scale: float | None = None,
+    node_role_strategy: str | None = None,
+    threshold_scale: float | None = None,
+    repair_crews: int | None = None,
+    repair_duration_scale: float | None = None,
+    fleet_scale: float | None = None,
+    supply_scale: float | None = None,
     resume: bool = False,
 ) -> list[dict[str, object]]:
     """Run the paired model-factor factorial with the unified benchmark solver.
@@ -186,6 +297,13 @@ def run_model_ablation(
     if algorithm not in ALGORITHMS:
         raise ValueError(f"unknown algorithm: {algorithm}")
     specs = _select_specs(benchmark_specs(suite), cases)
+    if capacity_scale is not None:
+        # Absolute capacity calibration override; the frozen sensitivity scheme
+        # (docs/formal_experiment_protocol.md) uses it, and capacity_scale is
+        # part of the physical instance hash, so each level is its own scenario.
+        if capacity_scale <= 0:
+            raise ValueError("capacity_scale must be positive")
+        specs = [replace(spec, capacity_scale=capacity_scale) for spec in specs]
     default_seeds = default_instance_seeds(suite)
     requested_seeds = instance_seeds if instance_seeds else None
     instance_seeds_by_case = {
@@ -262,6 +380,15 @@ def run_model_ablation(
                 spec,
                 instance_seed=instance_seed,
                 model_version=model_version,
+                node_role_strategy=node_role_strategy,
+            )
+            base_instance = _apply_instance_overrides(
+                base_instance,
+                threshold_scale=threshold_scale,
+                repair_crews=repair_crews,
+                repair_duration_scale=repair_duration_scale,
+                fleet_scale=fleet_scale,
+                supply_scale=supply_scale,
             )
             # The execution environment every planning group is replayed in.
             store.save_execution_instance(
@@ -745,6 +872,26 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--pop-size", type=int)
     parser.add_argument("--crossover-probability", type=float, default=0.90)
     parser.add_argument("--mutation-probability", type=float, default=0.20)
+    parser.add_argument(
+        "--capacity-scale",
+        type=float,
+        default=None,
+        help=(
+            "Absolute capacity calibration override for every selected case; "
+            "used by the frozen sensitivity scheme."
+        ),
+    )
+    parser.add_argument(
+        "--node-role-strategy",
+        choices=["random", "separated"],
+        default=None,
+        help="Synthetic node-role layout override (frozen sensitivity scheme).",
+    )
+    parser.add_argument("--threshold-scale", type=float, default=None)
+    parser.add_argument("--repair-crews", type=int, default=None)
+    parser.add_argument("--repair-duration-scale", type=float, default=None)
+    parser.add_argument("--fleet-scale", type=float, default=None)
+    parser.add_argument("--supply-scale", type=float, default=None)
     parser.add_argument("--alns-probability", type=float, default=0.35)
     parser.add_argument("--alns-iterations", type=int, default=4)
     parser.add_argument(

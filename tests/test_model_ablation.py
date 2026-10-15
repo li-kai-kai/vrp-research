@@ -4,6 +4,7 @@ from tempfile import TemporaryDirectory
 from scripts.reproduce.benchmark_algorithms import BenchmarkBudget
 from scripts.reproduce.run_model_ablation import MODEL_FACTOR_COMBINATIONS, run_model_ablation
 from scripts.reproduce.model_ablation_analysis import METRICS, analyze_model_ablation, merge_model_ablation_shards
+from scripts.reproduce.solution_io import RunStore
 
 
 class ModelAblationTest(unittest.TestCase):
@@ -27,7 +28,7 @@ class ModelAblationTest(unittest.TestCase):
             self.assertEqual(len(MODEL_FACTOR_COMBINATIONS), 8)
             self.assertEqual(len(rows), 8)
             self.assertEqual(len({row["model_id"] for row in rows}), 8)
-            self.assertEqual({row["algorithm"] for row in rows}, {"nsga2_alns"})
+            self.assertEqual({row["algorithm"] for row in rows}, {"nsga2"})
             self.assertEqual({row["instance_seed"] for row in rows}, {1})
             self.assertEqual({row["solver_seed"] for row in rows}, {60_000})
             self.assertEqual({row["max_evaluations"] for row in rows}, {2})
@@ -81,7 +82,7 @@ class ModelAblationTest(unittest.TestCase):
                                 "source": "synthetic",
                                 "instance_seed": instance_seed,
                                 "solver_seed": solver_seed,
-                                "algorithm": "nsga2_alns",
+                                "algorithm": "nsga2",
                                 "model_id": (
                                     f"PR{progressive}_HT{heterogeneous}_EC{capacity}"
                                 ),
@@ -131,7 +132,7 @@ class ModelAblationTest(unittest.TestCase):
             "source": "synthetic",
             "instance_seed": 1,
             "solver_seed": 60_000,
-            "algorithm": "nsga2_alns",
+            "algorithm": "nsga2",
             "model_id": "PR0_HT0_EC0",
             "progressive_recovery": 0,
             "heterogeneous_vehicle_thresholds": 0,
@@ -183,6 +184,65 @@ class ModelAblationTest(unittest.TestCase):
                 1,
             )
 
+    def test_capacity_scale_override_changes_the_physical_instance(self):
+        budget = BenchmarkBudget(max_evaluations=2, pop_size=2, alns_iterations=0)
+        with TemporaryDirectory() as directory:
+            common = dict(
+                suite="smoke",
+                cases=["S020"],
+                instance_seeds=[1],
+                solver_repeats=1,
+                budget=budget,
+                model_ids=["PR1_HT1_EC1"],
+            )
+            base_dir = Path(directory) / "base"
+            scaled_dir = Path(directory) / "scaled"
+            run_model_ablation(output_dir=base_dir, **common)
+            run_model_ablation(output_dir=scaled_dir, capacity_scale=0.002, **common)
+            base = RunStore(base_dir).load_runs_for_experiment()
+            scaled = RunStore(scaled_dir).load_runs_for_experiment()
+            self.assertEqual(len(base), 1)
+            self.assertEqual(len(scaled), 1)
+            self.assertNotEqual(
+                base[0]["physical_instance_hash"],
+                scaled[0]["physical_instance_hash"],
+            )
+
+    def test_sensitivity_overrides_change_the_instance(self):
+        budget = BenchmarkBudget(max_evaluations=2, pop_size=2, alns_iterations=0)
+        with TemporaryDirectory() as directory:
+            common = dict(
+                suite="smoke",
+                cases=["S020"],
+                instance_seeds=[1],
+                solver_repeats=1,
+                budget=budget,
+                model_ids=["PR1_HT1_EC1"],
+            )
+            baseline_dir = Path(directory) / "baseline"
+            run_model_ablation(output_dir=baseline_dir, **common)
+            baseline = RunStore(baseline_dir).load_runs_for_experiment()[0]
+            overrides = {
+                "node_role_strategy": "separated",
+                "threshold_scale": 1.25,
+                "repair_crews": 4,
+                "repair_duration_scale": 2.0,
+                "fleet_scale": 2.0,
+                "supply_scale": 0.5,
+            }
+            for name, value in overrides.items():
+                with self.subTest(override=name):
+                    output_dir = Path(directory) / name
+                    run_model_ablation(
+                        output_dir=output_dir, **{**common, name: value}
+                    )
+                    row = RunStore(output_dir).load_runs_for_experiment()[0]
+                    changed = (
+                        row["physical_instance_hash"]
+                        != baseline["physical_instance_hash"]
+                        or row["model_fingerprint"] != baseline["model_fingerprint"]
+                    )
+                    self.assertTrue(changed, name)
 
 
 if __name__ == "__main__":

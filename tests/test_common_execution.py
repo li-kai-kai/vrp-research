@@ -287,7 +287,7 @@ class AblationSubsetTest(unittest.TestCase):
                 output_dir=output_dir,
                 budget=budget,
                 model_version="v2",
-                algorithm="nsga2_alns",
+                algorithm="nsga2",
             )
             with (output_dir / "factor_effects.csv").open(newline="", encoding="utf-8") as handle:
                 effects = list(csv.DictReader(handle))
