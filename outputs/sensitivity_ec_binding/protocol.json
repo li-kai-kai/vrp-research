@@ -1,0 +1,56 @@
+{
+  "created_at_utc": "2026-10-14T06:24:19.640063+00:00",
+  "axis": "EC transition-band densification (docs/formal_experiment_protocol.md section 5)",
+  "case_id": "S025",
+  "instance_seeds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "solver_seed_start": 90000,
+  "solver_repeat_start": 0,
+  "solver_repeats": 4,
+  "capacity_scales": [
+    0.005,
+    0.002,
+    0.001
+  ],
+  "model_ids": [
+    "PR1_HT1_EC1",
+    "PR1_HT1_EC0"
+  ],
+  "algorithm": "nsga2",
+  "budget": 10000,
+  "pop_size": 32,
+  "crossover_probability": 0.9,
+  "mutation_probability": 0.2,
+  "planned_runs": 240,
+  "source_fingerprint": "bbf64bd39f2fd930beade02f014bc3ec895a15ab906fd1aacc9fafbe7ecee691",
+  "purpose": "Decide whether the EC constraint changes planning or executed outcomes once capacity utilization reaches the 0.85-0.97 transition band; the calibrated S025 utilization is 0.010-0.034, where No-EC ties Full.",
+  "probe_addition": {
+    "created_at_utc": "2026-10-14T06:41:39.527842+00:00",
+    "reason": "the three declared levels top out near utilization ~0.75 (measured slope: utilization scales ~1/capacity_scale); this probe reaches the clearly binding zone",
+    "capacity_scales": [
+      0.0005,
+      0.0002
+    ],
+    "instance_seeds": [
+      1,
+      2
+    ],
+    "solver_repeats": 1,
+    "model_ids": [
+      "PR1_HT1_EC1",
+      "PR1_HT1_EC0"
+    ],
+    "planned_runs": 8,
+    "purpose": "go/no-go screen: does a clearly binding EC constraint change decisions or outcomes"
+  }
+}

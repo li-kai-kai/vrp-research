@@ -1,0 +1,42 @@
+{
+  "created_at_utc": "2026-10-13T17:05:55.799320+00:00",
+  "scope": "WEN38 budget-ladder re-run on post-consolidation source: 80 searches, four budgets, five paired solver seeds.",
+  "case_id": "WEN38",
+  "instance_seed": 1,
+  "model_version": "v2",
+  "algorithm": "nsga2",
+  "model_ids": [
+    "PR1_HT1_EC1",
+    "PR0_HT1_EC1",
+    "PR1_HT0_EC1",
+    "PR1_HT1_EC0"
+  ],
+  "initial_budgets": [
+    500,
+    2000,
+    5000,
+    10000
+  ],
+  "pop_size": 32,
+  "solver_seeds": [
+    60000,
+    60001,
+    60002,
+    60003,
+    60004
+  ],
+  "solver_repeats": 5,
+  "solver_repeat_start": 0,
+  "source_fingerprint": "a5942f81eddf3fd4fbccf3c38c23550624f21f8945c1d13dd2ae4554d6b4f002",
+  "initial_planned_runs": 80,
+  "initial_planned_evaluations": 350000,
+  "reused_runs": [],
+  "runtime_scope": "Up to eight concurrent subprocesses on the 128-core Linux host, each with a disjoint RunStore. Runtime is descriptive only.",
+  "plateau_screen": {
+    "hv_relative_change_tolerance": 0.01,
+    "igd_absolute_change_tolerance": 0.01,
+    "minimum_small_change_pairs": 4,
+    "pairs_per_model": 5,
+    "confirmation_budget": 20000
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "created_at_utc": "2026-10-15T05:37:44.933760+00:00",
+  "design": "sensitivity track of docs/formal_experiment_protocol.md (Package B subset)",
+  "case_id": "S025",
+  "instance_seeds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "solver_repeats": 2,
+  "solver_seed_start": 90000,
+  "budget": 10000,
+  "algorithm": "nsga2",
+  "cells": [
+    {
+      "tag": "ec_cap0p0005",
+      "overrides": {
+        "capacity_scale": "0.0005"
+      },
+      "models": [
+        "PR1_HT1_EC1",
+        "PR1_HT1_EC0"
+      ]
+    },
+    {
+      "tag": "ec_cap0p0002",
+      "overrides": {
+        "capacity_scale": "0.0002"
+      },
+      "models": [
+        "PR1_HT1_EC1",
+        "PR1_HT1_EC0"
+      ]
+    },
+    {
+      "tag": "ht_scale0p75",
+      "overrides": {
+        "threshold_scale": "0.75"
+      },
+      "models": [
+        "PR1_HT1_EC1",
+        "PR1_HT0_EC1"
+      ]
+    },
+    {
+      "tag": "ht_scale1p25",
+      "overrides": {
+        "threshold_scale": "1.25"
+      },
+      "models": [
+        "PR1_HT1_EC1",
+        "PR1_HT0_EC1"
+      ]
+    },
+    {
+      "tag": "ht_role_sep",
+      "overrides": {
+        "node_role_strategy": "separated"
+      },
+      "models": [
+        "PR1_HT1_EC1",
+        "PR1_HT0_EC1"
+      ]
+    },
+    {
+      "tag": "pr_crews4",
+      "overrides": {
+        "repair_crews": "4"
+      },
+      "models": [
+        "PR1_HT1_EC1",
+        "PR0_HT1_EC1"
+      ]
+    },
+    {
+      "tag": "pr_dur0p5",
+      "overrides": {
+        "repair_duration_scale": "0.5"
+      },
+      "models": [
+        "PR1_HT1_EC1",
+        "PR0_HT1_EC1"
+      ]
+    },
+    {
+      "tag": "pr_dur2",
+      "overrides": {
+        "repair_duration_scale": "2.0"
+      },
+      "models": [
+        "PR1_HT1_EC1",
+        "PR0_HT1_EC1"
+      ]
+    },
+    {
+      "tag": "res_fleet0p5",
+      "overrides": {
+        "fleet_scale": "0.5"
+      },
+      "models": [
+        "PR1_HT1_EC1"
+      ]
+    },
+    {
+      "tag": "res_fleet2",
+      "overrides": {
+        "fleet_scale": "2.0"
+      },
+      "models": [
+        "PR1_HT1_EC1"
+      ]
+    },
+    {
+      "tag": "res_supply0p5",
+      "overrides": {
+        "supply_scale": "0.5"
+      },
+      "models": [
+        "PR1_HT1_EC1"
+      ]
+    },
+    {
+      "tag": "res_supply2",
+      "overrides": {
+        "supply_scale": "2.0"
+      },
+      "models": [
+        "PR1_HT1_EC1"
+      ]
+    }
+  ],
+  "planned_runs": 240,
+  "source_fingerprint": "644784087ed278ff276f6ffb2e9b0d963900555ef0b967fda46543608c5c5f56",
+  "note": "stress-level mechanism-activation cells, not calibration claims; resource cells pair against the baseline Full runs of the model track (same instances and seeds)"
+}

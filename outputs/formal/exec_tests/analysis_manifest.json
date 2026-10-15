@@ -1,0 +1,13 @@
+{
+  "created_at_utc": "2026-10-15T05:30:37.561435+00:00",
+  "input_dirs": [
+    "outputs/formal/exec_m100",
+    "outputs/formal/exec_s025",
+    "outputs/formal/exec_s050",
+    "outputs/formal/exec_wen38"
+  ],
+  "family_declaration": "per tier: {No-PR, No-HT, No-EC} x {delta_hv, representative_delta_F1} = 6 tests; Holm within the tier; positive favours Full; unit = instance (repeats averaged)",
+  "permutation_samples": 20000,
+  "analysis_seed": 20260831,
+  "hypervolume_scale": "normalised against the pooled reference front (0-1)"
+}

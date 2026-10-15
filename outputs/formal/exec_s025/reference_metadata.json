@@ -1,0 +1,872 @@
+[
+  {
+    "case_id": "S025",
+    "scenario_family": "benchmark",
+    "zone": "original",
+    "instance_seed": 1,
+    "physical_instance_hash": "9a7dfe8077fc2e189e1887c1bdfdabb4a300cfafbc02f0a08f6939572d46c46e",
+    "reference_front_size": 11,
+    "ideal": [
+      3.6225094227905674,
+      2328.2342851831786,
+      -0.8999999999999859
+    ],
+    "nadir": [
+      3.6950767326358624,
+      2927.580908804874,
+      -0.8999999999994708
+    ],
+    "raw_ranges": [
+      0.07256730984529502,
+      599.3466236216955,
+      5.151434834260726e-13
+    ],
+    "ideal_key": [
+      362250942,
+      2328234285,
+      -90000000
+    ],
+    "nadir_key": [
+      369507673,
+      2927580909,
+      -90000000
+    ],
+    "key_spans": [
+      7256731,
+      599346624,
+      0
+    ],
+    "degenerate_dimensions": [
+      2
+    ],
+    "effective_dimensions": 2,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  },
+  {
+    "case_id": "S025",
+    "scenario_family": "benchmark",
+    "zone": "original",
+    "instance_seed": 2,
+    "physical_instance_hash": "510c986458c32cc42e88f1c5c45fa629bfc0ef970d0f032290351267f8e5cea0",
+    "reference_front_size": 7,
+    "ideal": [
+      3.895036738252852,
+      2183.9551467063,
+      -0.8999999999999688
+    ],
+    "nadir": [
+      4.103290962847589,
+      2643.5624694665494,
+      -0.8999999999996362
+    ],
+    "raw_ranges": [
+      0.20825422459473675,
+      459.6073227602492,
+      3.326228181776969e-13
+    ],
+    "ideal_key": [
+      389503674,
+      2183955147,
+      -90000000
+    ],
+    "nadir_key": [
+      410329096,
+      2643562469,
+      -90000000
+    ],
+    "key_spans": [
+      20825422,
+      459607322,
+      0
+    ],
+    "degenerate_dimensions": [
+      2
+    ],
+    "effective_dimensions": 2,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  },
+  {
+    "case_id": "S025",
+    "scenario_family": "benchmark",
+    "zone": "original",
+    "instance_seed": 3,
+    "physical_instance_hash": "cfafb66c9a754ea97629acdcefd6b0765bedfc0a15ab8e5ecec402d049a5a4e7",
+    "reference_front_size": 8,
+    "ideal": [
+      3.674704060252394,
+      1570.9711246743993,
+      -0.8999999999999488
+    ],
+    "nadir": [
+      3.9881430398677304,
+      1821.5459494116644,
+      -0.8999999999994844
+    ],
+    "raw_ranges": [
+      0.3134389796153365,
+      250.5748247372651,
+      4.64406291200703e-13
+    ],
+    "ideal_key": [
+      367470406,
+      1570971125,
+      -90000000
+    ],
+    "nadir_key": [
+      398814304,
+      1821545949,
+      -90000000
+    ],
+    "key_spans": [
+      31343898,
+      250574824,
+      0
+    ],
+    "degenerate_dimensions": [
+      2
+    ],
+    "effective_dimensions": 2,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  },
+  {
+    "case_id": "S025",
+    "scenario_family": "benchmark",
+    "zone": "original",
+    "instance_seed": 4,
+    "physical_instance_hash": "438101fc28b45c7f1163539650df66110b374dbad5251bb689146615e30968af",
+    "reference_front_size": 9,
+    "ideal": [
+      3.545554699735904,
+      2547.801611638123,
+      -0.8999999999999923
+    ],
+    "nadir": [
+      3.817656257954334,
+      3000.9486856839876,
+      -0.8999999999996362
+    ],
+    "raw_ranges": [
+      0.27210155821842985,
+      453.14707404586443,
+      3.560485239972877e-13
+    ],
+    "ideal_key": [
+      354555470,
+      2547801612,
+      -90000000
+    ],
+    "nadir_key": [
+      381765626,
+      3000948686,
+      -90000000
+    ],
+    "key_spans": [
+      27210156,
+      453147074,
+      0
+    ],
+    "degenerate_dimensions": [
+      2
+    ],
+    "effective_dimensions": 2,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  },
+  {
+    "case_id": "S025",
+    "scenario_family": "benchmark",
+    "zone": "original",
+    "instance_seed": 5,
+    "physical_instance_hash": "9862103801e936f2909bc66d5fc5140eda12d4cd5fb53ba71562e5ff5fa901be",
+    "reference_front_size": 12,
+    "ideal": [
+      3.9219803270387006,
+      3093.707512372473,
+      -0.8999999999999907
+    ],
+    "nadir": [
+      4.143543637010243,
+      3559.189156656291,
+      -0.8999999999993958
+    ],
+    "raw_ranges": [
+      0.2215633099715424,
+      465.4816442838178,
+      5.948574965941589e-13
+    ],
+    "ideal_key": [
+      392198033,
+      3093707512,
+      -90000000
+    ],
+    "nadir_key": [
+      414354364,
+      3559189157,
+      -90000000
+    ],
+    "key_spans": [
+      22156331,
+      465481645,
+      0
+    ],
+    "degenerate_dimensions": [
+      2
+    ],
+    "effective_dimensions": 2,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  },
+  {
+    "case_id": "S025",
+    "scenario_family": "benchmark",
+    "zone": "original",
+    "instance_seed": 6,
+    "physical_instance_hash": "511fdac9b4771c9600ada7b15d5c144427ff5972de78b3fa8d0a78508bda5013",
+    "reference_front_size": 8,
+    "ideal": [
+      3.633517179180224,
+      2393.3213728961337,
+      -0.899999999999955
+    ],
+    "nadir": [
+      4.0921250741393544,
+      3127.932977507553,
+      -0.8999999999994448
+    ],
+    "raw_ranges": [
+      0.45860789495913057,
+      734.6116046114194,
+      5.101474798152594e-13
+    ],
+    "ideal_key": [
+      363351718,
+      2393321373,
+      -90000000
+    ],
+    "nadir_key": [
+      409212507,
+      3127932978,
+      -90000000
+    ],
+    "key_spans": [
+      45860789,
+      734611605,
+      0
+    ],
+    "degenerate_dimensions": [
+      2
+    ],
+    "effective_dimensions": 2,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  },
+  {
+    "case_id": "S025",
+    "scenario_family": "benchmark",
+    "zone": "original",
+    "instance_seed": 7,
+    "physical_instance_hash": "05856596c096ffec5e7e41cf06cf9a4178522c72a02adbacf8a2ced52af7c780",
+    "reference_front_size": 8,
+    "ideal": [
+      4.143031208660507,
+      2468.3756168869218,
+      -0.8999999999999773
+    ],
+    "nadir": [
+      4.308096896602027,
+      3256.9772509282716,
+      -0.899999999999426
+    ],
+    "raw_ranges": [
+      0.16506568794152,
+      788.6016340413498,
+      5.512257317263902e-13
+    ],
+    "ideal_key": [
+      414303121,
+      2468375617,
+      -90000000
+    ],
+    "nadir_key": [
+      430809690,
+      3256977251,
+      -90000000
+    ],
+    "key_spans": [
+      16506569,
+      788601634,
+      0
+    ],
+    "degenerate_dimensions": [
+      2
+    ],
+    "effective_dimensions": 2,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  },
+  {
+    "case_id": "S025",
+    "scenario_family": "benchmark",
+    "zone": "original",
+    "instance_seed": 8,
+    "physical_instance_hash": "cff4af631d0fff89a594e4ae2e313375413cf657b0a5bb8e6c755db4a3681f3a",
+    "reference_front_size": 18,
+    "ideal": [
+      3.888495817570015,
+      2112.825279003324,
+      -0.8999999999999976
+    ],
+    "nadir": [
+      4.205770924019025,
+      2666.659541116636,
+      -0.8999999999994607
+    ],
+    "raw_ranges": [
+      0.31727510644901,
+      553.834262113312,
+      5.369038547087257e-13
+    ],
+    "ideal_key": [
+      388849582,
+      2112825279,
+      -90000000
+    ],
+    "nadir_key": [
+      420577092,
+      2666659541,
+      -90000000
+    ],
+    "key_spans": [
+      31727510,
+      553834262,
+      0
+    ],
+    "degenerate_dimensions": [
+      2
+    ],
+    "effective_dimensions": 2,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  },
+  {
+    "case_id": "S025",
+    "scenario_family": "benchmark",
+    "zone": "original",
+    "instance_seed": 9,
+    "physical_instance_hash": "1f52ede29464e635c667c519f1c46c10ca5fcbca8a076c26c50861e2a908c7d1",
+    "reference_front_size": 29,
+    "ideal": [
+      3.9570125932894724,
+      1815.476319288567,
+      -0.8999999999999831
+    ],
+    "nadir": [
+      4.179358990401149,
+      2515.3342452137395,
+      -0.8999999999996362
+    ],
+    "raw_ranges": [
+      0.2223463971116768,
+      699.8579259251724,
+      3.469446951953614e-13
+    ],
+    "ideal_key": [
+      395701259,
+      1815476319,
+      -90000000
+    ],
+    "nadir_key": [
+      417935899,
+      2515334245,
+      -90000000
+    ],
+    "key_spans": [
+      22234640,
+      699857926,
+      0
+    ],
+    "degenerate_dimensions": [
+      2
+    ],
+    "effective_dimensions": 2,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  },
+  {
+    "case_id": "S025",
+    "scenario_family": "benchmark",
+    "zone": "original",
+    "instance_seed": 10,
+    "physical_instance_hash": "f912fdb092e08214b9702c9303ead931e052352282de95476df8a7c6064cf4b6",
+    "reference_front_size": 7,
+    "ideal": [
+      3.4629342620116317,
+      2264.925098332086,
+      -0.8999999999999883
+    ],
+    "nadir": [
+      3.717354714532523,
+      2727.4868222236482,
+      -0.8999999999995654
+    ],
+    "raw_ranges": [
+      0.2544204525208915,
+      462.56172389156245,
+      4.2288395007972213e-13
+    ],
+    "ideal_key": [
+      346293426,
+      2264925098,
+      -90000000
+    ],
+    "nadir_key": [
+      371735471,
+      2727486822,
+      -90000000
+    ],
+    "key_spans": [
+      25442045,
+      462561724,
+      0
+    ],
+    "degenerate_dimensions": [
+      2
+    ],
+    "effective_dimensions": 2,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  },
+  {
+    "case_id": "S025",
+    "scenario_family": "benchmark",
+    "zone": "original",
+    "instance_seed": 11,
+    "physical_instance_hash": "0665fb0a5c4122986c1effed48d7c361fe29fe8ecdd48647b1e3473667ef0785",
+    "reference_front_size": 18,
+    "ideal": [
+      3.7900378527108955,
+      1877.9599928228577,
+      -0.8999999999999918
+    ],
+    "nadir": [
+      4.148426392224149,
+      2359.732453710775,
+      -0.8999999999995627
+    ],
+    "raw_ranges": [
+      0.35838853951325333,
+      481.77246088791753,
+      4.29101199017623e-13
+    ],
+    "ideal_key": [
+      379003785,
+      1877959993,
+      -90000000
+    ],
+    "nadir_key": [
+      414842639,
+      2359732454,
+      -90000000
+    ],
+    "key_spans": [
+      35838854,
+      481772461,
+      0
+    ],
+    "degenerate_dimensions": [
+      2
+    ],
+    "effective_dimensions": 2,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  },
+  {
+    "case_id": "S025",
+    "scenario_family": "benchmark",
+    "zone": "original",
+    "instance_seed": 12,
+    "physical_instance_hash": "dcb0572678d1e61784c388f368226b8f7497571a8521523356994bebb578ebc7",
+    "reference_front_size": 7,
+    "ideal": [
+      3.5281452926929617,
+      1899.2927395891295,
+      -0.8999999999999665
+    ],
+    "nadir": [
+      3.671287563709586,
+      2337.432276091049,
+      -0.8999999999996918
+    ],
+    "raw_ranges": [
+      0.14314227101662436,
+      438.13953650191957,
+      2.7466917629226373e-13
+    ],
+    "ideal_key": [
+      352814529,
+      1899292740,
+      -90000000
+    ],
+    "nadir_key": [
+      367128756,
+      2337432276,
+      -90000000
+    ],
+    "key_spans": [
+      14314227,
+      438139536,
+      0
+    ],
+    "degenerate_dimensions": [
+      2
+    ],
+    "effective_dimensions": 2,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  },
+  {
+    "case_id": "S025",
+    "scenario_family": "benchmark",
+    "zone": "original",
+    "instance_seed": 13,
+    "physical_instance_hash": "7aed80ec3772973000b98006c7782abc78370cc7b3404cdc5e31d03a30004e5a",
+    "reference_front_size": 13,
+    "ideal": [
+      3.8110089815269204,
+      2943.6938198164307,
+      -0.8999999999999861
+    ],
+    "nadir": [
+      4.135014140400714,
+      3588.7489626242104,
+      -0.8999999999994485
+    ],
+    "raw_ranges": [
+      0.3240051588737938,
+      645.0551428077797,
+      5.376810108259633e-13
+    ],
+    "ideal_key": [
+      381100898,
+      2943693820,
+      -90000000
+    ],
+    "nadir_key": [
+      413501414,
+      3588748963,
+      -90000000
+    ],
+    "key_spans": [
+      32400516,
+      645055143,
+      0
+    ],
+    "degenerate_dimensions": [
+      2
+    ],
+    "effective_dimensions": 2,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  },
+  {
+    "case_id": "S025",
+    "scenario_family": "benchmark",
+    "zone": "original",
+    "instance_seed": 14,
+    "physical_instance_hash": "386486de2b153e2907bc37ac2560f605290da05a0e5cc5cc81490a462a7bf417",
+    "reference_front_size": 4,
+    "ideal": [
+      3.622424510488829,
+      2533.1000106726437,
+      -0.899999999999992
+    ],
+    "nadir": [
+      3.7609420872933605,
+      2776.5017248159156,
+      -0.8999999999996362
+    ],
+    "raw_ranges": [
+      0.13851757680453147,
+      243.40171414327187,
+      3.5582647939236267e-13
+    ],
+    "ideal_key": [
+      362242451,
+      2533100011,
+      -90000000
+    ],
+    "nadir_key": [
+      376094209,
+      2776501725,
+      -90000000
+    ],
+    "key_spans": [
+      13851758,
+      243401714,
+      0
+    ],
+    "degenerate_dimensions": [
+      2
+    ],
+    "effective_dimensions": 2,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  },
+  {
+    "case_id": "S025",
+    "scenario_family": "benchmark",
+    "zone": "original",
+    "instance_seed": 15,
+    "physical_instance_hash": "502814aa8e8041408c75dc39713b5a0bccd5d2d912aba7b3ed9b11ecfa81b8e7",
+    "reference_front_size": 22,
+    "ideal": [
+      3.533820176626543,
+      2386.605015441852,
+      -0.8999999999999975
+    ],
+    "nadir": [
+      3.7312858056785845,
+      3102.769346192539,
+      -0.8999999999996362
+    ],
+    "raw_ranges": [
+      0.19746562905204135,
+      716.164330750687,
+      3.6126657221302594e-13
+    ],
+    "ideal_key": [
+      353382018,
+      2386605015,
+      -90000000
+    ],
+    "nadir_key": [
+      373128581,
+      3102769346,
+      -90000000
+    ],
+    "key_spans": [
+      19746563,
+      716164331,
+      0
+    ],
+    "degenerate_dimensions": [
+      2
+    ],
+    "effective_dimensions": 2,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  }
+]

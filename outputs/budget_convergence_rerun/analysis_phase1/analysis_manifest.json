@@ -1,0 +1,715 @@
+{
+  "code": {
+    "git_sha": "a1057abbb400afc800cbd46bd42a3684b5faf882",
+    "git_dirty": false,
+    "python": "3.12.15 (main, Oct  9 2026, 15:22:32) [Clang 22.1.3 ]",
+    "python_version": "3.12.15",
+    "platform": "Linux-5.15.0-105-generic-x86_64-with-glibc2.35",
+    "created_at_utc": "2026-10-13T17:52:35.770949+00:00"
+  },
+  "source_hashes": {
+    "scripts/reproduce/run_benchmark.py": "cd78ddaa0ed47cd8c5e0be7edca730d39b095509d62e402860695407682a4f20",
+    "scripts/reproduce/benchmark_suite.py": "239c9588ce094aed154e585b2a7aa39eda73f503e78ced9115991b7165e5d683",
+    "scripts/reproduce/benchmark_algorithms.py": "1d39c567aee0724c9316f6a17dd6d57207e6f53eb8ffd882dc658031fb3d935c",
+    "scripts/reproduce/capacity_recovery.py": "eb4868bf96ba63e3afcd344d1482ed9f4b5d79b44ba97778e865f90f36a52a36",
+    "scripts/reproduce/instance_generator.py": "f121ea469e6bc7f547abc1b241c0baa35792960e465bdca0ea90098307712021",
+    "scripts/reproduce/model.py": "0bda882a13e8ea9c6a340dd0a721898209548a414fd1b517e0e4b8ee63db85c2",
+    "scripts/reproduce/solution_io.py": "4f4bcae51716fee0f066fb48cc9c8bdc137822682f1c0733f2ebf66684e710c1",
+    "scripts/reproduce/objective_precision.py": "fdc00b7437c0eabbbae5c1a575313864e60d97888c858d40cbcbf47950120bf3",
+    "pyproject.toml": "27788f5f0293c62cc6e6cde8b1de425210ad4ba56523795aeecd5688aa979bdb",
+    "uv.lock": "5b0cf64796c740d6c261a36e44622a83bb92c9e1886ca5a0fc233c56911fac5c",
+    "scripts/reproduce/run_model_ablation.py": "9ad6adf10a64aa023c7973fb1754c2604227f044988278ab1c331cffbb6fe83a",
+    "scripts/reproduce/model_ablation_analysis.py": "3c11b38542ea4966d2feaf1d0fc36d2cc47b51dd3a4b02e7391bf94f91e42722",
+    "scripts/reproduce/common_execution_analysis.py": "e59dd01c0e674bcbe616cd9d6141eab409644619a1c110817330c32ee94220e8",
+    "scripts/reproduce/replay_solutions.py": "dc6db301687c1f918d4311fd8f928a46bcf1092b5d2168db6e0085343cded6af",
+    "scripts/reproduce/service_diagnostics.py": "d9ee6728e21de4bbe1a876bde2571d2ff4dcac8180b8df111a2191f322f67a01",
+    "scripts/reproduce/mechanism_applicability.py": "7f90ab192cfe7174035c50d74ba4c5364ee593e94bc3b2dfe6050a422563e1bc",
+    "scripts/reproduce/mechanism_zone_search.py": "4e0fc5de922a09daaa770e893b733d59f0f623a5b964139eb1db6eb79fa36b12",
+    "scripts/reproduce/budget_convergence_analysis.py": "2fd206fee45de82d43f855987319ad59df91946e2af54148db9e4faab5d81792"
+  },
+  "protocol": {
+    "created_at_utc": "2026-10-13T17:05:55.799320+00:00",
+    "scope": "WEN38 budget-ladder re-run on post-consolidation source: 80 searches, four budgets, five paired solver seeds.",
+    "case_id": "WEN38",
+    "instance_seed": 1,
+    "model_version": "v2",
+    "algorithm": "nsga2",
+    "model_ids": [
+      "PR1_HT1_EC1",
+      "PR0_HT1_EC1",
+      "PR1_HT0_EC1",
+      "PR1_HT1_EC0"
+    ],
+    "initial_budgets": [
+      500,
+      2000,
+      5000,
+      10000
+    ],
+    "pop_size": 32,
+    "solver_seeds": [
+      60000,
+      60001,
+      60002,
+      60003,
+      60004
+    ],
+    "solver_repeats": 5,
+    "solver_repeat_start": 0,
+    "source_fingerprint": "a5942f81eddf3fd4fbccf3c38c23550624f21f8945c1d13dd2ae4554d6b4f002",
+    "initial_planned_runs": 80,
+    "initial_planned_evaluations": 350000,
+    "reused_runs": [],
+    "runtime_scope": "Up to eight concurrent subprocesses on the 128-core Linux host, each with a disjoint RunStore. Runtime is descriptive only.",
+    "plateau_screen": {
+      "hv_relative_change_tolerance": 0.01,
+      "igd_absolute_change_tolerance": 0.01,
+      "minimum_small_change_pairs": 4,
+      "pairs_per_model": 5,
+      "confirmation_budget": 20000
+    }
+  },
+  "protocol_sha256": "aaf9825281ebeaf4d8ea4fd4f4c59bdcabfb6165c47678656ededc8f650caa23",
+  "input_roots": [
+    "outputs/budget_convergence_rerun/budget_500/seed_60000",
+    "outputs/budget_convergence_rerun/budget_500/seed_60001",
+    "outputs/budget_convergence_rerun/budget_500/seed_60002",
+    "outputs/budget_convergence_rerun/budget_500/seed_60003",
+    "outputs/budget_convergence_rerun/budget_500/seed_60004",
+    "outputs/budget_convergence_rerun/budget_2000/seed_60000",
+    "outputs/budget_convergence_rerun/budget_2000/seed_60001",
+    "outputs/budget_convergence_rerun/budget_2000/seed_60002",
+    "outputs/budget_convergence_rerun/budget_2000/seed_60003",
+    "outputs/budget_convergence_rerun/budget_2000/seed_60004",
+    "outputs/budget_convergence_rerun/budget_5000/seed_60000",
+    "outputs/budget_convergence_rerun/budget_5000/seed_60001",
+    "outputs/budget_convergence_rerun/budget_5000/seed_60002",
+    "outputs/budget_convergence_rerun/budget_5000/seed_60003",
+    "outputs/budget_convergence_rerun/budget_5000/seed_60004",
+    "outputs/budget_convergence_rerun/budget_10000/seed_60000",
+    "outputs/budget_convergence_rerun/budget_10000/seed_60001",
+    "outputs/budget_convergence_rerun/budget_10000/seed_60002",
+    "outputs/budget_convergence_rerun/budget_10000/seed_60003",
+    "outputs/budget_convergence_rerun/budget_10000/seed_60004"
+  ],
+  "input_runs": [
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR0_HT1_EC1:46c8e20b4c74",
+      "record_sha256": "fa3f564a1594116d41b9e05152661473d459003e16a120a6a601c5644cedd80e"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT0_EC1:90eb595cda5d",
+      "record_sha256": "4dd9422572c4d8e344deac168b1ae1d00c5e55fe14be0bcbaea3ccd59597757b"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC0:8bfdaa57872d",
+      "record_sha256": "ac9c8f17961b998989078b09bb88b9628e2e2c8b34fb4903ce1f912b1a2f027c"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC1:9c0ff73f0850",
+      "record_sha256": "1c22cd3773b96cfa57ec6ae08f71002d834cfbcda5efee8326a67e68c838b7e2"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR0_HT1_EC1:32dade94c4a1",
+      "record_sha256": "0c5c799bc2d7eba597349f3b64bd5894bcbe72fa9fab3e21f8ccb6980eb20284"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT0_EC1:65619d2ec3af",
+      "record_sha256": "7b0cfe521c4c51b8cbb63d2a8c2bec692147d2b59f428d64bfaefca17f4095fe"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC0:4ef19fe7fd91",
+      "record_sha256": "7dcdb0bdfc733a19db3681deeac25903dbae45dc1d514f36ed1d4145966d81d5"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC1:990874f407a4",
+      "record_sha256": "2ba2e08df771f3aa8af225210b9f8cd8a847bf3fd30236093fd4d5c03ee9a534"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR0_HT1_EC1:6071acd0265f",
+      "record_sha256": "c844db013600ae7f74f2e922f2f5f0aa00bc35c341ec43c7ce3280aa7f12a1d9"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT0_EC1:cd484fc69a0d",
+      "record_sha256": "7e9a66e8d2097761bc629a740bd3d509c700109c9d7d5639ee4459c58deb4a3a"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT1_EC0:f86e1a299401",
+      "record_sha256": "a41916d5e2c4321a8270c41efc109531a4ab869b90d6853157005da57f2d1b60"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT1_EC1:95a572c5ce23",
+      "record_sha256": "65b69468b3c11e2e0fa9d1a358670d2690c5a6df59df040d13ea33589dfcdd52"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR0_HT1_EC1:26ca912ef4e5",
+      "record_sha256": "354e85e02c89b9e7e1e41aa90792fa8491f3306d386619923f7260e968302fb7"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT0_EC1:f0c4e27f0d82",
+      "record_sha256": "90b3e2c8fb8bcd65e1cff0ba63cc0d73d23ca4a3ae1ab318b00b078ae9308fa9"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT1_EC0:c920df3de455",
+      "record_sha256": "969f72fc80dd874787c502d47084127db242d1fea619825d60c139c9fbc22ba7"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT1_EC1:fcede1e4eccf",
+      "record_sha256": "3ec5cc060e3650afb507db3111c15d2c4488614770737c3a06cb6670fef93906"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR0_HT1_EC1:925fca7faab9",
+      "record_sha256": "b52f29c9bcd08ef4d922f768c8f2b059b6d6e7ed1a17aac563541c8b2fac5b9e"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT0_EC1:54977597e888",
+      "record_sha256": "450891421618db182de3b6b5c20f61f8622200483ae450482a6c7ea675df78f9"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT1_EC0:4fa02f5bdab6",
+      "record_sha256": "e0a7be7af850a774e691f7950c4ba35a81cc43d5656e4f7a10e59a0c0455f538"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_500/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT1_EC1:cb438b7abd85",
+      "record_sha256": "9c261e8a6228812c9004ddfe8143a3c73c66b51aa7812c719f30a3aa3572d491"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR0_HT1_EC1:bd7f57eca3f5",
+      "record_sha256": "74f71ee0e58ed0c5a0b8f78d22c561e2d73d5fedea98c30fd09c29d51b8e1dc1"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT0_EC1:bdf229e96041",
+      "record_sha256": "87c5e8e637788328e32a254c16c02a7abeee6585398d7aa47a7548d6d29c5f67"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC0:2cf2bf812e4e",
+      "record_sha256": "b3e02a18bf988fa2f3258117e4d4b8d519024747d8c4fdc3fafee4651e66fc8a"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC1:edb389a64394",
+      "record_sha256": "50a956fb60050f46c233ddf51d45d983a87012a968b087d12690b8392262c25d"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR0_HT1_EC1:c3e535f67b00",
+      "record_sha256": "87b93d025ef8fe1f49ca12fe97d4cfa35a6c0ebe8370c0096f6f62908afe4aa1"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT0_EC1:24b533bb2b7c",
+      "record_sha256": "6d241de29c53ec9887e47a9eeae855b3193ddda15e3521761d0ac77f19ffd97a"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC0:d6636fb8dd3c",
+      "record_sha256": "ee24f7b3f38f825eedcac624a2546a342ea2e209bd632166dd197051ef86ca01"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC1:e55679381da5",
+      "record_sha256": "8222452fdf2bcca101381883a75eedbdf20275b6009a61f073b1004f77500c02"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR0_HT1_EC1:834a47985a0c",
+      "record_sha256": "4530915ebc177a1e1217816ee145eeaaa84825da98661a006622d1f05e46ccf0"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT0_EC1:90c9245f68ad",
+      "record_sha256": "c7d130651aaf99e15539f042f228bbea76e16efa8500ae413ebcd5e1da97692a"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT1_EC0:196e354cc47c",
+      "record_sha256": "39c33868b4a1baa0799921e70d4f5b4430812d05f350944f9208dda0047eb05f"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT1_EC1:78198a18b4e8",
+      "record_sha256": "f96a831694de343cc94afa8b364c7932593facaf1ba7e649a137991aeedd6835"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR0_HT1_EC1:0f47f80f8fc0",
+      "record_sha256": "82f569aa401d8803b21a09222e96d15c484b4c104805eba193efa1845408b4a0"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT0_EC1:3243d461dc81",
+      "record_sha256": "01e1d233c92a8b61ff5aff10732bce68777bcc7c1f15318735cfec054be11744"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT1_EC0:13e0d1c77cd4",
+      "record_sha256": "40964fb41d1dcdecf8d56a349fac8a339d418faf69d874150adfcac71169bdbb"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT1_EC1:036c45eb67d6",
+      "record_sha256": "1e85bd85b3142df2efd02d3956e9b49bd2f82dafb907d737cd8b0b0acde13268"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR0_HT1_EC1:32fe5bafeca3",
+      "record_sha256": "9303c339fc7745d4bfd646f2fa3439c7516da6709873140e597d74b11dd68a21"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT0_EC1:c6e03232c500",
+      "record_sha256": "c9db42e6200e877e1b536837ad01e7a7c6a2f376960038f9371ae386d7c952c1"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT1_EC0:2f27f768b9a8",
+      "record_sha256": "4d1b5adb4893a1bcc51d0917945e163ebfdd13da0f10b9f2d001d628632265c5"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_2000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT1_EC1:4f65d0f7c118",
+      "record_sha256": "073a6e98a621ffbcf5cc790f41f597570647fb5704d1f7dbddb4471346c19827"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR0_HT1_EC1:e8d7520f9c58",
+      "record_sha256": "20ca9580a9f140eac78d4aea13faea75519c3ed9471cb1aca8a75109a954420b"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT0_EC1:8d658115548c",
+      "record_sha256": "d05fba8131d0565f0b181404ca3d10f478eb1b7c9b23345d4f0b458e7f2a9a89"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC0:ad2db10f327b",
+      "record_sha256": "3af3e6ebca309bec362fad2c51e1c2ae3944a4921300592bda15fbbc85fb10b8"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC1:129d7a8ac31b",
+      "record_sha256": "5c07a90563b6883f58f618e4b2cded439c17a8d7ac4c8453083eb8660580cd7a"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR0_HT1_EC1:09d8f3ccf9db",
+      "record_sha256": "4f730a34b68fcb2f16531a11ed6b19a624bc7bfd9e865713e8ac50a0f2164020"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT0_EC1:fd998e36a54d",
+      "record_sha256": "1b34f4e558737425c6808788896c12cb7eb2059ff543115da5ff3c403fe009c1"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC0:2db280064a12",
+      "record_sha256": "3fa80bbb3a1b499204e0cde2aeffdf9a52869673e80ee73777c24bac42952147"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC1:0fae67085588",
+      "record_sha256": "18f8cb6b4de5d0223bb75116cda3fbef8f8b51cc6eaa7a795834ed3f15593c42"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR0_HT1_EC1:4a893944e8a5",
+      "record_sha256": "ca1a44838237a8cd55d0bbb9286fa12831ade27ca88b21c0e61d1b3fbe90fc5f"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT0_EC1:20f5af6c2660",
+      "record_sha256": "741183e23830eaf145fedd0d92057688f9f7033dae1b759109b50a1f72237688"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT1_EC0:fb36bdb978f4",
+      "record_sha256": "e893a1ae76bcb0564ff5a271b0581aabdc51d87e1de4729f1328654dbf24ce12"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT1_EC1:4ea7e5a89f60",
+      "record_sha256": "3babf66b79c6a3931aaaec373878e8ced16948e0e780db54422dc89677116074"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR0_HT1_EC1:42586983610e",
+      "record_sha256": "a68a1c34ac2a65de20d88c28bbf539df6721793805246913dd21320f9d46a34a"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT0_EC1:e9b0cc53f74d",
+      "record_sha256": "f5f4d19a2121abdf0cbf3e54e596d6dc6cf6ce87aacbac8c559e186ab2f6028d"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT1_EC0:d3e5aa14be5c",
+      "record_sha256": "342d37b638df0f2b8ddaa7a98f398e1b40d738b0949d0b051334aaaa54fc6529"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT1_EC1:b10b280e4d03",
+      "record_sha256": "e62d666127c09977b8def4a3a7b1f2da2287edc1bc0643414abaff55277e210d"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR0_HT1_EC1:5dfb1b126f10",
+      "record_sha256": "d31f1b1208657819e08c42f54d7f9212201f6e9184893333c785f8e29bfb7b87"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT0_EC1:544b36765247",
+      "record_sha256": "4bfddf3ac1be0019222dea27d6552583b5a957b339230c232098fc0a1b873b37"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT1_EC0:ab48aa366893",
+      "record_sha256": "d3ec19f28e2748144975179ae789e165413626c68b9aca824bd2256c56f2d8d2"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_5000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT1_EC1:4a6623807c72",
+      "record_sha256": "b4148c35a291b3e83f36461139ce2bbcb1c26bc2fb7b5070dd0339550f78a0f4"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR0_HT1_EC1:9aef277950a8",
+      "record_sha256": "44f39164bd161d317278b2187fa4c889b1ddfcd91c60543648baadf01468915d"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT0_EC1:4ede68a38b73",
+      "record_sha256": "a1c250713a1b54e866ca132c35c1bc9bdb1000ec5e4503a1b9d98fd30921d3f8"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC0:b9449dc5d766",
+      "record_sha256": "787cc54961c6aba5b22fbc80759de7b1f28ab4c6d1645842839983389e72a80b"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60000",
+      "run_key": "WEN38:i1:nsga2:s60000:r0:PR1_HT1_EC1:9de9023cdcf6",
+      "record_sha256": "617077ea958d7a25e247930e817fd0ae9cd13e7692be50804629b9898d1b9aae"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR0_HT1_EC1:2f82bc2d05e4",
+      "record_sha256": "8f33d5f539ebd0ede8983732f32c51c35a5ad9b52676fd3f3d2d053fad84f4f0"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT0_EC1:ed45a2c7f68b",
+      "record_sha256": "97f5b2d8dad9f0b41d3e5fbd353e2889bcbb59ff43d9242e2d289665d3d6e036"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC0:b66fa7a2d9db",
+      "record_sha256": "8cb5fe59c3b9cfa71597acc859b83dd0354297799a56148f1744df9e7f727e78"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60001",
+      "run_key": "WEN38:i1:nsga2:s60001:r1:PR1_HT1_EC1:b4954d27c2ab",
+      "record_sha256": "a860028fec252dd708a98f9d461b65b64b20821ae24df74ff5895cd7b12c4dc4"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR0_HT1_EC1:f0aaed8377c2",
+      "record_sha256": "2b4c9635daa53ba0cbacfb7d01daa558dcbaba53b5737bc806faedee8be8ce29"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT0_EC1:c5de201adb32",
+      "record_sha256": "4a0cbb5bcf1c568aaf41c037e875d2546b63bfac1ba45e306750252da83c58be"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT1_EC0:646f16a4972b",
+      "record_sha256": "2bd22bfcdcb1e3a2a2bdb991734a332e2f2a948fba92e8bedcd2122e5a17a916"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60002",
+      "run_key": "WEN38:i1:nsga2:s60002:r2:PR1_HT1_EC1:081fec70e412",
+      "record_sha256": "6322cc3e41779b647363615a92a1b3fd67279b7833f9507f0fe56fa4aa54758e"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR0_HT1_EC1:a951b90543d4",
+      "record_sha256": "7bea45ce4267d86a643cf832be6593aafa89b044be960a55daade807a6b76649"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT0_EC1:4c9d972507d9",
+      "record_sha256": "0ecd45fa18818cbee6193677ad32eb3f218f6ef5e5e10f072e9ac1784a54bd47"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT1_EC0:1b529c0b7c0e",
+      "record_sha256": "c6a2dfecd73f4a9a1f57936ffcfbf80dc874ce9aa9e3e04592eb88b695ae4ad0"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60003",
+      "run_key": "WEN38:i1:nsga2:s60003:r3:PR1_HT1_EC1:58e496fe9237",
+      "record_sha256": "3c42c7ad8d98cfde66f1fac61b52e93d6efa0ab5917ad18327e19540b4547796"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR0_HT1_EC1:a7375a4a2944",
+      "record_sha256": "033e9825883862d7b134fe4d90b6196ac0861f99089949fc2fd23b020662b293"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT0_EC1:36356036cdfd",
+      "record_sha256": "df157cf04a3ed0960e3b360582407ef41ab5cd4af83901e8db2a0bc6faab8a39"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT1_EC0:bb387dbec7c0",
+      "record_sha256": "531f6435752e5bd69cbff91d36eca203048f0c411e0e3e25507fab3df6109840"
+    },
+    {
+      "root": "outputs/budget_convergence_rerun/budget_10000/seed_60004",
+      "run_key": "WEN38:i1:nsga2:s60004:r4:PR1_HT1_EC1:65e6e54950c9",
+      "record_sha256": "f3dd6f57433355e194da7fee6543e680b231af3d4ef5b55895b2f37cba32283e"
+    }
+  ],
+  "runs": 80,
+  "budgets": [
+    500,
+    2000,
+    5000,
+    10000
+  ],
+  "actual_evaluations": 350000,
+  "replayed_decisions": 5360,
+  "replay_failures": 0,
+  "identity_checked_decisions": 1152,
+  "max_abs_identity_error": 0.0,
+  "max_abs_planning_self_replay_error": 0.0,
+  "quality_reference": "Fixed across all included budgets. Planning frames separate by model; Full execution frame shared by all models.",
+  "runtime_scope": "Up to eight concurrent subprocesses on the 128-core Linux host, each with a disjoint RunStore. Runtime is descriptive only.",
+  "validated_input_hashes": {
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60000/experiment_contract.json": "37be60202d04036ef44eb24e938510709f914dd807caa5c55ccd5107eae9d3c5",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR0_HT1_EC1_46c8e20b4c74.json": "fa3f564a1594116d41b9e05152661473d459003e16a120a6a601c5644cedd80e",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60000/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60000/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT0_EC1_90eb595cda5d.json": "4dd9422572c4d8e344deac168b1ae1d00c5e55fe14be0bcbaea3ccd59597757b",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60000/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT1_EC0_8bfdaa57872d.json": "ac9c8f17961b998989078b09bb88b9628e2e2c8b34fb4903ce1f912b1a2f027c",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60000/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT1_EC1_9c0ff73f0850.json": "1c22cd3773b96cfa57ec6ae08f71002d834cfbcda5efee8326a67e68c838b7e2",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60000/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60001/experiment_contract.json": "0d0ff0abf535845c862db13273360b09d80a4906f0ee11d72f56e33d65d41abc",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR0_HT1_EC1_32dade94c4a1.json": "0c5c799bc2d7eba597349f3b64bd5894bcbe72fa9fab3e21f8ccb6980eb20284",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60001/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60001/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT0_EC1_65619d2ec3af.json": "7b0cfe521c4c51b8cbb63d2a8c2bec692147d2b59f428d64bfaefca17f4095fe",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60001/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT1_EC0_4ef19fe7fd91.json": "7dcdb0bdfc733a19db3681deeac25903dbae45dc1d514f36ed1d4145966d81d5",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60001/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT1_EC1_990874f407a4.json": "2ba2e08df771f3aa8af225210b9f8cd8a847bf3fd30236093fd4d5c03ee9a534",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60001/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60002/experiment_contract.json": "47f88d1e92150332e15565a05d1fcd0c354ec0ae0d4e3a1dc64f54d99d9a1994",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR0_HT1_EC1_6071acd0265f.json": "c844db013600ae7f74f2e922f2f5f0aa00bc35c341ec43c7ce3280aa7f12a1d9",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60002/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60002/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT0_EC1_cd484fc69a0d.json": "7e9a66e8d2097761bc629a740bd3d509c700109c9d7d5639ee4459c58deb4a3a",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60002/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT1_EC0_f86e1a299401.json": "a41916d5e2c4321a8270c41efc109531a4ab869b90d6853157005da57f2d1b60",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60002/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT1_EC1_95a572c5ce23.json": "65b69468b3c11e2e0fa9d1a358670d2690c5a6df59df040d13ea33589dfcdd52",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60002/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60003/experiment_contract.json": "388c4d423677ba8a87fdde7a80a0353399db1e376736062ae294df6d867668a0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR0_HT1_EC1_26ca912ef4e5.json": "354e85e02c89b9e7e1e41aa90792fa8491f3306d386619923f7260e968302fb7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60003/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60003/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT0_EC1_f0c4e27f0d82.json": "90b3e2c8fb8bcd65e1cff0ba63cc0d73d23ca4a3ae1ab318b00b078ae9308fa9",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60003/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT1_EC0_c920df3de455.json": "969f72fc80dd874787c502d47084127db242d1fea619825d60c139c9fbc22ba7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60003/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT1_EC1_fcede1e4eccf.json": "3ec5cc060e3650afb507db3111c15d2c4488614770737c3a06cb6670fef93906",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60003/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60004/experiment_contract.json": "9257668000bb16a89d568a774470802001f453c49254d340fcde0d0172bf800e",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR0_HT1_EC1_925fca7faab9.json": "b52f29c9bcd08ef4d922f768c8f2b059b6d6e7ed1a17aac563541c8b2fac5b9e",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60004/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60004/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT0_EC1_54977597e888.json": "450891421618db182de3b6b5c20f61f8622200483ae450482a6c7ea675df78f9",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60004/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT1_EC0_4fa02f5bdab6.json": "e0a7be7af850a774e691f7950c4ba35a81cc43d5656e4f7a10e59a0c0455f538",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60004/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT1_EC1_cb438b7abd85.json": "9c261e8a6228812c9004ddfe8143a3c73c66b51aa7812c719f30a3aa3572d491",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_500/seed_60004/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60000/experiment_contract.json": "39e3856e2780d968631973d1db875690764cddca9a27cebb42148fc1abf54699",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR0_HT1_EC1_bd7f57eca3f5.json": "74f71ee0e58ed0c5a0b8f78d22c561e2d73d5fedea98c30fd09c29d51b8e1dc1",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60000/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60000/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT0_EC1_bdf229e96041.json": "87c5e8e637788328e32a254c16c02a7abeee6585398d7aa47a7548d6d29c5f67",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60000/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT1_EC0_2cf2bf812e4e.json": "b3e02a18bf988fa2f3258117e4d4b8d519024747d8c4fdc3fafee4651e66fc8a",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60000/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT1_EC1_edb389a64394.json": "50a956fb60050f46c233ddf51d45d983a87012a968b087d12690b8392262c25d",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60000/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60001/experiment_contract.json": "8ae12acda46dabb7a83a36b633f4fe05c9f15896d66494c14c2c4a255cf235fb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR0_HT1_EC1_c3e535f67b00.json": "87b93d025ef8fe1f49ca12fe97d4cfa35a6c0ebe8370c0096f6f62908afe4aa1",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60001/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60001/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT0_EC1_24b533bb2b7c.json": "6d241de29c53ec9887e47a9eeae855b3193ddda15e3521761d0ac77f19ffd97a",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60001/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT1_EC0_d6636fb8dd3c.json": "ee24f7b3f38f825eedcac624a2546a342ea2e209bd632166dd197051ef86ca01",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60001/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT1_EC1_e55679381da5.json": "8222452fdf2bcca101381883a75eedbdf20275b6009a61f073b1004f77500c02",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60001/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60002/experiment_contract.json": "6f647c3bfa419d077ce4fa1e26ff67aa811f47c97dad1365cd38543d05e26184",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR0_HT1_EC1_834a47985a0c.json": "4530915ebc177a1e1217816ee145eeaaa84825da98661a006622d1f05e46ccf0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60002/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60002/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT0_EC1_90c9245f68ad.json": "c7d130651aaf99e15539f042f228bbea76e16efa8500ae413ebcd5e1da97692a",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60002/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT1_EC0_196e354cc47c.json": "39c33868b4a1baa0799921e70d4f5b4430812d05f350944f9208dda0047eb05f",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60002/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT1_EC1_78198a18b4e8.json": "f96a831694de343cc94afa8b364c7932593facaf1ba7e649a137991aeedd6835",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60002/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60003/experiment_contract.json": "7393f298f7a5b4fee0ec66803d80a460161ca0a65b6fab1cc03f23b670a2fe19",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR0_HT1_EC1_0f47f80f8fc0.json": "82f569aa401d8803b21a09222e96d15c484b4c104805eba193efa1845408b4a0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60003/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60003/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT0_EC1_3243d461dc81.json": "01e1d233c92a8b61ff5aff10732bce68777bcc7c1f15318735cfec054be11744",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60003/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT1_EC0_13e0d1c77cd4.json": "40964fb41d1dcdecf8d56a349fac8a339d418faf69d874150adfcac71169bdbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60003/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT1_EC1_036c45eb67d6.json": "1e85bd85b3142df2efd02d3956e9b49bd2f82dafb907d737cd8b0b0acde13268",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60003/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60004/experiment_contract.json": "a4340501daec2082a176fc58fdaccf19d470e99cb5b37dc03f9c1c4e71401aca",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR0_HT1_EC1_32fe5bafeca3.json": "9303c339fc7745d4bfd646f2fa3439c7516da6709873140e597d74b11dd68a21",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60004/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60004/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT0_EC1_c6e03232c500.json": "c9db42e6200e877e1b536837ad01e7a7c6a2f376960038f9371ae386d7c952c1",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60004/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT1_EC0_2f27f768b9a8.json": "4d1b5adb4893a1bcc51d0917945e163ebfdd13da0f10b9f2d001d628632265c5",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60004/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT1_EC1_4f65d0f7c118.json": "073a6e98a621ffbcf5cc790f41f597570647fb5704d1f7dbddb4471346c19827",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_2000/seed_60004/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60000/experiment_contract.json": "08aee2a535edba6795d42a0c05373fc699b816e64ea88325d9ee6f8061b81e0b",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR0_HT1_EC1_e8d7520f9c58.json": "20ca9580a9f140eac78d4aea13faea75519c3ed9471cb1aca8a75109a954420b",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60000/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60000/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT0_EC1_8d658115548c.json": "d05fba8131d0565f0b181404ca3d10f478eb1b7c9b23345d4f0b458e7f2a9a89",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60000/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT1_EC0_ad2db10f327b.json": "3af3e6ebca309bec362fad2c51e1c2ae3944a4921300592bda15fbbc85fb10b8",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60000/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT1_EC1_129d7a8ac31b.json": "5c07a90563b6883f58f618e4b2cded439c17a8d7ac4c8453083eb8660580cd7a",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60000/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60001/experiment_contract.json": "965c47710cdcd320cbf020bea1552bbd0ff1a377459e95acb9a48c84c2de6999",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR0_HT1_EC1_09d8f3ccf9db.json": "4f730a34b68fcb2f16531a11ed6b19a624bc7bfd9e865713e8ac50a0f2164020",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60001/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60001/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT0_EC1_fd998e36a54d.json": "1b34f4e558737425c6808788896c12cb7eb2059ff543115da5ff3c403fe009c1",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60001/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT1_EC0_2db280064a12.json": "3fa80bbb3a1b499204e0cde2aeffdf9a52869673e80ee73777c24bac42952147",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60001/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT1_EC1_0fae67085588.json": "18f8cb6b4de5d0223bb75116cda3fbef8f8b51cc6eaa7a795834ed3f15593c42",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60001/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60002/experiment_contract.json": "d8040a883577ffbebea89b0b43ef17eadc8bb43283e8169d601dfad47989231d",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR0_HT1_EC1_4a893944e8a5.json": "ca1a44838237a8cd55d0bbb9286fa12831ade27ca88b21c0e61d1b3fbe90fc5f",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60002/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60002/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT0_EC1_20f5af6c2660.json": "741183e23830eaf145fedd0d92057688f9f7033dae1b759109b50a1f72237688",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60002/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT1_EC0_fb36bdb978f4.json": "e893a1ae76bcb0564ff5a271b0581aabdc51d87e1de4729f1328654dbf24ce12",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60002/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT1_EC1_4ea7e5a89f60.json": "3babf66b79c6a3931aaaec373878e8ced16948e0e780db54422dc89677116074",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60002/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60003/experiment_contract.json": "3918f2cbf9c9763a6241e2aabdc545a86a0d9f0247e6dd6f54029d3b15e55f16",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR0_HT1_EC1_42586983610e.json": "a68a1c34ac2a65de20d88c28bbf539df6721793805246913dd21320f9d46a34a",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60003/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60003/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT0_EC1_e9b0cc53f74d.json": "f5f4d19a2121abdf0cbf3e54e596d6dc6cf6ce87aacbac8c559e186ab2f6028d",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60003/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT1_EC0_d3e5aa14be5c.json": "342d37b638df0f2b8ddaa7a98f398e1b40d738b0949d0b051334aaaa54fc6529",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60003/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT1_EC1_b10b280e4d03.json": "e62d666127c09977b8def4a3a7b1f2da2287edc1bc0643414abaff55277e210d",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60003/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60004/experiment_contract.json": "8ca452673fd483e8137716b98077fe3a0c7fa47a5b05e53b0dbc3cea35613978",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR0_HT1_EC1_5dfb1b126f10.json": "d31f1b1208657819e08c42f54d7f9212201f6e9184893333c785f8e29bfb7b87",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60004/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60004/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT0_EC1_544b36765247.json": "4bfddf3ac1be0019222dea27d6552583b5a957b339230c232098fc0a1b873b37",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60004/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT1_EC0_ab48aa366893.json": "d3ec19f28e2748144975179ae789e165413626c68b9aca824bd2256c56f2d8d2",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60004/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT1_EC1_4a6623807c72.json": "b4148c35a291b3e83f36461139ce2bbcb1c26bc2fb7b5070dd0339550f78a0f4",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_5000/seed_60004/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60000/experiment_contract.json": "1afd4b19b86cb156d26aa310199e18ad4454f81a3f6414cd2d91fb7cebf957e9",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR0_HT1_EC1_9aef277950a8.json": "44f39164bd161d317278b2187fa4c889b1ddfcd91c60543648baadf01468915d",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60000/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60000/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT0_EC1_4ede68a38b73.json": "a1c250713a1b54e866ca132c35c1bc9bdb1000ec5e4503a1b9d98fd30921d3f8",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60000/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT1_EC0_b9449dc5d766.json": "787cc54961c6aba5b22fbc80759de7b1f28ab4c6d1645842839983389e72a80b",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60000/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60000/runs/WEN38_i1_nsga2_s60000_r0_PR1_HT1_EC1_9de9023cdcf6.json": "617077ea958d7a25e247930e817fd0ae9cd13e7692be50804629b9898d1b9aae",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60000/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60001/experiment_contract.json": "cf1018c25bf6acbfc5d39891fbde8f06a45ea42739c99c98121093fa48ae9026",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR0_HT1_EC1_2f82bc2d05e4.json": "8f33d5f539ebd0ede8983732f32c51c35a5ad9b52676fd3f3d2d053fad84f4f0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60001/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60001/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT0_EC1_ed45a2c7f68b.json": "97f5b2d8dad9f0b41d3e5fbd353e2889bcbb59ff43d9242e2d289665d3d6e036",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60001/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT1_EC0_b66fa7a2d9db.json": "8cb5fe59c3b9cfa71597acc859b83dd0354297799a56148f1744df9e7f727e78",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60001/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60001/runs/WEN38_i1_nsga2_s60001_r1_PR1_HT1_EC1_b4954d27c2ab.json": "a860028fec252dd708a98f9d461b65b64b20821ae24df74ff5895cd7b12c4dc4",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60001/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60002/experiment_contract.json": "d9a2fda28276c7a6fa799d1b36abd7264693a0afc4deae09984c95f3ca996393",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR0_HT1_EC1_f0aaed8377c2.json": "2b4c9635daa53ba0cbacfb7d01daa558dcbaba53b5737bc806faedee8be8ce29",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60002/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60002/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT0_EC1_c5de201adb32.json": "4a0cbb5bcf1c568aaf41c037e875d2546b63bfac1ba45e306750252da83c58be",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60002/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT1_EC0_646f16a4972b.json": "2bd22bfcdcb1e3a2a2bdb991734a332e2f2a948fba92e8bedcd2122e5a17a916",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60002/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60002/runs/WEN38_i1_nsga2_s60002_r2_PR1_HT1_EC1_081fec70e412.json": "6322cc3e41779b647363615a92a1b3fd67279b7833f9507f0fe56fa4aa54758e",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60002/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60003/experiment_contract.json": "137d73cf11917d6da4de7dc3fecb184e27faafa675ca0c5288fc18794759e570",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR0_HT1_EC1_a951b90543d4.json": "7bea45ce4267d86a643cf832be6593aafa89b044be960a55daade807a6b76649",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60003/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60003/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT0_EC1_4c9d972507d9.json": "0ecd45fa18818cbee6193677ad32eb3f218f6ef5e5e10f072e9ac1784a54bd47",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60003/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT1_EC0_1b529c0b7c0e.json": "c6a2dfecd73f4a9a1f57936ffcfbf80dc874ce9aa9e3e04592eb88b695ae4ad0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60003/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60003/runs/WEN38_i1_nsga2_s60003_r3_PR1_HT1_EC1_58e496fe9237.json": "3c42c7ad8d98cfde66f1fac61b52e93d6efa0ab5917ad18327e19540b4547796",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60003/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60004/experiment_contract.json": "67a20dd7a167f91adef633e9737cd446063660fdbf2d709650a62497fc6f1120",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR0_HT1_EC1_a7375a4a2944.json": "033e9825883862d7b134fe4d90b6196ac0861f99089949fc2fd23b020662b293",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60004/instances/5a3987e94130527bc1b444c25fcb2f83e76b24620c83c0f6215f19f2d3e15bf7.json": "99f91dd858fe97fc34fe61b253c4b5555f2d67eb9d2f120858b8914000d850f7",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60004/executions/cf9bc95d906238978e0c5ab26a1947d4104e026d3bac972323bf05453ec86ca7.json": "ef913f2c3776804f0b4fe5b7d44deadaaeb4a822bf27a9e7cf1c506f66e54d71",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT0_EC1_36356036cdfd.json": "df157cf04a3ed0960e3b360582407ef41ab5cd4af83901e8db2a0bc6faab8a39",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60004/instances/716feb78a89b882a20ab8d73b90dc7f2cce92e24a8065d5faecffada3f9967e4.json": "e0c00be6a129debde0dbc1c6e214d6545177608375ef6d1f187dd840b932bdc0",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT1_EC0_bb387dbec7c0.json": "531f6435752e5bd69cbff91d36eca203048f0c411e0e3e25507fab3df6109840",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60004/instances/eff43348491cb4cfafd4d33265d0430f45b06053eb35313886f5a3d54a9c7886.json": "d7143960d42811442c85a45fddb9d0819570b54abb0c1dcf1c1b7d85c1e4ce53",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60004/runs/WEN38_i1_nsga2_s60004_r4_PR1_HT1_EC1_65e6e54950c9.json": "f3dd6f57433355e194da7fee6543e680b231af3d4ef5b55895b2f37cba32283e",
+    "/SimCLR/vrp-research/outputs/budget_convergence_rerun/budget_10000/seed_60004/instances/0211d5313450418ddc20712d3c36e63ff4b64637bfb9f717eca80fcb394b1e6b.json": "e7d3da007f8ce033fd76ec2e002cc0cd23876da4788e988f11f0d255c78d7dbb"
+  },
+  "scope": "Five paired search repeats on one WEN38 case, no independent-network or statistical-significance claim."
+}

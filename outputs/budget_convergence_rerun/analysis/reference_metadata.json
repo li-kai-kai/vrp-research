@@ -1,0 +1,307 @@
+[
+  {
+    "evaluation_space": "planning",
+    "planning_model": "Full",
+    "budgets": [
+      500,
+      2000,
+      5000,
+      10000,
+      20000
+    ],
+    "included_runs": 25,
+    "reference_front_size": 143,
+    "ideal": [
+      2.4550822523678466,
+      48412.0,
+      -0.7973068745568526
+    ],
+    "nadir": [
+      3.608579075444831,
+      173705.33333333334,
+      -0.0
+    ],
+    "raw_ranges": [
+      1.1534968230769844,
+      125293.33333333334,
+      0.7973068745568526
+    ],
+    "ideal_key": [
+      245508225,
+      48412000000,
+      -79730687
+    ],
+    "nadir_key": [
+      360857908,
+      173705333333,
+      0
+    ],
+    "key_spans": [
+      115349683,
+      125293333333,
+      79730687
+    ],
+    "degenerate_dimensions": [],
+    "effective_dimensions": 3,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  },
+  {
+    "evaluation_space": "planning",
+    "planning_model": "No-PR",
+    "budgets": [
+      500,
+      2000,
+      5000,
+      10000,
+      20000
+    ],
+    "included_runs": 25,
+    "reference_front_size": 353,
+    "ideal": [
+      2.456238291340928,
+      36717.5,
+      -0.580645161290704
+    ],
+    "nadir": [
+      4.294384995809276,
+      164991.0,
+      -0.0
+    ],
+    "raw_ranges": [
+      1.8381467044683477,
+      128273.5,
+      0.580645161290704
+    ],
+    "ideal_key": [
+      245623829,
+      36717500000,
+      -58064516
+    ],
+    "nadir_key": [
+      429438500,
+      164991000000,
+      0
+    ],
+    "key_spans": [
+      183814671,
+      128273500000,
+      58064516
+    ],
+    "degenerate_dimensions": [],
+    "effective_dimensions": 3,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  },
+  {
+    "evaluation_space": "planning",
+    "planning_model": "No-HT",
+    "budgets": [
+      500,
+      2000,
+      5000,
+      10000,
+      20000
+    ],
+    "included_runs": 25,
+    "reference_front_size": 207,
+    "ideal": [
+      2.4568563798284178,
+      44355.16666666667,
+      -0.7973068745568526
+    ],
+    "nadir": [
+      4.232460828550835,
+      157456.6666666667,
+      -0.0
+    ],
+    "raw_ranges": [
+      1.775604448722417,
+      113101.50000000001,
+      0.7973068745568526
+    ],
+    "ideal_key": [
+      245685638,
+      44355166667,
+      -79730687
+    ],
+    "nadir_key": [
+      423246083,
+      157456666667,
+      0
+    ],
+    "key_spans": [
+      177560445,
+      113101500000,
+      79730687
+    ],
+    "degenerate_dimensions": [],
+    "effective_dimensions": 3,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  },
+  {
+    "evaluation_space": "planning",
+    "planning_model": "No-EC",
+    "budgets": [
+      500,
+      2000,
+      5000,
+      10000,
+      20000
+    ],
+    "included_runs": 25,
+    "reference_front_size": 143,
+    "ideal": [
+      2.4550822523678466,
+      48412.0,
+      -0.7973068745568526
+    ],
+    "nadir": [
+      3.608579075444831,
+      173705.33333333334,
+      -0.0
+    ],
+    "raw_ranges": [
+      1.1534968230769844,
+      125293.33333333334,
+      0.7973068745568526
+    ],
+    "ideal_key": [
+      245508225,
+      48412000000,
+      -79730687
+    ],
+    "nadir_key": [
+      360857908,
+      173705333333,
+      0
+    ],
+    "key_spans": [
+      115349683,
+      125293333333,
+      79730687
+    ],
+    "degenerate_dimensions": [],
+    "effective_dimensions": 3,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  },
+  {
+    "evaluation_space": "execution",
+    "planning_model": "all",
+    "budgets": [
+      500,
+      2000,
+      5000,
+      10000,
+      20000
+    ],
+    "included_runs": 100,
+    "reference_front_size": 160,
+    "ideal": [
+      2.4550822523678466,
+      46272.5,
+      -0.7973068745568526
+    ],
+    "nadir": [
+      4.232460828550835,
+      188717.83333333334,
+      -0.0
+    ],
+    "raw_ranges": [
+      1.7773785761829881,
+      142445.33333333334,
+      0.7973068745568526
+    ],
+    "ideal_key": [
+      245508225,
+      46272500000,
+      -79730687
+    ],
+    "nadir_key": [
+      423246083,
+      188717833333,
+      0
+    ],
+    "key_spans": [
+      177737858,
+      142445333333,
+      79730687
+    ],
+    "degenerate_dimensions": [],
+    "effective_dimensions": 3,
+    "coordinate_space": "quantized comparison keys",
+    "precision": {
+      "label": "v2_service_resolution",
+      "resolutions": [
+        1e-08,
+        1e-06,
+        1e-08
+      ],
+      "exact": false
+    },
+    "precision_fingerprint": "ec44b6c6bd6ced4c",
+    "reference_point_normalized": [
+      1.1,
+      1.1,
+      1.1
+    ]
+  }
+]

@@ -1,0 +1,104 @@
+{
+  "created_at_utc": "2026-10-14T07:24:17.738780+00:00",
+  "design": "Package B of the frozen formal protocol (docs/formal_experiment_protocol.md)",
+  "model_track": {
+    "tiers": [
+      {
+        "case": "S025",
+        "instance_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "budget": 10000
+      },
+      {
+        "case": "S050",
+        "instance_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "budget": 5000
+      },
+      {
+        "case": "M100",
+        "instance_seeds": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "budget": 2000
+      },
+      {
+        "case": "WEN38",
+        "instance_seeds": [
+          1
+        ],
+        "budget": 10000
+      }
+    ],
+    "solver_seed_start": 90000,
+    "solver_repeat_start": 0,
+    "solver_repeats": 3,
+    "model_ids": [
+      "PR1_HT1_EC1",
+      "PR0_HT1_EC1",
+      "PR1_HT0_EC1",
+      "PR1_HT1_EC0",
+      "PR0_HT0_EC1",
+      "PR0_HT1_EC0",
+      "PR1_HT0_EC0",
+      "PR0_HT0_EC0"
+    ],
+    "algorithm": "nsga2",
+    "pop_size": 32,
+    "crossover_probability": 0.9,
+    "mutation_probability": 0.2,
+    "planned_runs": 744,
+    "planned_evaluations": 5208000,
+    "restart_note": "first launch ran 16 runs on the pre-override revision (bbf64bd3); the source changed mid-flight when the override flags were implemented, so the track was restarted on the final revision; the partial is kept in model_track_superseded_bbf64bd3/"
+  },
+  "sensitivity": {
+    "status": "override flags implemented and tested (--threshold-scale / --node-role-strategy / --repair-crews / --repair-duration-scale / --fleet-scale / --supply-scale, plus --capacity-scale)",
+    "subset": {
+      "case": "S025",
+      "instance_seeds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "repeats": [
+        0,
+        1
+      ]
+    },
+    "cells": 20,
+    "planned_runs": 240
+  },
+  "source_fingerprint": "644784087ed278ff276f6ffb2e9b0d963900555ef0b967fda46543608c5c5f56"
+}

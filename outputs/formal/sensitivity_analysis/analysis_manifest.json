@@ -1,0 +1,46 @@
+{
+  "created_at_utc": "2026-10-15T08:08:31.139613+00:00",
+  "two_model_cells": {
+    "ec_cap0p0005": [
+      "PR1_HT1_EC1",
+      "PR1_HT1_EC0"
+    ],
+    "ec_cap0p0002": [
+      "PR1_HT1_EC1",
+      "PR1_HT1_EC0"
+    ],
+    "ht_scale0p75": [
+      "PR1_HT1_EC1",
+      "PR1_HT0_EC1"
+    ],
+    "ht_scale1p25": [
+      "PR1_HT1_EC1",
+      "PR1_HT0_EC1"
+    ],
+    "ht_role_sep": [
+      "PR1_HT1_EC1",
+      "PR1_HT0_EC1"
+    ],
+    "pr_crews4": [
+      "PR1_HT1_EC1",
+      "PR0_HT1_EC1"
+    ],
+    "pr_dur0p5": [
+      "PR1_HT1_EC1",
+      "PR0_HT1_EC1"
+    ],
+    "pr_dur2": [
+      "PR1_HT1_EC1",
+      "PR0_HT1_EC1"
+    ]
+  },
+  "resource_cells": [
+    "res_fleet0p5",
+    "res_fleet2",
+    "res_supply0p5",
+    "res_supply2"
+  ],
+  "baseline": "model track Full runs, same instances and seeds (exec_all executions)",
+  "permutation_samples": 20000,
+  "note": "descriptive; positive delta = decision executes better than Full's / than baseline"
+}

@@ -1,0 +1,25 @@
+tier,model,metric,n_units,mean_delta,favor_full_units,against_full_units,raw_p,holm_p,note
+m100,No-PR,delta_hv,6,-0.0026577498757864534,1,5,1.0,1.0,
+m100,No-PR,representative_delta_F1,6,0.012309986786702995,3,3,0.5625,1.0,
+m100,No-HT,delta_hv,6,0.029575637133102486,1,5,1.0,1.0,
+m100,No-HT,representative_delta_F1,6,0.008596504172658066,4,2,0.65625,1.0,
+m100,No-EC,delta_hv,6,0.0,0,0,1.0,1.0,
+m100,No-EC,representative_delta_F1,6,0.0,0,0,1.0,1.0,
+s025,No-PR,delta_hv,15,0.2023034008780743,11,4,0.01434326171875,0.04302978515625,
+s025,No-PR,representative_delta_F1,15,0.037119371524261674,12,3,0.00750732421875,0.030029296875,
+s025,No-HT,delta_hv,15,0.1895378830629941,12,3,0.000732421875,0.003662109375,
+s025,No-HT,representative_delta_F1,15,0.048198968861761844,12,3,0.00054931640625,0.0032958984375,
+s025,No-EC,delta_hv,15,0.0,0,0,1.0,1.0,
+s025,No-EC,representative_delta_F1,15,0.0,0,0,1.0,1.0,
+s050,No-PR,delta_hv,9,0.2951273559020522,9,0,0.00390625,0.0234375,
+s050,No-PR,representative_delta_F1,9,0.1012687510269545,8,1,0.0078125,0.0390625,
+s050,No-HT,delta_hv,9,0.21644393159203423,6,3,0.0546875,0.1640625,
+s050,No-HT,representative_delta_F1,9,0.06663778607825514,8,1,0.0078125,0.0390625,
+s050,No-EC,delta_hv,9,0.0,0,0,1.0,1.0,
+s050,No-EC,representative_delta_F1,9,0.0,0,0,1.0,1.0,
+wen38,No-PR,delta_hv,1,0.3028363198896989,1,0,,,single instance: descriptive only
+wen38,No-PR,representative_delta_F1,1,0.1541375953322929,1,0,,,single instance: descriptive only
+wen38,No-HT,delta_hv,1,-0.02801357092943831,0,1,,,single instance: descriptive only
+wen38,No-HT,representative_delta_F1,1,0.0018464834171636468,1,0,,,single instance: descriptive only
+wen38,No-EC,delta_hv,1,0.0,0,0,,,single instance: descriptive only
+wen38,No-EC,representative_delta_F1,1,0.0,0,0,,,single instance: descriptive only

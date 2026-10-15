@@ -1,0 +1,37 @@
+case_id,exposure,cost,instances,spearman_rho,note
+M100,PR,ignoring_PR,6,-0.13093073414159545,
+M100,PR,ignoring_HT,6,0.3927922024247863,
+M100,PR,ignoring_EC,6,,outcome constant across instances
+M100,EC,ignoring_PR,6,-0.8285714285714286,
+M100,EC,ignoring_HT,6,-0.02857142857142857,
+M100,EC,ignoring_EC,6,,outcome constant across instances
+M100,-,ignoring_PR,6,,instances with cost>0: 3/6; range -0.0358..0.0906
+M100,-,ignoring_HT,6,,instances with cost>0: 4/6; range -0.0280..0.0746
+M100,-,ignoring_EC,6,,instances with cost>0: 0/6; range 0.0000..0.0000
+S025,PR,ignoring_PR,15,0.09075827652377438,
+S025,PR,ignoring_HT,15,0.15328064479570785,
+S025,PR,ignoring_EC,15,,outcome constant across instances
+S025,EC,ignoring_PR,15,-0.13214285714285715,
+S025,EC,ignoring_HT,15,-0.2642857142857143,
+S025,EC,ignoring_EC,15,,outcome constant across instances
+S025,-,ignoring_PR,15,,instances with cost>0: 12/15; range -0.0161..0.1937
+S025,-,ignoring_HT,15,,instances with cost>0: 12/15; range -0.0077..0.1688
+S025,-,ignoring_EC,15,,instances with cost>0: 0/15; range 0.0000..0.0000
+S050,PR,ignoring_PR,9,,exposure constant within tier
+S050,PR,ignoring_HT,9,,exposure constant within tier
+S050,PR,ignoring_EC,9,,outcome constant across instances
+S050,EC,ignoring_PR,9,0.5,
+S050,EC,ignoring_HT,9,0.6166666666666667,
+S050,EC,ignoring_EC,9,,outcome constant across instances
+S050,-,ignoring_PR,9,,instances with cost>0: 8/9; range -0.0250..0.2993
+S050,-,ignoring_HT,9,,instances with cost>0: 8/9; range -0.0096..0.1306
+S050,-,ignoring_EC,9,,instances with cost>0: 0/9; range 0.0000..0.0000
+WEN38,PR,ignoring_PR,1,,outcome constant across instances
+WEN38,PR,ignoring_HT,1,,outcome constant across instances
+WEN38,PR,ignoring_EC,1,,outcome constant across instances
+WEN38,EC,ignoring_PR,1,,outcome constant across instances
+WEN38,EC,ignoring_HT,1,,outcome constant across instances
+WEN38,EC,ignoring_EC,1,,outcome constant across instances
+WEN38,-,ignoring_PR,1,,instances with cost>0: 1/1; range 0.1541..0.1541
+WEN38,-,ignoring_HT,1,,instances with cost>0: 1/1; range 0.0018..0.0018
+WEN38,-,ignoring_EC,1,,instances with cost>0: 0/1; range 0.0000..0.0000

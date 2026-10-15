@@ -1,0 +1,50 @@
+{
+  "created_at_utc": "2026-10-14T16:05:39.057980+00:00",
+  "python": "3.12.15 (main, Oct  9 2026, 15:22:32) [Clang 22.1.3 ]",
+  "platform": "Linux-5.15.0-105-generic-x86_64-with-glibc2.35",
+  "source_file_sha256": "a8744b75f5e553db4d215e5cc84352b09180968bd64508e9bea7afe945da2ba6",
+  "input_files_sha256": {
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100000_PR0_HT0_EC0/model_ablation.csv": "10642db39830f3b68edd2b1762cec4fa1ea8a33fb3b1c0649fc13b8ad6defbe4",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100000_PR0_HT0_EC1/model_ablation.csv": "7db8340c3ad6777bd0eacdd5315ae500094a2471bd04a280bdf8813148120005",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100000_PR0_HT1_EC0/model_ablation.csv": "467af199b5ad7ea833916fa20db2de8af96e7986df2dec21f6956ed9cf7a52b5",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100000_PR0_HT1_EC1/model_ablation.csv": "0cec082ddccd0e6a9cffe9e13c44fc5847a1ad6d66b29111c23742073333db1e",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100000_PR1_HT0_EC0/model_ablation.csv": "164ff155f24ef0d30165e120a8c8a76c5b9cb66abf4b587545ea889a5d717d41",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100000_PR1_HT0_EC1/model_ablation.csv": "4a3f88496c466b44d7b0b74b0153a0a31a5d502d145375bb3e9e17a0d594a638",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100000_PR1_HT1_EC0/model_ablation.csv": "dd9263ce283ee00b5b06d3b1cde443c58f3c3d564affb57506fe4752f9686fa2",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100000_PR1_HT1_EC1/model_ablation.csv": "3dfd823e58e822ae3a3d6049ebba2f4b5f9ad6a2c4bb8e8ec639d6fed763a3d4",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100001_PR0_HT0_EC0/model_ablation.csv": "0fe65ae95de168c7fca35baa0e7de28d03ebc626379c090ee5e7a9884cab5194",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100001_PR0_HT0_EC1/model_ablation.csv": "c72879a297b0241fccee557259f7da3dc6305a587a2312c87bc1e6ee25f1819e",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100001_PR0_HT1_EC0/model_ablation.csv": "603c2a1bb7b5a2f53fd424e8db938447d47c0a1ef1bdc72512188189eca1cac4",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100001_PR0_HT1_EC1/model_ablation.csv": "8037e59dd165ad50dc511d4d5946ea692cac3e08d6fc177d40bce4aa7377f809",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100001_PR1_HT0_EC0/model_ablation.csv": "affef81ebced17a18f7abf0990eb266d5a2e77dd3f10029b373d4d927de8dfbf",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100001_PR1_HT0_EC1/model_ablation.csv": "f30f3fb4a09f77835b7fe39bdaef265103f883b65ab71617b72c3648d6ad925a",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100001_PR1_HT1_EC0/model_ablation.csv": "343a0fa32864136fa34d3259e75751035b5f96cb5662ff3464881659a0b57513",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100001_PR1_HT1_EC1/model_ablation.csv": "c14f6a74889d819d31ac1a2e96f5d9e996342ff147d54dcb2dcba91013214a4f",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100002_PR0_HT0_EC0/model_ablation.csv": "f7ab7380c5288fa8f71a718bd14d21f2214bb106337369b8f2c2b0493109604e",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100002_PR0_HT0_EC1/model_ablation.csv": "b4603e1f425bee42142c3a36d09f137881706353800166e622bc94bc53fef83e",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100002_PR0_HT1_EC0/model_ablation.csv": "16d52a3775128568b4cfe01eb033cc23d1ca204824efe6f6819037163c477bb2",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100002_PR0_HT1_EC1/model_ablation.csv": "c4833714685cfd7acaeaeac83061dcd99aca06162cb6cff079b2e491b6191631",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100002_PR1_HT0_EC0/model_ablation.csv": "9bb1df2ca3f1cf71b83fd2d34378093c04ef1d1a682342d6c8d2e834ea89e075",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100002_PR1_HT0_EC1/model_ablation.csv": "b3c254d6004d62e03cf558ab5a6adc2124e4819ff022df7968fd5c76ecb36d99",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100002_PR1_HT1_EC0/model_ablation.csv": "cc62202c84a34b3d2a013118ba4b07d338bfcd39debe99ebd7351835ea012fcf",
+    "/SimCLR/vrp-research/outputs/formal/model_track/WEN38_i1_s100002_PR1_HT1_EC1/model_ablation.csv": "34a4811d5d6a6eba9407b43f34cf3ca77e329f309fcb3fe4ed87ce9973e13b57"
+  },
+  "run_rows": 24,
+  "cases": [
+    "WEN38"
+  ],
+  "instance_seeds_by_case": {
+    "WEN38": [
+      1
+    ]
+  },
+  "pooled_quality_recomputed_from_all_input_pareto_points": true,
+  "bootstrap_samples": 5000,
+  "permutation_samples": 20000,
+  "analysis_seed": 20260831,
+  "analysis_units": {
+    "synthetic": "instance mean across paired solver repeats",
+    "wenchuan": "solver run on one fixed case-study instance"
+  },
+  "multiple_comparison_correction": "Holm across six factorial terms within case and metric"
+}

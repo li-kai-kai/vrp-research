@@ -1,0 +1,4 @@
+case_id,instance_seed,solver_seed,rows,unique_models,missing_models,duplicate_models,algorithms,evaluation_counts,evaluation_budgets,complete
+WEN38,1,100000,8,8,,,nsga2,10000,10000,1
+WEN38,1,100001,8,8,,,nsga2,10000,10000,1
+WEN38,1,100002,8,8,,,nsga2,10000,10000,1

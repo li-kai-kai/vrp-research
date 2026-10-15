@@ -1,0 +1,13 @@
+{
+  "created_at_utc": "2026-10-15T07:10:02.166272+00:00",
+  "exposure_columns": {
+    "PR": "partial_recovery_edge_periods",
+    "EC": "max_edge_utilization"
+  },
+  "cost_definitions": {
+    "ignoring_PR": "PR0_HT1_EC1",
+    "ignoring_HT": "PR1_HT0_EC1",
+    "ignoring_EC": "PR1_HT1_EC0"
+  },
+  "note": "descriptive conditioning; exposure from Full planning runs, cost from the shared-execution replay (positive = Full better)"
+}
